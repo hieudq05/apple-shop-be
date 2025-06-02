@@ -14,15 +14,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderDetail {
     @Id
-    private Long maChiTietDonHang;
-    private Integer soLuong;
-    private Double donGia;
+    private Long orderDetailId;
+    private Integer quantity;
+    private Double unitPrice;
 
     @ManyToOne
-    @JoinColumn(name = "maDonHang")
-    private OrderDetail donHang;
+    @JoinColumn(name = "orderId")
+    private Order order;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
-    private SanPham sanPham;
+    @JoinColumn(name = "productId")
+    private Product product;
 }

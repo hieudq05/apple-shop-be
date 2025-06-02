@@ -12,13 +12,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImageProduct {
+public class ProductImage {
     @Id
-    private Long maAnhSanPham;
-    private String tenAnh;
-    private String linkAnh;
+    private Long imageId;
+    private String imageName;
+    private String imageUrl;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
-    private SanPham sanPham;
+    @JoinColumn(name = "productId")
+    private Product product;
 }

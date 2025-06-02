@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Promotion {
     @Id
-    private Long maKhuyenMai;
-    private LocalDate ngayHetHan;
-    private String kieuGiamGia;
-    private Double mucGiam;
+    private Long promotionId;
+    private LocalDate expirationDate;
+    private String discountType;
+    private Double discountValue;
 }

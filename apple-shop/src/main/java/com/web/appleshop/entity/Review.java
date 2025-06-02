@@ -1,14 +1,8 @@
 package com.web.appleshop.entity;
 
 import java.time.LocalDate;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Data
@@ -16,16 +10,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Review {
     @Id
-    private Long maDanhGia;
-    private Integer sao;
-    private String binhLuan;
-    private LocalDate ngayDanhGia;
+    private Long reviewId;
+    private Integer rating;
+    private String comment;
+    private LocalDate reviewDate;
 
     @ManyToOne
-    @JoinColumn(name = "maNguoiDung")
-    private NguoiDung nguoiDung;
+    @JoinColumn(name = "userId")
+    private User user;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
-    private SanPham sanPham;
+    @JoinColumn(name = "productId")
+    private Product product;
 }

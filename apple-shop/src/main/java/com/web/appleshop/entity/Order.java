@@ -16,15 +16,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Order {
     @Id
-    private Long maDonHang;
-    private LocalDate ngayMua;
-    private String trangThaiDonHang;
-    private Double tongTien;
-    private String diaChiGiaoHang;
-    private String trangThaiGiaoHang;
-    private LocalDate ngayGiao;
+    private Long orderId;
+    private LocalDate orderDate;
+    private String orderStatus;
+    private Double totalAmount;
+    private String deliveryAddress;
+    private String shippingStatus;
+    private LocalDate shippingDate;
 
     @ManyToOne
-    @JoinColumn(name = "maNguoiDung")
-    private NguoiDung nguoiDung;
+    @JoinColumn(name = "userId")
+    private User user;
 }

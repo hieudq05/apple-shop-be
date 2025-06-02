@@ -14,11 +14,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Color {
     @Id
-    private Long maMau;
-    private String tenMau;
-    private String maMauCode;
+    private Long colorId;
+    private String colorName;
+    private String colorCode;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
-    private SanPham sanPham;
+    @JoinColumn(name = "productId")
+    private Product product;
 }

@@ -12,19 +12,19 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class YeuThichSanPham {
+public class FavoriteProduct {
     @Id
-    private Long maYeuThich;
+    private Long favoriteId;
 
     @ManyToOne
-    @JoinColumn(name = "maDonHang")
-    private DonHang donHang;
+    @JoinColumn(name = "orderId")
+    private Order order;
 
     @ManyToOne
-    @JoinColumn(name = "maNguoiDung")
-    private NguoiDung nguoiDung;
+    @JoinColumn(name = "userId")
+    private User user;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
-    private SanPham sanPham;
+    @JoinColumn(name = "productId")
+    private Product product;
 }

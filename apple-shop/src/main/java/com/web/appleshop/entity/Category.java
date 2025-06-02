@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Category {
     @Id
-    private Long maDanhMuc;
-    private String tenDanhMuc;
-    private String linkAnh;
+    private Long categoryId;
+    private String categoryName;
+    private String imageUrl;
 }

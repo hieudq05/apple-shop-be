@@ -11,21 +11,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
     @Id
-    private Long maNguoiDung;
+    private Long userId;
     private String email;
-    private String tenNguoiDung;
-    private String diaChi;
-    private String matKhau;
-    private String soDienThoai;
-    private LocalDate ngaySinh;
+    private String fullName;
+    private String address;
+    private String password;
+    private String phoneNumber;
+    private LocalDate birthDate;
 
     @ManyToOne
-    @JoinColumn(name = "maPhanQuyen")
-    private PhanQuyen phanQuyen;
+    @JoinColumn(name = "roleId")
+    private Role role;
 }

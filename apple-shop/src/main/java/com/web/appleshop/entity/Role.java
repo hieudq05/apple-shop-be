@@ -1,7 +1,7 @@
 package com.web.appleshop.entity;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,9 +10,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "phanquyen")
-public class PhanQuyen {
+public class Role {
     @Id
-    private Long maPhanQuyen;
-    private String tenQuyen;
+    private Long roleId;
+    private String roleName;
 }

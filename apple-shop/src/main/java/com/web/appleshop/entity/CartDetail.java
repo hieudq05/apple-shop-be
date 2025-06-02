@@ -15,14 +15,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CartDetail {
     @Id
-    private Long maChiTietGioHang;
-    private Integer soLuong;
+    private Long cartDetailId;
+    private Integer quantity;
 
     @ManyToOne
-    @JoinColumn(name = "maSanPham")
-    private SanPham sanPham;
+    @JoinColumn(name = "productId")
+    private Product product;
 
     @OneToOne
-    @JoinColumn(name = "maNguoiDung")
-    private NguoiDung nguoiDung;
+    @JoinColumn(name = "userId")
+    private User user;
 }

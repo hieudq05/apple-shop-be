@@ -8,17 +8,17 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SanPham {
+public class Product {
     @Id
-    private Long maSanPham;
-    private LocalDate ngayNhapKho;
-    private LocalDate ngayBanRa;
-    private Double gia;
-    private String moTa;
-    private String tenSanPham;
-    private Integer soLuong;
+    private Long productId;
+    private LocalDate importDate;
+    private LocalDate releaseDate;
+    private Double price;
+    private String description;
+    private String productName;
+    private Integer quantity;
 
     @ManyToOne
-    @JoinColumn(name = "maDanhMuc")
-    private DProduct danhMuc;
+    @JoinColumn(name = "categoryId")
+    private Category category;
 }
