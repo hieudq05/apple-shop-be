@@ -11,17 +11,17 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-public class Role {
+public class OrderStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Name", nullable = false, length = 50)
+    @Column(name = "Name")
     private String name;
 
-    @OneToMany(mappedBy = "role")
-    private Set<User> users = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "status")
+    private Set<Order> orders = new LinkedHashSet<>();
 
 }

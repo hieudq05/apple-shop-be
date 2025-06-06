@@ -5,40 +5,22 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
-
-import java.time.Instant;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "\"Order\"")
-public class Order {
+public class ShippingInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CreatedBy", nullable = false)
-    private User createdBy;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedAt")
-    private Instant createdAt;
-
-    @Nationalized
-    @Column(name = "PaymentType", length = 50)
-    private String paymentType;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "ApproveAt")
-    private Instant approveAt;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ApproveBy", nullable = false)
-    private User approveBy;
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "UserId", nullable = false)
+    private User user;
 
     @Nationalized
     @Column(name = "FirstName", length = 55)
@@ -76,11 +58,8 @@ public class Order {
     @Column(name = "Country", length = 100)
     private String country;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "Status", nullable = false)
-    private OrderStatus status;
-
-    @OneToMany(mappedBy = "order")
-    private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
+    @ColumnDefault("0")
+    @Column(name = "IsDefault")
+    private Boolean isDefault;
 
 }

@@ -1,24 +1,34 @@
 package com.web.appleshop.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.Nationalized;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+@Getter
+@Setter
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Color {
     @Id
-    private Long colorId;
-    private String colorName;
-    private String colorCode;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id", nullable = false)
+    private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "productId")
+    @Nationalized
+    @Column(name = "Name", nullable = false, length = 50)
+    private String name;
+
+    @Column(name = "HexCode", length = 7)
+    private String hexCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ProductId")
     private Product product;
+
+    @OneToMany(mappedBy = "color")
+    private Set<Stock> stocks = new LinkedHashSet<>();
+
 }

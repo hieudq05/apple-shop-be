@@ -1,18 +1,37 @@
 package com.web.appleshop.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.Nationalized;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+@Getter
+@Setter
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Category {
     @Id
-    private Long categoryId;
-    private String categoryName;
-    private String imageUrl;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id", nullable = false)
+    private Integer id;
+
+    @Nationalized
+    @Column(name = "Name", nullable = false, length = 100)
+    private String name;
+
+    @Nationalized
+    @Column(name = "Image")
+    private String image;
+
+    @OneToMany(mappedBy = "category")
+    private Set<Product> products = new LinkedHashSet<>();
+
+    @ManyToMany
+    @JoinTable(name = "PromotionCategory",
+            joinColumns = @JoinColumn(name = "CategoryId"),
+            inverseJoinColumns = @JoinColumn(name = "PromotionId"))
+    private Set<Promotion> promotions = new LinkedHashSet<>();
+
 }
