@@ -11,27 +11,28 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Table(name = "category")
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Nationalized
-    @Column(name = "Image")
+    @Column(name = "image")
     private String image;
 
     @OneToMany(mappedBy = "category")
     private Set<Product> products = new LinkedHashSet<>();
 
     @ManyToMany
-    @JoinTable(name = "PromotionCategory",
-            joinColumns = @JoinColumn(name = "CategoryId"),
-            inverseJoinColumns = @JoinColumn(name = "PromotionId"))
+    @JoinTable(name = "promotion_category",
+            joinColumns = @JoinColumn(name = "category_id"),
+            inverseJoinColumns = @JoinColumn(name = "promotion_id"))
     private Set<Promotion> promotions = new LinkedHashSet<>();
 
 }

@@ -5,29 +5,34 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "stock")
 public class Stock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ColorId")
+    @JoinColumn(name = "color_id", nullable = false)
     private Color color;
 
     @ColumnDefault("0")
-    @Column(name = "Quantity", nullable = false)
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
+
+    @Column(name = "price", nullable = false, precision = 18, scale = 2)
+    private BigDecimal price;
 
     @OneToMany(mappedBy = "stock")
     private Set<CartItem> cartItems = new LinkedHashSet<>();
@@ -41,7 +46,7 @@ public class Stock {
     @OneToMany(mappedBy = "stock")
     private Set<SavedProduct> savedProducts = new LinkedHashSet<>();
 
-    @ManyToMany
+    @ManyToMany(mappedBy = "stocks")
     private Set<InstanceProperty> instanceProperties = new LinkedHashSet<>();
 
 }

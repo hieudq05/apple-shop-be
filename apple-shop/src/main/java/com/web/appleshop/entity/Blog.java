@@ -6,11 +6,12 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "blog")
 public class Blog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,18 +32,18 @@ public class Blog {
     private String thumbnail;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "AuthorId")
+    @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    @Column(name = "PublishedAt")
-    private Instant publishedAt;
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
 
     @ColumnDefault("getdate()")
-    @Column(name = "CreatedAt")
-    private Instant createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @Column(name = "UpdatedAt")
-    private Instant updatedAt;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Nationalized
     @Column(name = "Status", length = 50)

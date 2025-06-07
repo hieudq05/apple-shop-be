@@ -11,55 +11,56 @@ import org.hibernate.annotations.OnDeleteAction;
 @Getter
 @Setter
 @Entity
+@Table(name = "shipping_info")
 public class ShippingInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "UserId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Nationalized
-    @Column(name = "FirstName", length = 55)
+    @Column(name = "first_name", length = 55)
     private String firstName;
 
     @Nationalized
-    @Column(name = "LastName", length = 55)
+    @Column(name = "last_name", length = 55)
     private String lastName;
 
     @Nationalized
-    @Column(name = "Email")
+    @Column(name = "email")
     private String email;
 
     @Nationalized
-    @Column(name = "Phone", length = 20)
+    @Column(name = "phone", length = 20)
     private String phone;
 
     @Nationalized
-    @Column(name = "Address", length = 500)
+    @Column(name = "address", length = 500)
     private String address;
 
     @Nationalized
-    @Column(name = "Ward", length = 100)
+    @Column(name = "ward", length = 100)
     private String ward;
 
     @Nationalized
-    @Column(name = "District", length = 100)
+    @Column(name = "district", length = 100)
     private String district;
 
     @Nationalized
-    @Column(name = "Province", length = 100)
+    @Column(name = "province", length = 100)
     private String province;
 
     @Nationalized
-    @Column(name = "Country", length = 100)
+    @Column(name = "country", length = 100)
     private String country;
 
     @ColumnDefault("0")
-    @Column(name = "IsDefault")
+    @Column(name = "is_default")
     private Boolean isDefault;
 
 }

@@ -7,65 +7,70 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "Promotions")
+@Table(name = "promotions")
 public class Promotion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Nationalized
-    @Column(name = "Code", nullable = false, length = 50)
+    @Column(name = "code", nullable = false, length = 50)
     private String code;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "PromotionType", nullable = false)
+    @JoinColumn(name = "promotion_type", nullable = false)
     private PromotionType promotionType;
 
-    @Column(name = "\"Value\"", nullable = false, precision = 18, scale = 2)
+    @Column(name = "\"value\"", nullable = false, precision = 18, scale = 2)
     private BigDecimal value;
 
-    @Column(name = "MaxDiscountAmount", precision = 18, scale = 2)
+    @Column(name = "max_discount_amount", precision = 18, scale = 2)
     private BigDecimal maxDiscountAmount;
 
-    @Column(name = "MinOrderValue", precision = 18, scale = 2)
+    @Column(name = "min_order_value", precision = 18, scale = 2)
     private BigDecimal minOrderValue;
 
-    @Column(name = "UsageLimit", nullable = false)
+    @Column(name = "usage_limit", nullable = false)
     private Integer usageLimit;
 
     @ColumnDefault("0")
-    @Column(name = "UsageCount")
+    @Column(name = "usage_count")
     private Integer usageCount;
 
     @ColumnDefault("1")
-    @Column(name = "IsActive")
+    @Column(name = "is_active")
     private Boolean isActive;
 
-    @Column(name = "StartDate", nullable = false)
-    private Instant startDate;
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
 
-    @Column(name = "EndDate", nullable = false)
-    private Instant endDate;
+    @Column(name = "end_date", nullable = false)
+    private LocalDateTime endDate;
 
-    @Column(name = "applyOn", nullable = false)
+    @Column(name = "apply_on", nullable = false)
     private Boolean applyOn = false;
 
     @ManyToMany(mappedBy = "promotions")
     private Set<Category> categories = new LinkedHashSet<>();
 
-    @ManyToMany(mappedBy = "promotions")
+    @ManyToMany
+    @JoinTable(
+            name = "promotion_product",
+            joinColumns = @JoinColumn(name = "promotions_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
     private Set<Product> products = new LinkedHashSet<>();
 
 }

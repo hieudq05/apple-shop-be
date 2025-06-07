@@ -6,77 +6,77 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "\"User\"")
+@Table(name = "\"user\"")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Email", nullable = false)
+    @Column(name = "email", nullable = false)
     private String email;
 
     @Nationalized
-    @Column(name = "Phone", length = 20)
+    @Column(name = "phone", length = 20)
     private String phone;
 
     @Nationalized
-    @Column(name = "PasswordHash", nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Nationalized
-    @Column(name = "FirstName", length = 50)
+    @Column(name = "first_name", length = 50)
     private String firstName;
 
     @Nationalized
-    @Column(name = "LastName", length = 50)
+    @Column(name = "last_name", length = 50)
     private String lastName;
 
     @Nationalized
-    @Column(name = "Address", length = 500)
+    @Column(name = "address", length = 500)
     private String address;
 
     @Nationalized
-    @Column(name = "Ward", length = 100)
+    @Column(name = "ward", length = 100)
     private String ward;
 
     @Nationalized
-    @Column(name = "District", length = 100)
+    @Column(name = "district", length = 100)
     private String district;
 
     @Nationalized
-    @Column(name = "Province", length = 100)
+    @Column(name = "province", length = 100)
     private String province;
 
     @Nationalized
-    @Column(name = "Country", length = 100)
+    @Column(name = "country", length = 100)
     private String country;
 
     @Nationalized
-    @Column(name = "Image")
+    @Column(name = "image")
     private String image;
 
     @ColumnDefault("getdate()")
-    @Column(name = "CreatedAt")
-    private Instant createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @Column(name = "UpdatedAt")
-    private Instant updatedAt;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "RoleId")
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
     @ColumnDefault("1")
-    @Column(name = "IsActive")
+    @Column(name = "is_active")
     private Boolean isActive;
 
     @OneToMany(mappedBy = "author")
@@ -85,8 +85,8 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<CartItem> cartItems = new LinkedHashSet<>();
 
-    @OneToOne(mappedBy = "id")
-    private Feature feature;
+    @OneToMany(mappedBy = "createdBy")
+    private Set<Feature> features = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "createdBy")
     private Set<InstanceProperty> instanceProperties = new LinkedHashSet<>();
@@ -110,7 +110,7 @@ public class User {
     private Set<Review> reviewsApproved = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "repliedBy")
-    private Set<Review> reviews = new LinkedHashSet<>();
+    private Set<Review> reviewsReplied = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "user")
     private Set<SavedProduct> savedProducts = new LinkedHashSet<>();

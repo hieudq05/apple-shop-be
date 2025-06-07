@@ -9,23 +9,22 @@ import org.hibernate.annotations.Nationalized;
 @Getter
 @Setter
 @Entity
-@Table(name = "ProductPhotos")
+@Table(name = "product_photos")
 public class ProductPhoto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "StockId", nullable = false)
+    @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 
     @Nationalized
-    @Column(name = "ImageUrl", nullable = false)
+    @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    @ColumnDefault("0")
-    @Column(name = "IsDefault")
-    private Boolean isDefault;
+    @Column(name = "alt")
+    private Boolean alt;
 
 }

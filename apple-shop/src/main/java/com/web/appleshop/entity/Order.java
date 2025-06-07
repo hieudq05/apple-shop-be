@@ -6,14 +6,14 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "\"Order\"")
+@Table(name = "\"order\"")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,63 +21,63 @@ public class Order {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CreatedBy", nullable = false)
+    @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
     @ColumnDefault("getdate()")
-    @Column(name = "CreatedAt")
-    private Instant createdAt;
-
-    @Nationalized
-    @Column(name = "PaymentType", length = 50)
-    private String paymentType;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "ApproveAt")
-    private Instant approveAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ApproveBy", nullable = false)
+    @JoinColumn(name = "payment_type", nullable = false)
+    private PaymentType paymentType;
+
+    @ColumnDefault("getdate()")
+    @Column(name = "approve_at")
+    private LocalDateTime approveAt;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "approve_by", nullable = false)
     private User approveBy;
 
     @Nationalized
-    @Column(name = "FirstName", length = 55)
+    @Column(name = "first_name", length = 55)
     private String firstName;
 
     @Nationalized
-    @Column(name = "LastName", length = 55)
+    @Column(name = "last_name", length = 55)
     private String lastName;
 
     @Nationalized
-    @Column(name = "Email")
+    @Column(name = "email")
     private String email;
 
     @Nationalized
-    @Column(name = "Phone", length = 20)
+    @Column(name = "phone", length = 20)
     private String phone;
 
     @Nationalized
-    @Column(name = "Address", length = 500)
+    @Column(name = "address", length = 500)
     private String address;
 
     @Nationalized
-    @Column(name = "Ward", length = 100)
+    @Column(name = "ward", length = 100)
     private String ward;
 
     @Nationalized
-    @Column(name = "District", length = 100)
+    @Column(name = "district", length = 100)
     private String district;
 
     @Nationalized
-    @Column(name = "Province", length = 100)
+    @Column(name = "province", length = 100)
     private String province;
 
     @Nationalized
-    @Column(name = "Country", length = 100)
+    @Column(name = "country", length = 100)
     private String country;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "Status", nullable = false)
+    @JoinColumn(name = "status", nullable = false)
     private OrderStatus status;
 
     @OneToMany(mappedBy = "order")

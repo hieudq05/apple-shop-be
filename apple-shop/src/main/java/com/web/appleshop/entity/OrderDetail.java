@@ -12,37 +12,38 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
+@Table(name = "order_detail")
 public class OrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "OrderId", nullable = false)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Nationalized
-    @Column(name = "ProductName", nullable = false)
+    @Column(name = "product_name", nullable = false)
     private String productName;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "StockId", nullable = false)
+    @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 
-    @Column(name = "Quantity", nullable = false)
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "Price", nullable = false, precision = 18, scale = 2)
+    @Column(name = "price", nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
 
     @Nationalized
-    @Column(name = "Note")
+    @Column(name = "note")
     private String note;
 
 }
