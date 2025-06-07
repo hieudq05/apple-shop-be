@@ -8,44 +8,50 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "user_activity_log")
 public class UserActivityLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.SET_NULL)
-    @JoinColumn(name = "UserId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ColumnDefault("getdate()")
-    @Column(name = "LogTime")
-    private Instant logTime;
+    @Column(name = "log_time")
+    private LocalDateTime logTime;
 
     @Nationalized
     @Lob
-    @Column(name = "ActionType", nullable = false)
+    @Column(name = "action_type", nullable = false)
     private String actionType;
 
     @Nationalized
     @Lob
-    @Column(name = "TargetEntityType")
+    @Column(name = "target_entity_type")
     private String targetEntityType;
 
     @Nationalized
     @Lob
-    @Column(name = "Message")
+    @Column(name = "message")
     private String message;
 
     @Nationalized
     @Lob
-    @Column(name = "OldValue")
+    @Column(name = "old_value")
     private String oldValue;
+
+    @Nationalized
+    @Lob
+    @Column(name = "new_value")
+    private String newValue;
 
 }

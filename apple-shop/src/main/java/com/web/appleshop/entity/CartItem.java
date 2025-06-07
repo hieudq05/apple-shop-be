@@ -8,26 +8,26 @@ import org.hibernate.annotations.Nationalized;
 @Getter
 @Setter
 @Entity
+@Table(name = "cart_item")
 public class CartItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Nationalized
-    @Column(name = "ProductName")
+    @Column(name = "product_name")
     private String productName;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "StockId", nullable = false)
+    @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 
     @Column(name = "Quantity", nullable = false)

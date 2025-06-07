@@ -11,21 +11,22 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Table(name = "color")
 public class Color {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Name", nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Column(name = "HexCode", length = 7)
+    @Column(name = "hex_code", length = 7)
     private String hexCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ProductId")
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @OneToMany(mappedBy = "color")

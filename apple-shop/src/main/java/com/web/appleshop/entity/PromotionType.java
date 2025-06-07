@@ -11,14 +11,15 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Table(name = "promotion_type")
 public class PromotionType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Name", length = 155)
+    @Column(name = "name", length = 155)
     private String name;
 
     @OneToMany(mappedBy = "promotionType")

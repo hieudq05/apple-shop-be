@@ -6,54 +6,55 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "review")
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductId", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Nationalized
-    @Column(name = "Content", nullable = false, length = 1000)
+    @Column(name = "content", nullable = false, length = 1000)
     private String content;
 
-    @Column(name = "Rating", nullable = false)
+    @Column(name = "rating", nullable = false)
     private Integer rating;
 
     @ColumnDefault("getdate()")
-    @Column(name = "CreatedAt")
-    private Instant createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @ColumnDefault("0")
-    @Column(name = "IsApproved")
+    @Column(name = "is_approved")
     private Boolean isApproved;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ApprovedBy")
+    @JoinColumn(name = "approved_by", nullable = true)
     private User approvedBy;
 
     @ColumnDefault("getdate()")
-    @Column(name = "ApprovedAt")
-    private Instant approvedAt;
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
 
     @Nationalized
-    @Column(name = "ReplyContent", nullable = false, length = 1000)
+    @Column(name = "reply_content", nullable = false, length = 1000)
     private String replyContent;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "RepliedBy", nullable = false)
+    @JoinColumn(name = "replied_by", nullable = false)
     private User repliedBy;
 
 }

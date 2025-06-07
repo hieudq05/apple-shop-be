@@ -6,47 +6,44 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "feature")
 public class Feature {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "Id", nullable = false)
-    private User user;
-
     @Nationalized
-    @Column(name = "Name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Nationalized
-    @Column(name = "Description", length = 500)
+    @Column(name = "description", length = 500)
     private String description;
 
     @Nationalized
-    @Column(name = "Image")
+    @Column(name = "image")
     private String image;
 
     @ColumnDefault("getdate()")
-    @Column(name = "CreatedAt")
-    private Instant createdAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @Column(name = "CreatedBy", nullable = false)
-    private Integer createdBy;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 
     @ManyToMany
-    @JoinTable(name = "ProductFeature",
-            joinColumns = @JoinColumn(name = "FeatureId"),
-            inverseJoinColumns = @JoinColumn(name = "ProductId"))
+    @JoinTable(name = "product_feature",
+            joinColumns = @JoinColumn(name = "feature_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> products = new LinkedHashSet<>();
 
 }

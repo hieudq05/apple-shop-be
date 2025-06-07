@@ -14,10 +14,10 @@ import java.util.Objects;
 @Embeddable
 public class SavedProductId implements Serializable {
     private static final long serialVersionUID = -849318116995174317L;
-    @Column(name = "UserId", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Integer userId;
 
-    @Column(name = "StockId", nullable = false)
+    @Column(name = "stock_id", nullable = false)
     private Integer stockId;
 
     @Override
