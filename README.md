@@ -4,16 +4,16 @@ Apple Shop is a backend system for managing an online apple shop, built with Jav
 
 ## Table of Contents
 
-- [Overview](#-overview)
-- [Technologies & Tools](#️-technologies--tools)
-- [Project Structure](#-project-structure)
-- [Database](#️-database)
-- [Configuration](#️-configuration)
-- [Prerequisites](#-prerequisites)
-- [Build & Run](#-build--run)
-- [API Endpoints](#-api-endpoints)
-- [Testing](#-testing)
-- [Contribution](#-contribution)
+- [Overview](#overview)
+- [Technologies & Tools](#technologies--tools)
+- [Project Structure](#project-structure)
+- [Database](#database)
+- [Configuration](#configuration)
+- [Prerequisites](#prerequisites)
+- [Build & Run](#build--run)
+- [API Endpoints](#api-endpoints)
+- [Testing](#testing)
+- [Contribution](#contribution)
 
 ---
 
@@ -162,7 +162,7 @@ Before running the application, ensure you have the following installed:
 
 ---
 
-## 🚀 Build & Run
+## Build & Run
 
 ### 1. Clone the Repository
 ```bash
