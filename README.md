@@ -1,10 +1,6 @@
 # Apple Shop Backend – Detailed Documentation
-
-![Java](https://img.shields.io/badge/Java-24-orange?style=flat-square&logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.0-brightgreen?style=flat-square&logo=spring)
-![SQL Server](https://img.shields.io/badge/SQL%20Server-Azure-blue?style=flat-square&logo=microsoft-sql-server)
-![Maven](https://img.shields.io/badge/Maven-Build%20Tool-red?style=flat-square&logo=apache-maven)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
+## 1. Overview
+Apple Shop is a backend system for managing an online apple shop, built with Java 24 and Spring Boot 3.5.0. It provides RESTful APIs for product management, order processing, user authentication, and more.
 
 ## Table of Contents
 
