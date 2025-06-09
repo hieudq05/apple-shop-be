@@ -2,10 +2,23 @@ spring:
   application:
     name: apple-shop
   datasource:
-    url: jdbc:sqlserver://dqhieuse.database.windows.net:1433;database=apple_dev_shop_v1;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
-    username: dqhieuse@dqhieuse
-    password: Hieu26102005
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     hibernate:
       ddl-auto: validate
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY}
+      expiration: ${JWT_EXPIRATION}
+      refresh-token:
+        expiration: ${JWT_REFRESH_EXPIRATION}
+
+server:
+  servlet:
+    context-path: /api/v1
+  port: 8080
