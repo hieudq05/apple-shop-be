@@ -1,15 +1,14 @@
 package com.web.appleshop.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationResponse {
-    private String accessToken;
-    private String refreshToken;
+    String accessToken;
+    String refreshToken;
 }

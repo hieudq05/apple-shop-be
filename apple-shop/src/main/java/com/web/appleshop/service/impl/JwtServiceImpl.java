@@ -69,18 +69,19 @@ public class JwtServiceImpl implements JwtService {
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-        return buildToken(extraClaims, userDetails, expiration);
+        return "Bearer " + buildToken(extraClaims, userDetails, expiration);
     }
 
     /**
      * Tạo refresh token.
+     *
      * @param userDetails Thông tin người dùng
      * @return Refresh token
      */
     public String generateRefreshToken(
             UserDetails userDetails
     ) {
-        return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+        return "Bearer " + buildToken(new HashMap<>(), userDetails, refreshExpiration);
     }
 
     /**

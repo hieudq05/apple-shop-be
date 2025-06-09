@@ -1,15 +1,14 @@
 package com.web.appleshop.dto.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoginRequest {
-    private String loginIdentifier;
-    private String password;
+    String loginIdentifier;
+    String password;
 }

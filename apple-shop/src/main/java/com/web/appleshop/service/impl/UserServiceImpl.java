@@ -1,5 +1,7 @@
 package com.web.appleshop.service.impl;
 
+import com.web.appleshop.dto.request.RegisterRequest;
+import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.UserService;
@@ -17,5 +19,10 @@ public class UserServiceImpl implements UserService {
     public UserDetails findByLoginIdentifier(String loginIdentifier) {
         return userRepository.findByUsernameOrEmailOrPhone(loginIdentifier, loginIdentifier, loginIdentifier)
                 .orElseThrow(() -> new NotFoundException("User not found with identifier: " + loginIdentifier));
+    }
+
+    @Override
+    public void save(User user) {
+        userRepository.save(user);
     }
 }

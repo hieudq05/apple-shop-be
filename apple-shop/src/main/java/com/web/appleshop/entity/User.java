@@ -1,15 +1,19 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -20,6 +24,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "\"users\"")
+@DynamicInsert
 public class User implements UserDetails {
 
     @Id
@@ -84,6 +89,10 @@ public class User implements UserDetails {
 
     @Column(name = "username", nullable = false, length = 155)
     private String username;
+
+    @NotNull
+    @Column(name = "birth", nullable = false)
+    private LocalDate birth;
 
     @ManyToMany
     @JoinTable(name = "user_role",
