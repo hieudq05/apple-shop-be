@@ -11,7 +11,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "promotion_type")
+@Table(name = "promotion_types")
 public class PromotionType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

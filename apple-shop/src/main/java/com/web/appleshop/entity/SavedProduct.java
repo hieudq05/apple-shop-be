@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "saved_product")
+@Table(name = "saved_products")
 public class SavedProduct {
     @EmbeddedId
     private SavedProductId id;
