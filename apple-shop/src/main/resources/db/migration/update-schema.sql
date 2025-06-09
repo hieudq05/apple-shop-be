@@ -458,10 +458,6 @@ ALTER TABLE user_activity_logs
     ADD CONSTRAINT FK_USERACTIVITYLOG_ON_USERID FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 GO
 
-ALTER TABLE users
-    ADD CONSTRAINT FK_USER_ON_ROLEID FOREIGN KEY (role_id) REFERENCES roles (id)
-GO
-
 ALTER TABLE promotion_category
     ADD CONSTRAINT fk_procat_on_category FOREIGN KEY (category_id) REFERENCES categories (id)
 GO
