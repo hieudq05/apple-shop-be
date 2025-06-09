@@ -46,15 +46,13 @@ public class AuthController {
 
     @PostMapping("register")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        UserDetails user = new User();
-        BeanUtils.copyProperties(request, user);
         User userEntity = new User();
         BeanUtils.copyProperties(request, userEntity);
 
         userService.save(userEntity);
 
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        String accessToken = jwtService.generateToken(userEntity);
+        String refreshToken = jwtService.generateRefreshToken(userEntity);
 
         AuthenticationResponse response = new AuthenticationResponse(accessToken, refreshToken);
 
