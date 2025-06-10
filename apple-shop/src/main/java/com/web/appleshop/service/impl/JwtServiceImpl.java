@@ -1,6 +1,9 @@
 package com.web.appleshop.service.impl;
 
+import com.web.appleshop.entity.RefreshToken;
 import com.web.appleshop.service.JwtService;
+import com.web.appleshop.service.RefreshTokenService;
+import com.web.appleshop.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -10,6 +13,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +23,8 @@ import java.util.function.Function;
 
 @Service
 public class JwtServiceImpl implements JwtService {
+    private final RefreshTokenService refreshTokenService;
+    private final UserService userService;
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
 
@@ -25,6 +33,11 @@ public class JwtServiceImpl implements JwtService {
 
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
+
+    public JwtServiceImpl(RefreshTokenService refreshTokenService, UserService userService) {
+        this.refreshTokenService = refreshTokenService;
+        this.userService = userService;
+    }
 
     /**
      * Trích xuất username (subject) từ token.
@@ -81,7 +94,13 @@ public class JwtServiceImpl implements JwtService {
     public String generateRefreshToken(
             UserDetails userDetails
     ) {
-        return "Bearer " + buildToken(new HashMap<>(), userDetails, refreshExpiration);
+        String refreshToken = buildToken(new HashMap<>(), userDetails, refreshExpiration);
+
+        Claims claims = extractAllClaims(refreshToken);
+
+        refreshTokenService.save(createRefreshToken(userDetails, claims, refreshToken));
+
+        return "Bearer " + refreshToken;
     }
 
     /**
@@ -97,6 +116,7 @@ public class JwtServiceImpl implements JwtService {
             UserDetails userDetails,
             long expiration
     ) {
+
         return Jwts
                 .builder()
                 .claims(extraClaims)
@@ -151,7 +171,7 @@ public class JwtServiceImpl implements JwtService {
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parser()
-                .decryptWith(getSignInKey())
+                .verifyWith(getSignInKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -165,5 +185,14 @@ public class JwtServiceImpl implements JwtService {
     private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private RefreshToken createRefreshToken(UserDetails userDetails, Claims claims, String refreshToken) {
+        RefreshToken refreshTokenEntity = new RefreshToken();
+        refreshTokenEntity.setToken(refreshToken);
+        refreshTokenEntity.setIssuedAt(claims.getIssuedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        refreshTokenEntity.setExpiryDate(claims.getExpiration().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        refreshTokenEntity.setUser(userService.findUserByLoginIdentifier(userDetails.getUsername()));
+        return refreshTokenEntity;
     }
 }

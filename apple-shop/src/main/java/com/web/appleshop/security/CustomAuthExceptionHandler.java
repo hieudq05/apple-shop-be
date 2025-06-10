@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -28,9 +30,19 @@ public class CustomAuthExceptionHandler implements AuthenticationEntryPoint, Acc
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException, ServletException {
+        String errorCode = "UNAUTHORIZED";
+        String errorMessage = authException.getMessage();
+
+        if(authException instanceof DisabledException) {
+            errorCode = "USER_DISABLED";
+            errorMessage = "Tài khoản của bạn đã bị vô hiệu hóa hoặc chưa được kích hoạt.";
+        } else if(authException instanceof BadCredentialsException) {
+            errorMessage = "Sai thông tin đăng nhập.";
+        }
+
         ApiResponse<Object> apiResponse = ApiResponse.error(
-                "UNAUTHORIZED",
-                "Authentication failed: " + authException.getMessage()
+                errorCode,
+                errorMessage
         );
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
