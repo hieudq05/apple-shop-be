@@ -9,6 +9,24 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DATABASE}
+      timeout: 6000
+  mail:
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 application:
   security:
@@ -22,3 +40,7 @@ server:
   servlet:
     context-path: /api/v1
   port: 8080
+
+otp:
+  expired.in: 5
+  length: 6

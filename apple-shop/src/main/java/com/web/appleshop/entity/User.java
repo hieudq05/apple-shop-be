@@ -83,7 +83,7 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ColumnDefault("1")
+    @ColumnDefault("0")
     @Column(name = "enabled")
     private Boolean enabled;
 
@@ -165,5 +165,10 @@ public class User implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.enabled;
     }
 }

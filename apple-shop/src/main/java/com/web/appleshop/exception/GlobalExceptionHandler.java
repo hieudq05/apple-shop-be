@@ -45,4 +45,15 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalStateException(
+            IllegalStateException e
+    ) {
+        log.warn("Illegal state: {}", e.getMessage());
+
+        ApiResponse<Object> response = ApiResponse.error(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
