@@ -46,7 +46,7 @@ public class AuthController {
 
         AuthenticationResponse response = new AuthenticationResponse(accessToken, refreshToken);
 
-        return ResponseEntity.ok(ApiResponse.success(response, "Login successfully"));
+        return ResponseEntity.ok(ApiResponse.success(response, "Login successful"));
     }
 
     @PostMapping("register")
