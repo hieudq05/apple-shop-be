@@ -11,7 +11,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "payment_type")
+@Table(name = "payment_types")
 public class PaymentType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

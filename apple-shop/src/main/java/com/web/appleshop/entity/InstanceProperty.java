@@ -33,7 +33,7 @@ public class InstanceProperty {
     private User createdBy;
 
     @ManyToMany
-    @JoinTable(name = "stock_instance",
+    @JoinTable(name = "stock_instances",
             joinColumns = @JoinColumn(name = "instance_id"),
             inverseJoinColumns = @JoinColumn(name = "stock_id"))
     private Set<Stock> stocks = new LinkedHashSet<>();

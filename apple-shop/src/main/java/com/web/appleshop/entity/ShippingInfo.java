@@ -11,7 +11,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Getter
 @Setter
 @Entity
-@Table(name = "shipping_info")
+@Table(name = "shipping_infos")
 public class ShippingInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
