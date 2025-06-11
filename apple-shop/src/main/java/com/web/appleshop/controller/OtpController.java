@@ -26,7 +26,7 @@ public class OtpController {
         otpService.generateOtp(request.getEmail());
         OtpResponse response = new OtpResponse(request.getEmail(), Integer.parseInt(Objects.requireNonNull(environment.getProperty("otp.expired.in"))));
         return ResponseEntity.ok(
-                ApiResponse.success(response, "Generate OTP successfully")
+                ApiResponse.success(response, "OTP generated successfully")
         );
     }
 
