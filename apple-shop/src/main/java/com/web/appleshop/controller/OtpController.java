@@ -34,7 +34,7 @@ public class OtpController {
     public ResponseEntity<ApiResponse<OtpValidationResponse>> verify(@RequestBody OtpValidationRequest request) {
         boolean valid = otpService.verifyOtp(request.getEmail(), request.getOtp());
         return ResponseEntity.ok(
-                ApiResponse.success(new OtpValidationResponse(valid), "Verify OTP successfully")
+                ApiResponse.success(new OtpValidationResponse(valid), "OTP verified successfully")
         );
     }
 }
