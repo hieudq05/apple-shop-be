@@ -34,7 +34,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("login")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@Valid @RequestBody LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getLoginIdentifier(), request.getPassword())
         );
