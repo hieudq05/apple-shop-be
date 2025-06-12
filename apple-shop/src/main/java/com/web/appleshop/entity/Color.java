@@ -1,8 +1,8 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 
 import java.util.LinkedHashSet;
@@ -10,8 +10,12 @@ import java.util.Set;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "colors")
+@DynamicInsert
 public class Color {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,11 +29,15 @@ public class Color {
     @Column(name = "hex_code", length = 7)
     private String hexCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
-
-    @OneToMany(mappedBy = "color")
+    @OneToMany(mappedBy = "color", cascade = {
+            CascadeType.MERGE,
+            CascadeType.PERSIST,
+            CascadeType.REFRESH
+    })
     private Set<Stock> stocks = new LinkedHashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_id")
+    private Stock stock;
 
 }

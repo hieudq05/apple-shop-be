@@ -46,7 +46,7 @@ public class JwtServiceImpl implements JwtService {
      * @return String
      */
     public String extractUsername(String token) {
-        return null;
+        return extractClaim(token, Claims::getSubject);
     }
 
     /**

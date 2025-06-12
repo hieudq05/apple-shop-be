@@ -1,9 +1,9 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
@@ -12,8 +12,12 @@ import java.util.Set;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "features")
+@DynamicInsert
 public class Feature {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,6 +33,7 @@ public class Feature {
     private String description;
 
     @Nationalized
+    @Lob
     @Column(name = "image")
     private String image;
 
@@ -40,10 +45,24 @@ public class Feature {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @ManyToMany
+    @ManyToMany(cascade = {
+            CascadeType.MERGE,
+            CascadeType.PERSIST,
+            CascadeType.REFRESH
+    }, fetch = FetchType.EAGER)
     @JoinTable(name = "product_features",
             joinColumns = @JoinColumn(name = "feature_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> products = new LinkedHashSet<>();
+
+    public void addProduct(Product product) {
+        this.products.add(product);
+        product.getFeatures().add(this);
+    }
+
+    public void removeProduct(Product product) {
+        this.products.remove(product);
+        product.getFeatures().remove(this);
+    }
 
 }

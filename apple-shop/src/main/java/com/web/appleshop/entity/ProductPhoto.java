@@ -21,10 +21,11 @@ public class ProductPhoto {
     private Stock stock;
 
     @Nationalized
+    @Lob
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
     @Column(name = "alt")
-    private Boolean alt;
+    private String alt;
 
 }

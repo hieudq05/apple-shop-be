@@ -1,8 +1,11 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -13,6 +16,7 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @Table(name = "order_details")
+@DynamicInsert
 public class OrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,10 +36,6 @@ public class OrderDetail {
     @Column(name = "product_name", nullable = false)
     private String productName;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "stock_id", nullable = false)
-    private Stock stock;
-
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
@@ -45,5 +45,17 @@ public class OrderDetail {
     @Nationalized
     @Column(name = "note")
     private String note;
+
+    @Size(max = 50)
+    @NotNull
+    @Nationalized
+    @Column(name = "color_name", nullable = false, length = 50)
+    private String colorName;
+
+    @Size(max = 50)
+    @NotNull
+    @Nationalized
+    @Column(name = "version_name", nullable = false, length = 50)
+    private String versionName;
 
 }

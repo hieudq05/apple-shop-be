@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
@@ -13,6 +14,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "stocks")
+@DynamicInsert
 public class Stock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,19 +36,29 @@ public class Stock {
     @Column(name = "price", nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
 
-    @OneToMany(mappedBy = "stock")
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CartItem> cartItems = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "stock")
-    private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "stock")
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductPhoto> productPhotos = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "stock")
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SavedProduct> savedProducts = new LinkedHashSet<>();
 
     @ManyToMany(mappedBy = "stocks")
     private Set<InstanceProperty> instanceProperties = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "stock")
+    private Set<Color> colors = new LinkedHashSet<>();
+
+    public void addInstanceProperty(InstanceProperty instanceProperty) {
+        this.instanceProperties.add(instanceProperty);
+        instanceProperty.getStocks().add(this);
+    }
+
+    public void removeInstanceProperty(InstanceProperty instanceProperty) {
+        this.instanceProperties.remove(instanceProperty);
+        instanceProperty.getStocks().remove(this);
+    }
 
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "products")
+@DynamicInsert
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,11 +51,8 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CartItem> cartItems = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "product")
-    private Set<Color> colors = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "product")
     private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
@@ -64,13 +63,32 @@ public class Product {
     @ManyToMany(mappedBy = "products")
     private Set<Promotion> promotions = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SavedProduct> savedProducts = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Stock> stocks = new LinkedHashSet<>();
 
+    public void addFeature(Feature feature) {
+        this.features.add(feature);
+        feature.getProducts().add(this);
+    }
+
+    public void removeFeature(Feature feature) {
+        this.features.remove(feature);
+        feature.getProducts().remove(this);
+    }
+
+    public void addPromotion(Promotion promotion) {
+        this.promotions.add(promotion);
+        promotion.getProducts().add(this);
+    }
+
+    public void removePromotion(Promotion promotion) {
+        this.promotions.remove(promotion);
+        promotion.getProducts().remove(this);
+    }
 }
