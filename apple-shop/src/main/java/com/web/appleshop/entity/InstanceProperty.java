@@ -17,11 +17,11 @@ import java.util.Set;
 public class InstanceProperty {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @ColumnDefault("getdate()")
@@ -32,7 +32,11 @@ public class InstanceProperty {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @ManyToMany
+    @ManyToMany(cascade = {
+            CascadeType.MERGE,
+            CascadeType.PERSIST,
+            CascadeType.REFRESH
+    }, fetch = FetchType.EAGER)
     @JoinTable(name = "stock_instances",
             joinColumns = @JoinColumn(name = "instance_id"),
             inverseJoinColumns = @JoinColumn(name = "stock_id"))

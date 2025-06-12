@@ -33,11 +33,11 @@ public class User implements UserDetails {
     private Integer id;
 
     @Nationalized
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Nationalized
-    @Column(name = "phone", nullable = false, length = 20)
+    @Column(name = "phone", nullable = false, length = 20, unique = true)
     private String phone;
 
     @Nationalized
@@ -87,14 +87,14 @@ public class User implements UserDetails {
     @Column(name = "enabled")
     private Boolean enabled;
 
-    @Column(name = "username", nullable = false, length = 155)
+    @Column(name = "username", nullable = false, length = 155, unique = true)
     private String username;
 
     @NotNull
     @Column(name = "birth", nullable = false)
     private LocalDate birth;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
