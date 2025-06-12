@@ -11,7 +11,6 @@ import java.util.Set;
  * DTO for {@link com.web.appleshop.entity.Product}
  */
 @Value
-@Data
 @Builder
 @AllArgsConstructor
 public class ProductAdminResponse implements Serializable {
