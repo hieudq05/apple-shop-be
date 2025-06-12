@@ -62,7 +62,7 @@ public class CreateProductRequest implements Serializable {
         @Value
         public static class CreateProductPhotoRequest implements Serializable {
             String imageUrl;
-            Boolean alt;
+            String alt;
         }
 
         /**

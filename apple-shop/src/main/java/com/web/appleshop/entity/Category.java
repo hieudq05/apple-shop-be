@@ -1,8 +1,7 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 
@@ -11,6 +10,9 @@ import java.util.Set;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "categories")
 @DynamicInsert
@@ -25,6 +27,7 @@ public class Category {
     private String name;
 
     @Nationalized
+    @Lob
     @Column(name = "image")
     private String image;
 

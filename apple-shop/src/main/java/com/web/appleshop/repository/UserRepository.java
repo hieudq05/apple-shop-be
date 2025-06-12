@@ -12,4 +12,6 @@ public interface UserRepository extends JpaRepository<User, Integer> , JpaSpecif
     Optional<UserDetails> findByUsernameOrEmailOrPhone(String username, String email, String phone);
 
     Optional<User> getUserByUsernameOrEmailOrPhone(String username, String email, String phone);
+
+    Optional<User> findByUsername(String username);
 }

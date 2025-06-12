@@ -23,7 +23,7 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<String>> createProduct(@Valid @RequestBody CreateProductRequest request) {
-        System.out.println(request);
+        productService.createProduct(request);
         return ResponseEntity.ok(ApiResponse.success(null, "Product created successfully"));
     }
 
