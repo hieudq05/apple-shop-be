@@ -1,152 +1,168 @@
-# Apple Shop Backend – Detailed Documentation
-## 1. Overview
-Apple Shop is a backend system for managing an online apple shop, built with Java 24 and Spring Boot 3.5.0. It provides RESTful APIs for product management, order processing, user authentication, and more.
+# Backend Apple Shop – Tài liệu chi tiết
 
-## Table of Contents
+## 1\. Tổng quan
 
-- [Overview](#overview)
-- [Technologies & Tools](#technologies--tools)
-- [Project Structure](#project-structure)
-- [Database](#database)
-- [Configuration](#configuration)
-- [Prerequisites](#prerequisites)
-- [Build & Run](#build--run)
-- [API Endpoints](#api-endpoints)
-- [Testing](#testing)
-- [Contribution](#contribution)
+Apple Shop là một hệ thống backend để quản lý một cửa hàng Apple trực tuyến, được xây dựng bằng **Java 24** và **Spring Boot 3.5.0**. Nó cung cấp các API RESTful để quản lý sản phẩm, xử lý đơn hàng, xác thực người dùng, và nhiều hơn nữa.
 
----
+## Mục lục
 
-## Overview
+  - [Tổng quan](https://www.google.com/search?q=%23t%E1%BB%95ng-quan)
+  - [Công nghệ & Công cụ](https://www.google.com/search?q=%23c%C3%B4ng-ngh%E1%BB%87--c%C3%B4ng-c%E1%BB%A5)
+  - [Cấu trúc dự án](https://www.google.com/search?q=%23c%E1%BA%A5u-tr%C3%BAc-d%E1%BB%B1-%C3%A1n)
+  - [Cơ sở dữ liệu](https://www.google.com/search?q=%23c%C6%A1-s%E1%BB%9F-d%E1%BB%AF-li%E1%BB%87u)
+  - [Cấu hình](https://www.google.com/search?q=%23c%E1%BA%A5u-h%C3%ACnh)
+  - [Điều kiện tiên quyết](https://www.google.com/search?q=%23%C4%91i%E1%BB%81u-ki%E1%BB%87n-ti%C3%AAn-quy%E1%BA%BFt)
+  - [Xây dựng & Chạy](https://www.google.com/search?q=%23x%C3%A2y-d%E1%BB%B1ng--ch%E1%BA%A1y)
+  - [Điểm cuối API](https://www.google.com/search?q=%23%C4%91i%E1%BB%83m-cu%E1%BB%91i-api)
+  - [Kiểm thử](https://www.google.com/search?q=%23ki%E1%BB%83m-th%E1%BB%AD)
+  - [Đóng góp](https://www.google.com/search?q=%23%C4%91%C3%B3ng-g%C3%B3p)
 
-Apple Shop is a backend system for managing an online apple shop, built with **Java 24** and **Spring Boot 3.5.0**. It provides RESTful APIs for product management, order processing, user authentication, and more.
+-----
 
-### ✨ Key Features
-- Product catalog management
-- User authentication and authorization
-- Order processing and tracking
-- Payment integration support
-- Blog management system
-- Product customization (colors, features)
-- Review and rating system
+## Tổng quan
 
----
+Apple Shop là một hệ thống backend để quản lý một cửa hàng Apple trực tuyến, được xây dựng bằng **Java 24** và **Spring Boot 3.5.0**. Nó cung cấp các API RESTful để quản lý sản phẩm, xử lý đơn hàng, xác thực người dùng, và nhiều hơn nữa.
 
-## Technologies & Tools
+### ✨ Tính năng chính
+
+  - Quản lý danh mục sản phẩm
+  - Xác thực và phân quyền người dùng
+  - Xử lý và theo dõi đơn hàng
+  - Hỗ trợ tích hợp thanh toán
+  - Hệ thống quản lý blog
+  - Tùy chỉnh sản phẩm (màu sắc, tính năng)
+  - Hệ thống đánh giá và xếp hạng
+
+-----
+
+## Công nghệ & Công cụ
 
 | Technology | Version | Purpose |
 |----------|---------|---------|
-| **Java** | 24 | Core programming language |
-| **Spring Boot** | 3.5.0 | Application framework |
-| **Spring Data JPA** | Latest | Object-Relational Mapping |
-| **Spring Security** | Latest | Authentication & Authorization |
-| **Maven** | Latest | Build & dependency management |
-| **Microsoft SQL Server** | Azure | Database management |
-| **Lombok** | Latest | Boilerplate code reduction |
-| **Flyway** | Latest | Database migration |
-| **JUnit** | Latest | Unit testing framework |
+| **Java** | 24 | Ngôn ngữ lập trình cốt lõi |
+| **Spring Boot** | 3.5.0 | Framework ứng dụng |
+| **Spring Data JPA** | Latest | Ánh xạ đối tượng-quan hệ |
+| **Spring Security** | Latest | Xác thực & Phân quyền |
+| **Maven** | Latest | Quản lý bản dựng & phụ thuộc |
+| **Microsoft SQL Server** | Azure | Quản lý cơ sở dữ liệu |
+| **Lombok** | Latest | Giảm mã boilerplate |
+| **Flyway** | Latest | Di chuyển cơ sở dữ liệu |
+| **JUnit** | Latest | Framework kiểm thử đơn vị |
 
----
+-----
 
-## Project Structure
+## Cấu trúc dự án
 
 ```
 apple-shop/
 │
 ├── 📂 src/
-│   ├── 📂 main/
-│   │   ├── 📂 java/com/web/appleshop/
-│   │   │   ├── 🚀 AppleShopApplication.java      # Main application entry point
-│   │   │   ├── 📂 config/                        # Configuration classes
-│   │   │   ├── 📂 controller/                    # REST API controllers
-│   │   │   ├── 📂 dto/                           # Data Transfer Objects
-│   │   │   ├── 📂 entity/                        # JPA Entities (22 entities)
-│   │   │   ├── 📂 enums/                         # Enum types
-│   │   │   ├── 📂 exception/                     # Custom exceptions
-│   │   │   ├── 📂 repository/                    # Spring Data JPA repositories
-│   │   │   ├── 📂 service/                       # Business logic services
-│   │   │   └── 📂 util/                          # Utility classes
-│   │   └── 📂 resources/
-│   │       ├── ⚙️ application.yaml               # Main configuration file
-│   │       ├── 📂 db/migration/                  # Flyway migration scripts
-│   │       ├── 📂 static/                        # Static web resources
-│   │       └── 📂 templates/                     # Template files
-│   └── 📂 test/
-│       └── 📂 java/com/web/appleshop/
-│           └── 🧪 AppleShopApplicationTests.java # Main test class
-├── 📄 pom.xml                                    # Maven build configuration
-├── 📄 README.md                                  # Project documentation
-└── 📄 .gitignore                                 # Git ignore rules
+│   ├── 📂 main/
+│   │   ├── 📂 java/com/web/appleshop/
+│   │   │   ├── 🚀 AppleShopApplication.java      # Điểm vào chính của ứng dụng
+│   │   │   ├── 📂 config/                        # Các lớp cấu hình
+│   │   │   ├── 📂 controller/                    # Các bộ điều khiển REST API
+│   │   │   ├── 📂 dto/                           # Các đối tượng truyền dữ liệu
+│   │   │   ├── 📂 entity/                        # Các thực thể JPA (22 thực thể)
+│   │   │   ├── 📂 enums/                         # Các kiểu Enum
+│   │   │   ├── 📂 exception/                     # Các ngoại lệ tùy chỉnh
+│   │   │   ├── 📂 repository/                    # Các kho lưu trữ Spring Data JPA
+│   │   │   ├── 📂 service/                       # Các dịch vụ logic nghiệp vụ
+│   │   │   └── 📂 util/                          # Các lớp tiện ích
+│   │   └── 📂 resources/
+│   │       ├── ⚙️ application.yaml               # Tệp cấu hình chính
+│   │       ├── 📂 db/migration/                  # Các script di chuyển Flyway
+│   │       ├── 📂 static/                        # Các tài nguyên web tĩnh
+│   │       └── 📂 templates/                     # Các tệp template
+│   └── 📂 test/
+│       └── 📂 java/com/web/appleshop/
+│           └── 🧪 AppleShopApplicationTests.java # Lớp kiểm thử chính
+├── 📄 pom.xml                                    # Cấu hình bản dựng Maven
+├── 📄 README.md                                  # Tài liệu dự án
+└── 📄 .gitignore                                 # Các quy tắc bỏ qua Git
 ```
 
----
+-----
 
-## Database
+## Cơ sở dữ liệu
 
-### 📊 Database Information
-- **Type**: Microsoft SQL Server (Azure SQL Database)
-- **Connection**: Configured in `application.yaml`
-- **Migration**: Managed by Flyway scripts in `db/migration/`
+### 📊 Thông tin cơ sở dữ liệu
 
-### 🔧 Database Setup
-To access the database, you'll need to configure your IPv4 address:
-- **Start IPv4 address**: `1.2.3.4`
-- **End IPv4 address**: `1.2.3.4`
+  - **Type**: Microsoft SQL Server (Azure SQL Database)
+  - **Connection**: Được cấu hình trong `application.yaml`
+  - **Migration**: Được quản lý bởi các script Flyway trong `db/migration/`
 
-### 📋 Database Entities
+### 🔧 Thiết lập cơ sở dữ liệu
+
+Để truy cập cơ sở dữ liệu, bạn cần cung cấp địa chỉ IPv4 của mình:
+
+  - **Start IPv4 address**: `1.2.3.4`
+  - **End IPv4 address**: `1.2.3.4`
+
+### 📋 Các thực thể cơ sở dữ liệu
 
 | Entity | Description | Key Relationships |
 |--------|-------------|-------------------|
-| **User** | User accounts and profiles | → Role, ShippingInfo, Orders |
-| **Product** | Product catalog items | → Category, Stock, Reviews |
-| **Order** | Customer orders | → User, OrderDetails, OrderStatus |
-| **Category** | Product categories | → Products, Promotions |
-| **Blog** | Blog posts and articles | → User (author) |
-| **CartItem** | Shopping cart items | → Product, Stock, User |
-| **Color** | Product color options | → Stock |
-| **Feature** | Product features | → InstanceProperty |
-| **OrderDetail** | Order line items | → Order, Stock |
-| **PaymentType** | Payment methods | → Orders |
-| **ProductPhoto** | Product images | → Stock |
-| **Promotion** | Promotional campaigns | → Categories, PromotionType |
-| **Review** | Product reviews | → Product, User |
-| **Role** | User roles and permissions | → Users |
-| **SavedProduct** | User's saved products | → User, Product |
-| **ShippingInfo** | Shipping addresses | → User |
-| **Stock** | Product inventory | → Product, Color |
-| **UserActivityLog** | User activity tracking | → User |
+| **User** | Tài khoản và hồ sơ người dùng | → Role, ShippingInfo, Orders |
+| **Product** | Các mục trong danh mục sản phẩm | → Category, Stock, Reviews |
+| **Order** | Đơn hàng của khách hàng | → User, OrderDetails, OrderStatus |
+| **Category** | Danh mục sản phẩm | → Products, Promotions |
+| **Blog** | Bài đăng và bài viết blog | → User (tác giả) |
+| **CartItem** | Các mặt hàng trong giỏ hàng | → Product, Stock, User |
+| **Color** | Các tùy chọn màu sắc sản phẩm | → Stock |
+| **Feature** | Các tính năng sản phẩm | → InstanceProperty |
+| **OrderDetail** | Các mục chi tiết đơn hàng | → Order, Stock |
+| **PaymentType** | Các phương thức thanh toán | → Orders |
+| **ProductPhoto** | Hình ảnh sản phẩm | → Stock |
+| **Promotion** | Các chiến dịch khuyến mãi | → Categories, PromotionType |
+| **Refresh Token** | Các token làm mới | → User |
+| **Review** | Đánh giá sản phẩm | → Product, User |
+| **Role** | Vai trò và quyền của người dùng | → Users |
+| **SavedProduct** | Các sản phẩm đã lưu của người dùng | → User, Product |
+| **ShippingInfo** | Địa chỉ giao hàng | → User |
+| **Stock** | Tồn kho sản phẩm | → Product, Color |
+| **UserActivityLog** | Theo dõi hoạt động người dùng | → User |
 
----
+-----
 
-## Configuration
+## Cấu hình
 
-The **`application.yaml`** file contains all main application settings:
+Tệp **`application.yaml`** chứa tất cả các cài đặt ứng dụng chính:
 
 ```yaml
 spring:
   application:
     name: apple-shop
   datasource:
-    url: jdbc:sqlserver://[server]:1433;database=[database_name]
-    username: [username]
-    password: [password]
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     hibernate:
       ddl-auto: validate
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DATABASE}
+      timeout: 6000
+...
 ```
 
-### 🔧 Configuration Options
-- **Database Connection**: SQL Server connection parameters
-- **JPA Settings**: Hibernate DDL mode set to `validate`
-- **Security**: Spring Security configuration (to be implemented)
-- **Logging**: Application logging levels
+### 🔧 Các tùy chọn cấu hình
 
----
+  - **Database Connection**: Các tham số kết nối SQL Server
+  - **JPA Settings**: Chế độ Hibernate DDL được đặt thành `validate`
+  - **Security**: Cấu hình Spring Security (sẽ được triển khai)
+  - **Logging**: Mức độ ghi log ứng dụng
 
-## Prerequisites
+-----
 
-Before running the application, ensure you have the following installed:
+## Điều kiện tiên quyết
+
+Trước khi chạy ứng dụng, đảm bảo bạn đã cài đặt những thứ sau:
 
 | Requirement | Version | Download Link |
 |-------------|---------|---------------|
@@ -155,144 +171,159 @@ Before running the application, ensure you have the following installed:
 | 🗄️ **SQL Server** | 2019+ | [Microsoft SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) |
 | 🔧 **Git** | Latest | [Git SCM](https://git-scm.com/downloads) |
 
-### 🌐 Network Requirements
-- Internet connection for Maven dependencies
-- Access to Azure SQL Database (if using cloud database)
-- Firewall configuration for SQL Server connection
+### 🌐 Yêu cầu mạng
 
----
+  - Kết nối Internet cho các dependency của Maven
+  - Truy cập vào Azure SQL Database (nếu sử dụng cơ sở dữ liệu đám mây)
+  - Cấu hình tường lửa cho kết nối SQL Server
 
-## Build & Run
+-----
 
-### 1. Clone the Repository
+## Xây dựng & Chạy
+
+### 1\. Clone Repository
+
 ```bash
 git clone https://github.com/hieudq05/apple-shop-be.git
 cd apple-shop-be/apple-shop
 ```
 
-### 2. Configure the Database
-Edit `src/main/resources/application.yaml` with your database credentials:
+### 2\. Cấu hình cơ sở dữ liệu
+
+Chỉnh sửa `src/main/resources/application.yaml` với thông tin đăng nhập cơ sở dữ liệu của bạn:
+
 ```yaml
 spring:
-  datasource:
-    url: jdbc:sqlserver://your-server:1433;database=your-database
-    username: your-username
-    password: your-password
+  datasource:
+    url: jdbc:sqlserver://dqhieuse.database.windows.net:1433;database=apple_dev_shop_v1;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+    username: [secret]
+    password: [secret]
 ```
 
-### 3. Build and Run
+### 3\. Xây dựng và chạy
+
 ```bash
-# Using Maven wrapper (recommended)
+# Sử dụng Maven wrapper (khuyên dùng)
 ./mvnw spring-boot:run
 
-# Or using installed Maven
+# Hoặc sử dụng Maven đã cài đặt
 mvn spring-boot:run
 ```
 
-### 4. Verify Installation
-The application will start on **[localhost:8080](http://localhost:8080)** by default.
+### 4\. Xác minh cài đặt
 
----
+Ứng dụng sẽ khởi chạy trên **[localhost:8080](https://www.google.com/search?q=http://localhost:8080)** theo mặc định.
 
-## API Endpoints
+-----
 
-> **Note**: API endpoints are currently in development. The following endpoints are planned:
+## Điểm cuối API
 
-### Authentication
+> **Lưu ý**: Các điểm cuối API hiện đang được phát triển. Các điểm cuối sau đây đã được lên kế hoạch:
+
+### Xác thực
+
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| `POST` | `/api/auth/login` | User login | 🚧 Planned |
-| `POST` | `/api/auth/register` | User registration | 🚧 Planned |
-| `POST` | `/api/auth/logout` | User logout | 🚧 Planned |
+| `POST` | `/api/v1/auth/login` | Đăng nhập người dùng | Complete |
+| `POST` | `/api/v1/auth/register` | Đăng ký người dùng | Complete |
+| `POST` | `/api/v1/auth/logout` | Đăng xuất người dùng | 🚧 Planned |
 
-### User Management
+### Quản lý người dùng
+
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| `GET` | `/api/users` | Get all users | 🚧 Planned |
-| `GET` | `/api/users/{id}` | Get user by ID | 🚧 Planned |
-| `PUT` | `/api/users/{id}` | Update user | 🚧 Planned |
+| `GET` | `/api/v1/users` | Lấy tất cả người dùng | 🚧 Planned |
+| `GET` | `/api/v1/users/{id}` | Lấy người dùng theo ID | 🚧 Planned |
+| `PUT` | `/api/v1/users/{id}` | Cập nhật người dùng | 🚧 Planned |
 
-### Product Management
+### Quản lý sản phẩm
+
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| `GET` | `/api/products` | Get all products | 🚧 Planned |
-| `GET` | `/api/products/{id}` | Get product by ID | 🚧 Planned |
-| `POST` | `/api/products` | Create new product | 🚧 Planned |
-| `PUT` | `/api/products/{id}` | Update product | 🚧 Planned |
+| `GET` | `/api/v1/products` | Lấy tất cả sản phẩm | 🚧 Planned |
+| `GET` | `/api/v1/products/{id}` | Lấy sản phẩm theo ID | 🚧 Planned |
+| `POST` | `/api/v1/products` | Tạo sản phẩm mới | 🚧 Planned |
+| `PUT` | `/api/v1/products/{id}` | Cập nhật sản phẩm | 🚧 Planned |
 
-### Order Management
+### Quản lý đơn hàng
+
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| `GET` | `/api/orders` | Get all orders | 🚧 Planned |
-| `POST` | `/api/orders` | Create new order | 🚧 Planned |
-| `GET` | `/api/orders/{id}` | Get order by ID | 🚧 Planned |
+| `GET` | `/api/v1/orders` | Lấy tất cả đơn hàng | 🚧 Planned |
+| `POST` | `/api/v1/orders` | Tạo đơn hàng mới | 🚧 Planned |
+| `GET` | `/api/v1/orders/{id}` | Lấy đơn hàng theo ID | 🚧 Planned |
 
----
+-----
 
-## Testing
+## Kiểm thử
 
-### 🔬 Test Structure
-- Unit and integration tests are located in `src/test/java/com/web/appleshop/`
-- Main test class: `AppleShopApplicationTests.java`
+### 🔬 Cấu trúc kiểm thử
 
-### 🏃‍♂️ Running Tests
+  - Unit và integration tests được đặt tại `src/test/java/com/web/appleshop/`
+  - Lớp kiểm thử chính: `AppleShopApplicationTests.java`
+
+### 🏃‍♂️ Chạy kiểm thử
+
 ```bash
-# Run all tests
+# Chạy tất cả các bài kiểm thử
 ./mvnw test
 
-# Run tests with coverage
+# Chạy kiểm thử với độ bao phủ
 ./mvnw test jacoco:report
 
-# Run specific test class
+# Chạy một lớp kiểm thử cụ thể
 ./mvnw test -Dtest=AppleShopApplicationTests
 ```
 
-### 📊 Test Coverage
+### 📊 Độ bao phủ kiểm thử
 
+-----
 
----
+## Đóng góp
 
-## Contribution
+Chúng tôi hoan nghênh những đóng góp cho dự án Apple Shop Backend\! Dưới đây là cách bạn có thể giúp đỡ:
 
-We welcome contributions to the Apple Shop Backend project! Here's how you can help:
+### 🔄 Quy trình phát triển
 
-### 🔄 Development Workflow
-1. **Fork** the repository
-2. **Create** a new branch (`git checkout -b feature/your-feature`)
-3. **Make** your changes with proper tests
-4. **Commit** your changes (`git commit -m 'Add some feature'`)
-5. **Push** to the branch (`git push origin feature/your-feature`)
-6. **Open** a Pull Request
+1.  **Fork** repository
+2.  **Tạo** một nhánh mới (`git checkout -b feature/your-feature`)
+3.  **Thực hiện** các thay đổi của bạn với các bài kiểm thử thích hợp
+4.  **Commit** các thay đổi của bạn (`git commit -m 'Add some feature'`)
+5.  **Push** lên nhánh (`git push origin feature/your-feature`)
+6.  **Mở** một Pull Request
 
-### 📝 Contribution Guidelines
-- Follow Java coding standards and Spring Boot best practices
-- Write comprehensive tests for new features
-- Update documentation for any API changes
-- Ensure all tests pass before submitting PR
+### 📝 Hướng dẫn đóng góp
 
-### 🐛 Bug Reports
-- Use GitHub Issues to report bugs
-- Include detailed steps to reproduce
-- Provide system information and error logs
+  - Tuân thủ các tiêu chuẩn mã hóa Java và các phương pháp hay nhất của Spring Boot
+  - Viết các bài kiểm thử toàn diện cho các tính năng mới
+  - Cập nhật tài liệu cho bất kỳ thay đổi API nào
+  - Đảm bảo tất cả các bài kiểm thử đều vượt qua trước khi gửi PR
 
-### 💡 Feature Requests
-- Open an issue with the `enhancement` label
-- Describe the feature and its benefits
-- Discuss implementation approach
+### 🐛 Báo cáo lỗi
 
----
+  - Sử dụng GitHub Issues để báo cáo lỗi
+  - Bao gồm các bước chi tiết để tái tạo
+  - Cung cấp thông tin hệ thống và nhật ký lỗi
 
-## 📄 License
+### 💡 Yêu cầu tính năng
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+  - Mở một issue với nhãn `enhancement`
+  - Mô tả tính năng và lợi ích của nó
+  - Thảo luận về phương pháp triển khai
 
----
+-----
 
-## 📞 Contact & Support
+## 📄 Giấy phép
 
-- **Project Repository**: [GitHub](https://github.com/hieudq05/apple-shop-be)
-- **Issues**: [GitHub Issues](https://github.com/hieudq05/apple-shop-be/issues)
-- **Documentation**: This README and inline code comments
+Dự án này được cấp phép theo Giấy phép MIT - xem tệp [LICENSE](https://www.google.com/search?q=LICENSE) để biết chi tiết.
+
+-----
+
+## 📞 Liên hệ & Hỗ trợ
+
+  - **Kho lưu trữ dự án**: [GitHub](https://github.com/hieudq05/apple-shop-be)
+  - **Vấn đề**: [GitHub Issues](https://github.com/hieudq05/apple-shop-be/issues)
+  - **Tài liệu**: README này và các chú thích mã nội tuyến
 
 ---
 
