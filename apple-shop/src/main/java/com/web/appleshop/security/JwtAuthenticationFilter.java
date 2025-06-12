@@ -46,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             userEmail = jwtService.extractUsername(jwt); // Lấy email người dùng từ JWT
-            log.info("User email: " + userEmail);
         } catch (Exception e) {
             filterChain.doFilter(request, response);
             return;

@@ -72,4 +72,23 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Stock> stocks = new LinkedHashSet<>();
 
+    public void addFeature(Feature feature) {
+        this.features.add(feature);
+        feature.getProducts().add(this);
+    }
+
+    public void removeFeature(Feature feature) {
+        this.features.remove(feature);
+        feature.getProducts().remove(this);
+    }
+
+    public void addPromotion(Promotion promotion) {
+        this.promotions.add(promotion);
+        promotion.getProducts().add(this);
+    }
+
+    public void removePromotion(Promotion promotion) {
+        this.promotions.remove(promotion);
+        promotion.getProducts().remove(this);
+    }
 }

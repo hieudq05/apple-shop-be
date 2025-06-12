@@ -51,4 +51,14 @@ public class Stock {
     @OneToMany(mappedBy = "stock")
     private Set<Color> colors = new LinkedHashSet<>();
 
+    public void addInstanceProperty(InstanceProperty instanceProperty) {
+        this.instanceProperties.add(instanceProperty);
+        instanceProperty.getStocks().add(this);
+    }
+
+    public void removeInstanceProperty(InstanceProperty instanceProperty) {
+        this.instanceProperties.remove(instanceProperty);
+        instanceProperty.getStocks().remove(this);
+    }
+
 }

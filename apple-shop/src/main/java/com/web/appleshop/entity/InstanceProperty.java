@@ -1,8 +1,7 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
@@ -12,6 +11,9 @@ import java.util.Set;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "instance_properties")
 public class InstanceProperty {
@@ -42,4 +44,13 @@ public class InstanceProperty {
             inverseJoinColumns = @JoinColumn(name = "stock_id"))
     private Set<Stock> stocks = new LinkedHashSet<>();
 
+    public void addStock(Stock stock) {
+        this.stocks.add(stock);
+        stock.getInstanceProperties().add(this);
+    }
+
+    public void removeStock(Stock stock) {
+        this.stocks.remove(stock);
+        stock.getInstanceProperties().remove(this);
+    }
 }

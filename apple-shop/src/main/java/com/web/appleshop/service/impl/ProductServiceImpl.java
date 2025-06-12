@@ -1,6 +1,7 @@
 package com.web.appleshop.service.impl;
 
 import com.web.appleshop.dto.request.CreateProductRequest;
+import com.web.appleshop.dto.response.ProductAdminResponse;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.*;
@@ -8,11 +9,15 @@ import com.web.appleshop.service.ProductService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,17 +30,17 @@ public class ProductServiceImpl implements ProductService {
     private final ColorRepository colorRepository;
     private final StockRepository stockRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final InstancePropertyRepository instancePropertyRepository;
 
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @Override
     public void createProduct(CreateProductRequest request) {
-        // 1. Lưu User
+
         User createdBy = userRepository.findByUsername(request.getCreatedBy()).orElseThrow(
                 () -> new NotFoundException("User not found with identifier: " + request.getCreatedBy())
         );
 
-        // 2. Lưu Category (nếu là category mới)
         Category category;
         if (request.getCategory().getId() != null) {
             category = categoryRepository.findById(request.getCategory().getId()).orElseThrow(
@@ -46,11 +51,15 @@ public class ProductServiceImpl implements ProductService {
                     .name(request.getCategory().getName())
                     .image(request.getCategory().getImage())
                     .build();
-            category = categoryRepository.save(category); // Lưu category mới
+            category = categoryRepository.save(category);
         }
 
-        // 3. Lưu Features (nếu là feature mới)
-        Set<Feature> features = new LinkedHashSet<>();
+        Product product = new Product();
+        BeanUtils.copyProperties(request, product);
+        product.setCreatedBy(createdBy);
+        product.setCategory(category);
+        product.setUpdatedBy(createdBy);
+
         for (CreateProductRequest.CreateProductFeatureRequest featureRequest : request.getFeatures()) {
             Feature feature;
             if (featureRequest.getId() != null) {
@@ -63,25 +72,17 @@ public class ProductServiceImpl implements ProductService {
                         .description(featureRequest.getDescription())
                         .image(featureRequest.getImage())
                         .createdBy(createdBy)
+                        .products(new LinkedHashSet<>())
                         .build();
-                feature = featureRepository.save(feature); // Lưu feature mới
+                feature = featureRepository.save(feature);
             }
-            features.add(feature);
+            feature.addProduct(product);
         }
 
-        // 4. Tạo và lưu Product
-        Product product = new Product();
-        BeanUtils.copyProperties(request, product);
-        product.setCreatedBy(createdBy);
-        product.setCategory(category);
-        product.setFeatures(features);
-        product.setUpdatedBy(createdBy);
-        product = productRepository.save(product); // Lưu product
+        product = productRepository.save(product);
 
-        // 5. Lưu Colors và Stocks sau
         Set<Stock> stocks = new LinkedHashSet<>();
         for (CreateProductRequest.CreateProductStockRequest stockRequest : request.getStocks()) {
-            // Lưu Color (nếu là color mới)
             Color color;
             if (stockRequest.getColor().getId() != null) {
                 color = colorRepository.findById(stockRequest.getColor().getId()).orElseThrow(
@@ -94,13 +95,29 @@ public class ProductServiceImpl implements ProductService {
                         .build();
             }
 
-            // Tạo Stock
             Stock stock = new Stock();
             BeanUtils.copyProperties(stockRequest, stock);
             stock.setProduct(product);
-            stock = stockRepository.save(stock); // Lưu stock
 
-            // Tạo ProductPhotos sau khi stock đã được lưu
+            for (CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest instanceRequest : stockRequest.getInstanceProperties()) {
+                InstanceProperty instanceProperty;
+                if (instanceRequest.getId() != null) {
+                    instanceProperty = instancePropertyRepository.findById(instanceRequest.getId()).orElseThrow(
+                            () -> new NotFoundException("Instance property not found with id: " + instanceRequest.getId())
+                    );
+                } else {
+                    instanceProperty = InstanceProperty.builder()
+                            .name(instanceRequest.getName())
+                            .createdBy(createdBy)
+                            .stocks(new LinkedHashSet<>())
+                            .build();
+                    instanceProperty = instancePropertyRepository.save(instanceProperty);
+                }
+                instanceProperty.addStock(stock);
+            }
+
+            stock = stockRepository.save(stock);
+
             Set<ProductPhoto> productPhotos = new LinkedHashSet<>();
             for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest.getProductPhotos()) {
                 ProductPhoto productPhoto = new ProductPhoto();
@@ -110,18 +127,75 @@ public class ProductServiceImpl implements ProductService {
             }
 
             if (!productPhotos.isEmpty()) {
-                productPhotoRepository.saveAll(productPhotos); // Lưu photos
+                productPhotoRepository.saveAll(productPhotos);
                 stock.setProductPhotos(productPhotos);
             }
             color.setStock(stock);
-            color = colorRepository.save(color); // Lưu color
+            color = colorRepository.save(color);
             stock.setColor(color);
 
             stocks.add(stock);
         }
 
-        // Cập nhật product với stocks
         product.setStocks(stocks);
         productRepository.save(product);
     }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Override
+    public Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable) {
+        Page<Product> products = productRepository.findAll(pageable);
+        return products.map(this::convertProductToProductAdminResponse);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public ProductAdminResponse convertProductToProductAdminResponse(Product product) {
+
+        User createdByEntity = product.getCreatedBy();
+        ProductAdminResponse.ProductOwnerAdminResponse createdByDto = new ProductAdminResponse.ProductOwnerAdminResponse(
+                createdByEntity.getId(),
+                createdByEntity.getEmail(),
+                createdByEntity.getFirstName(),
+                createdByEntity.getLastName(),
+                createdByEntity.getImage(),
+                createdByEntity.getUsername()
+        );
+
+        User updatedByEntity = product.getUpdatedBy();
+        ProductAdminResponse.ProductUpdatedAdminResponse updatedByDto = new ProductAdminResponse.ProductUpdatedAdminResponse(
+                updatedByEntity.getId(),
+                updatedByEntity.getEmail(),
+                updatedByEntity.getFirstName(),
+                updatedByEntity.getLastName(),
+                updatedByEntity.getImage(),
+                updatedByEntity.getUsername()
+        );
+
+        Category categoryEntity = product.getCategory();
+        ProductAdminResponse.ProductCategoryAdminResponse categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(
+                categoryEntity.getId(),
+                categoryEntity.getName(),
+                categoryEntity.getImage()
+        );
+        BeanUtils.copyProperties(categoryEntity, categoryDto);
+
+        Set<ProductAdminResponse.ProductStockAdminResponse> stockDto = product.getStocks().stream()
+                .map(stock -> new ProductAdminResponse.ProductStockAdminResponse(
+                        stock.getId(),
+                        stock.getQuantity(),
+                        stock.getPrice()
+                )).collect(Collectors.toSet());
+        return new ProductAdminResponse(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getCreatedAt(),
+                createdByDto,
+                product.getUpdatedAt(),
+                updatedByDto,
+                categoryDto,
+                stockDto
+        );
+    }
+
 }

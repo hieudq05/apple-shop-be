@@ -55,4 +55,14 @@ public class Feature {
             inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> products = new LinkedHashSet<>();
 
+    public void addProduct(Product product) {
+        this.products.add(product);
+        product.getFeatures().add(this);
+    }
+
+    public void removeProduct(Product product) {
+        this.products.remove(product);
+        product.getFeatures().remove(this);
+    }
+
 }
