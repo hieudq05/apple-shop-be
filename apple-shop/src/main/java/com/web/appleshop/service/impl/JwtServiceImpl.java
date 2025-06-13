@@ -1,6 +1,8 @@
 package com.web.appleshop.service.impl;
 
 import com.web.appleshop.entity.RefreshToken;
+import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.repository.RefreshTokenRepository;
 import com.web.appleshop.service.JwtService;
 import com.web.appleshop.service.RefreshTokenService;
 import com.web.appleshop.service.UserService;
@@ -25,6 +27,7 @@ import java.util.function.Function;
 public class JwtServiceImpl implements JwtService {
     private final RefreshTokenService refreshTokenService;
     private final UserService userService;
+    private final RefreshTokenRepository refreshTokenRepository;
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
 
@@ -34,9 +37,10 @@ public class JwtServiceImpl implements JwtService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
-    public JwtServiceImpl(RefreshTokenService refreshTokenService, UserService userService) {
+    public JwtServiceImpl(RefreshTokenService refreshTokenService, UserService userService, RefreshTokenRepository refreshTokenRepository) {
         this.refreshTokenService = refreshTokenService;
         this.userService = userService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     /**
@@ -53,7 +57,7 @@ public class JwtServiceImpl implements JwtService {
      * Trích xuất một claim cụ thể từ token.
      *
      * @param token          JWT token
-     * @param claimsResolver - Một function để lấy claim mong muốn
+     * @param claimsResolver Một function để lấy claim mong muốn
      * @return T - Giá trị của claim
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -160,6 +164,27 @@ public class JwtServiceImpl implements JwtService {
      */
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    /**
+     * Kiểm tra xem refresh token có tồn tại trong database không?
+     *
+     * @param refreshToken Refresh token
+     * @return true nếu hợp lệ, false nếu không
+     */
+    @Override
+    public void validateRefreshToken(String refreshToken) {
+        if (refreshToken.isBlank() || !refreshToken.startsWith("Bearer ")) {
+            throw new BadRequestException("Your refresh token is invalid.");
+        } else {
+            refreshToken = refreshToken.substring(7);
+            refreshTokenRepository.findRefreshTokenByToken(refreshToken).orElseThrow(
+                    () -> new IllegalStateException("Invalid refresh token")
+            );
+            if (extractClaim(refreshToken, Claims::getExpiration).after(new Date())) {
+                throw new IllegalStateException("Refresh token expired");
+            }
+        }
     }
 
     /**

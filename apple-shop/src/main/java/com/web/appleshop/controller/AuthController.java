@@ -6,6 +6,8 @@ import com.web.appleshop.dto.request.RegisterRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.AuthenticationResponse;
 import com.web.appleshop.entity.User;
+import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.repository.RefreshTokenRepository;
 import com.web.appleshop.service.JwtService;
 import com.web.appleshop.service.OtpService;
 import com.web.appleshop.service.UserService;
@@ -15,6 +17,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,6 +34,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final OtpService otpService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @PostMapping("login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -73,5 +77,12 @@ public class AuthController {
         AuthenticationResponse response = new AuthenticationResponse(accessToken, refreshToken);
 
         return ResponseEntity.ok(ApiResponse.success(response, "Verified successfully, you can login now!"));
+    }
+
+    @PostMapping("refresh-token")
+    public ResponseEntity<ApiResponse<String>> refreshToken(@RequestBody String refreshToken) {
+        jwtService.validateRefreshToken(refreshToken);
+        UserDetails userDetails = userService.findByLoginIdentifier(jwtService.extractUsername(refreshToken));
+        return ResponseEntity.ok(ApiResponse.success(jwtService.generateToken(userDetails), "Refreshed token successful"));
     }
 }
