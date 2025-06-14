@@ -2,9 +2,9 @@ name: Spring Boot CI (CRUD Blog)
 
 on:
   push:
-    branches: [ "Duc" ]
+    branches: [ "Duc-xc" ]
   pull_request:
-    branches: [ "Duc" ]
+    branches: [ "Duc-xc" ]
 
 jobs:
   build:
