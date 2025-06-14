@@ -67,6 +67,7 @@ public class ProductAdminResponse implements Serializable {
     public static class ProductStockAdminResponse implements Serializable {
         Integer id;
         Integer quantity;
+        String imageUrl;
         BigDecimal price;
     }
 }

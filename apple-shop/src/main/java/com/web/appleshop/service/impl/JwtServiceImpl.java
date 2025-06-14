@@ -10,6 +10,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import java.util.function.Function;
 
 @Service
 public class JwtServiceImpl implements JwtService {
+    private static final Logger log = LoggerFactory.getLogger(JwtServiceImpl.class);
     private final RefreshTokenService refreshTokenService;
     private final UserService userService;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -102,7 +105,7 @@ public class JwtServiceImpl implements JwtService {
 
         Claims claims = extractAllClaims(refreshToken);
 
-        refreshTokenService.save(createRefreshToken(userDetails, claims, refreshToken));
+        refreshTokenService.save(createRefreshTokenEntity(userDetails, claims, "Bearer " + refreshToken));
 
         return "Bearer " + refreshToken;
     }
@@ -166,25 +169,13 @@ public class JwtServiceImpl implements JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    /**
-     * Kiểm tra xem refresh token có tồn tại trong database không?
-     *
-     * @param refreshToken Refresh token
-     * @return true nếu hợp lệ, false nếu không
-     */
     @Override
-    public void validateRefreshToken(String refreshToken) {
-        if (refreshToken.isBlank() || !refreshToken.startsWith("Bearer ")) {
+    public void validateRefreshToken(String token, UserDetails userDetails) {
+        if (!this.isTokenValid(token, userDetails)) {
             throw new BadRequestException("Your refresh token is invalid.");
-        } else {
-            refreshToken = refreshToken.substring(7);
-            refreshTokenRepository.findRefreshTokenByToken(refreshToken).orElseThrow(
-                    () -> new IllegalStateException("Invalid refresh token")
-            );
-            if (extractClaim(refreshToken, Claims::getExpiration).after(new Date())) {
-                throw new IllegalStateException("Refresh token expired");
-            }
         }
+        refreshTokenRepository.findRefreshTokenByToken(token)
+                .orElseThrow(() -> new BadRequestException("Your refresh token is invalid."));
     }
 
     /**
@@ -212,7 +203,7 @@ public class JwtServiceImpl implements JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private RefreshToken createRefreshToken(UserDetails userDetails, Claims claims, String refreshToken) {
+    private RefreshToken createRefreshTokenEntity(UserDetails userDetails, Claims claims, String refreshToken) {
         RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setToken(refreshToken);
         refreshTokenEntity.setIssuedAt(claims.getIssuedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());

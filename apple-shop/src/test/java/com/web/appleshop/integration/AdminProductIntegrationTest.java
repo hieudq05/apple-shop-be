@@ -61,7 +61,7 @@ class AdminProductIntegrationTest {
 
         ProductAdminResponse.ProductStockAdminResponse stock =
             new ProductAdminResponse.ProductStockAdminResponse(
-                1, 50, new BigDecimal("999.99")
+                1, 50, "https://example.com/photo.jpg", new BigDecimal("999.99")
             );
 
         sampleProduct = new ProductAdminResponse(
@@ -153,9 +153,9 @@ class AdminProductIntegrationTest {
     void getAllProducts_WithMultipleStocks() {
         // Given
         ProductAdminResponse.ProductStockAdminResponse stock1 =
-            new ProductAdminResponse.ProductStockAdminResponse(1, 50, new BigDecimal("999.99"));
+            new ProductAdminResponse.ProductStockAdminResponse(1, 50, "https://example.com/photo1.jpg", new BigDecimal("999.99"));
         ProductAdminResponse.ProductStockAdminResponse stock2 =
-            new ProductAdminResponse.ProductStockAdminResponse(2, 25, new BigDecimal("1299.99"));
+            new ProductAdminResponse.ProductStockAdminResponse(2, 25, "https://example.com/photo2.jpg", new BigDecimal("1299.99"));
 
         ProductAdminResponse productWithMultipleStocks = new ProductAdminResponse(
             sampleProduct.getId(),
