@@ -21,7 +21,12 @@ jobs:
           distribution: 'temurin'
 
       - name: 🧪 Build with Maven
-        run: mvn clean install
+        run: |
+          cd apple-shop
+          mvn clean install
 
       - name: ✅ Run Tests
-        run: mvn test
+        run: |
+          cd apple-shop
+          mvn test
+
