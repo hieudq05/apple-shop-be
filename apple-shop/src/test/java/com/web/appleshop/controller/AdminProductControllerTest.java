@@ -58,7 +58,7 @@ class AdminProductControllerTest {
 
         ProductAdminResponse.ProductStockAdminResponse stock = 
             new ProductAdminResponse.ProductStockAdminResponse(
-                1, 100, new BigDecimal("999.99")
+                1, 100, "https://example.com/photo.jpg", new BigDecimal("999.99")
             );
 
         ProductAdminResponse sampleProduct = new ProductAdminResponse(

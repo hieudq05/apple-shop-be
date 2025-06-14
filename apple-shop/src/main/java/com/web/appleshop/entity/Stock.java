@@ -48,9 +48,6 @@ public class Stock {
     @ManyToMany(mappedBy = "stocks")
     private Set<InstanceProperty> instanceProperties = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "stock")
-    private Set<Color> colors = new LinkedHashSet<>();
-
     public void addInstanceProperty(InstanceProperty instanceProperty) {
         this.instanceProperties.add(instanceProperty);
         instanceProperty.getStocks().add(this);

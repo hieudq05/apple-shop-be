@@ -1,5 +1,6 @@
 package com.web.appleshop.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.web.appleshop.entity.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -15,6 +16,7 @@ import java.util.Set;
 /**
  * DTO for {@link com.web.appleshop.entity.Product}
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Value
 public class CreateProductRequest implements Serializable {
     @NotBlank(message = "Không được bỏ trống tên sản phẩm.")
@@ -81,8 +83,9 @@ public class CreateProductRequest implements Serializable {
             @Length(max = 50, message = "Tên màu sắc không được vượt quá 50 ký tự.")
             String name;
 
-            @Pattern(regexp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
-                    message = "Mã màu hex không hợp lệ. Định dạng: #RRGGBB hoặc #RGB")
+            // Hex code can blank
+            @Pattern(regexp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})?$"
+                    , message = "Mã màu hex không hợp lệ. Định dạng: #RRGGBB hoặc #RGB")
             String hexCode;
         }
 

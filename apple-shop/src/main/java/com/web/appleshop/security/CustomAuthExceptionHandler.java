@@ -5,10 +5,12 @@ import com.web.appleshop.dto.response.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.hibernate.ResourceClosedException;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -38,6 +40,8 @@ public class CustomAuthExceptionHandler implements AuthenticationEntryPoint, Acc
             errorMessage = "Tài khoản của bạn đã bị vô hiệu hóa hoặc chưa được kích hoạt.";
         } else if(authException instanceof BadCredentialsException) {
             errorMessage = "Sai thông tin đăng nhập.";
+        } else if(authException instanceof InsufficientAuthenticationException) {
+            errorMessage = "Bạn không có quyền truy cập vào tài nguyên này.";
         }
 
         ApiResponse<Object> apiResponse = ApiResponse.error(

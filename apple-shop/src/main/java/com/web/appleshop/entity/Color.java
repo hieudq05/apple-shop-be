@@ -36,8 +36,4 @@ public class Color {
     })
     private Set<Stock> stocks = new LinkedHashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_id")
-    private Stock stock;
-
 }
