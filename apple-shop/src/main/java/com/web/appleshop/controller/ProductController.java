@@ -40,11 +40,11 @@ public class ProductController {
         return "Create product";
     }
 
-    
+
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteProductById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<String>> deleteProductById(@PathVariable("id") Integer id) {
         productService.deleteProductById(id);
-        return ResponseEntity.ok("Xoá sản phẩm thành công với ID: " + id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Xóa Sản phẩm thành công với id : " + id));
     }
 }
