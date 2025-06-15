@@ -40,6 +40,7 @@ public class ProductController {
         return "Create product";
     }
 
+    
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("{id}")
     public ResponseEntity<String> deleteProductById(@PathVariable Integer id) {

@@ -11,6 +11,5 @@ public interface ProductService {
     Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable);
     Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable);
 
-
     void deleteProductById(Integer id);
 }
