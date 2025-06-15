@@ -40,13 +40,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void createProduct(CreateProductRequest request) {
 
-        User createdBy = userRepository.findByUsername(request.getCreatedBy()).orElseThrow(() -> new NotFoundException("User not found with identifier: " + request.getCreatedBy()));
+        User createdBy = userRepository.findByUsername(request.getCreatedBy())
+                .orElseThrow(() -> new NotFoundException("User not found with identifier: " + request.getCreatedBy()));
 
         Category category;
         if (request.getCategory().getId() != null) {
-            category = categoryRepository.findById(request.getCategory().getId()).orElseThrow(() -> new NotFoundException("Category not found with id: " + request.getCategory().getId()));
+            category = categoryRepository.findById(request.getCategory().getId()).orElseThrow(
+                    () -> new NotFoundException("Category not found with id: " + request.getCategory().getId()));
         } else {
-            category = Category.builder().name(request.getCategory().getName()).image(request.getCategory().getImage()).build();
+            category = Category.builder().name(request.getCategory().getName()).image(request.getCategory().getImage())
+                    .build();
             category = categoryRepository.save(category);
         }
 
@@ -59,9 +62,11 @@ public class ProductServiceImpl implements ProductService {
         for (CreateProductRequest.CreateProductFeatureRequest featureRequest : request.getFeatures()) {
             Feature feature;
             if (featureRequest.getId() != null) {
-                feature = featureRepository.findById(featureRequest.getId()).orElseThrow(() -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
+                feature = featureRepository.findById(featureRequest.getId()).orElseThrow(
+                        () -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
             } else {
-                feature = Feature.builder().name(featureRequest.getName()).description(featureRequest.getDescription()).image(featureRequest.getImage()).createdBy(createdBy).products(new LinkedHashSet<>()).build();
+                feature = Feature.builder().name(featureRequest.getName()).description(featureRequest.getDescription())
+                        .image(featureRequest.getImage()).createdBy(createdBy).products(new LinkedHashSet<>()).build();
                 feature = featureRepository.save(feature);
             }
             feature.addProduct(product);
@@ -73,9 +78,11 @@ public class ProductServiceImpl implements ProductService {
         for (CreateProductRequest.CreateProductStockRequest stockRequest : request.getStocks()) {
             Color color;
             if (stockRequest.getColor().getId() != null) {
-                color = colorRepository.findById(stockRequest.getColor().getId()).orElseThrow(() -> new NotFoundException("Color not found with id: " + stockRequest.getColor().getId()));
+                color = colorRepository.findById(stockRequest.getColor().getId()).orElseThrow(
+                        () -> new NotFoundException("Color not found with id: " + stockRequest.getColor().getId()));
             } else {
-                color = Color.builder().name(stockRequest.getColor().getName()).hexCode(stockRequest.getColor().getHexCode()).build();
+                color = Color.builder().name(stockRequest.getColor().getName())
+                        .hexCode(stockRequest.getColor().getHexCode()).build();
             }
             color = colorRepository.save(color);
 
@@ -83,12 +90,16 @@ public class ProductServiceImpl implements ProductService {
             BeanUtils.copyProperties(stockRequest, stock);
             stock.setProduct(product);
 
-            for (CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest instanceRequest : stockRequest.getInstanceProperties()) {
+            for (CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest instanceRequest : stockRequest
+                    .getInstanceProperties()) {
                 InstanceProperty instanceProperty;
                 if (instanceRequest.getId() != null) {
-                    instanceProperty = instancePropertyRepository.findById(instanceRequest.getId()).orElseThrow(() -> new NotFoundException("Instance property not found with id: " + instanceRequest.getId()));
+                    instanceProperty = instancePropertyRepository.findById(instanceRequest.getId())
+                            .orElseThrow(() -> new NotFoundException(
+                                    "Instance property not found with id: " + instanceRequest.getId()));
                 } else {
-                    instanceProperty = InstanceProperty.builder().name(instanceRequest.getName()).createdBy(createdBy).createdAt(LocalDateTime.now()).stocks(new LinkedHashSet<>()).build();
+                    instanceProperty = InstanceProperty.builder().name(instanceRequest.getName()).createdBy(createdBy)
+                            .createdAt(LocalDateTime.now()).stocks(new LinkedHashSet<>()).build();
                     instanceProperty = instancePropertyRepository.save(instanceProperty);
                 }
                 instanceProperty.addStock(stock);
@@ -97,7 +108,8 @@ public class ProductServiceImpl implements ProductService {
             stock = stockRepository.save(stock);
 
             Set<ProductPhoto> productPhotos = new LinkedHashSet<>();
-            for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest.getProductPhotos()) {
+            for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest
+                    .getProductPhotos()) {
                 ProductPhoto productPhoto = new ProductPhoto();
                 BeanUtils.copyProperties(photoRequest, productPhoto);
                 productPhoto.setStock(stock);
@@ -126,17 +138,28 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
-        Page<Product> products = productRepository.findAllByCategory_Id(categoryId, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
+        Page<Product> products = productRepository.findAllByCategory_Id(categoryId, pageable)
+                .orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
         return products.map(this::convertProductToProductUserResponse);
     }
 
     public ProductUserResponse convertProductToProductUserResponse(Product product) {
         Set<ProductUserResponse.ProductStockResponse> stockDtos = new LinkedHashSet<>();
         for (Stock stock : product.getStocks()) {
-            ProductUserResponse.ProductStockResponse.StockColorResponse colorDto = new ProductUserResponse.ProductStockResponse.StockColorResponse(stock.getColor().getId(), stock.getColor().getName(), stock.getColor().getHexCode());
-            Set<ProductUserResponse.ProductStockResponse.StockPhotoResponse> photoDtos = stock.getProductPhotos().stream().map(photo -> new ProductUserResponse.ProductStockResponse.StockPhotoResponse(photo.getId(), photo.getImageUrl(), photo.getAlt())).collect(Collectors.toSet());
-            Set<ProductUserResponse.ProductStockResponse.StockInstanceResponse> instanceDtos = stock.getInstanceProperties().stream().map(instance -> new ProductUserResponse.ProductStockResponse.StockInstanceResponse(instance.getId(), instance.getName(), instance.getCreatedAt())).collect(Collectors.toSet());
-            stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDtos));
+            ProductUserResponse.ProductStockResponse.StockColorResponse colorDto = new ProductUserResponse.ProductStockResponse.StockColorResponse(
+                    stock.getColor().getId(), stock.getColor().getName(), stock.getColor().getHexCode());
+            Set<ProductUserResponse.ProductStockResponse.StockPhotoResponse> photoDtos = stock.getProductPhotos()
+                    .stream()
+                    .map(photo -> new ProductUserResponse.ProductStockResponse.StockPhotoResponse(photo.getId(),
+                            photo.getImageUrl(), photo.getAlt()))
+                    .collect(Collectors.toSet());
+            Set<ProductUserResponse.ProductStockResponse.StockInstanceResponse> instanceDtos = stock
+                    .getInstanceProperties().stream()
+                    .map(instance -> new ProductUserResponse.ProductStockResponse.StockInstanceResponse(
+                            instance.getId(), instance.getName(), instance.getCreatedAt()))
+                    .collect(Collectors.toSet());
+            stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(),
+                    stock.getPrice(), photoDtos, instanceDtos));
         }
 
         return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos);
@@ -145,17 +168,35 @@ public class ProductServiceImpl implements ProductService {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public ProductAdminResponse convertProductToProductAdminResponse(Product product) {
         User createdByEntity = product.getCreatedBy();
-        ProductAdminResponse.ProductOwnerAdminResponse createdByDto = new ProductAdminResponse.ProductOwnerAdminResponse(createdByEntity.getId(), createdByEntity.getEmail(), createdByEntity.getFirstName(), createdByEntity.getLastName(), createdByEntity.getImage(), createdByEntity.getUsername());
+        ProductAdminResponse.ProductOwnerAdminResponse createdByDto = new ProductAdminResponse.ProductOwnerAdminResponse(
+                createdByEntity.getId(), createdByEntity.getEmail(), createdByEntity.getFirstName(),
+                createdByEntity.getLastName(), createdByEntity.getImage(), createdByEntity.getUsername());
 
         User updatedByEntity = product.getUpdatedBy();
-        ProductAdminResponse.ProductUpdatedAdminResponse updatedByDto = new ProductAdminResponse.ProductUpdatedAdminResponse(updatedByEntity.getId(), updatedByEntity.getEmail(), updatedByEntity.getFirstName(), updatedByEntity.getLastName(), updatedByEntity.getImage(), updatedByEntity.getUsername());
+        ProductAdminResponse.ProductUpdatedAdminResponse updatedByDto = new ProductAdminResponse.ProductUpdatedAdminResponse(
+                updatedByEntity.getId(), updatedByEntity.getEmail(), updatedByEntity.getFirstName(),
+                updatedByEntity.getLastName(), updatedByEntity.getImage(), updatedByEntity.getUsername());
 
         Category categoryEntity = product.getCategory();
-        ProductAdminResponse.ProductCategoryAdminResponse categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(categoryEntity.getId(), categoryEntity.getName(), categoryEntity.getImage());
+        ProductAdminResponse.ProductCategoryAdminResponse categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(
+                categoryEntity.getId(), categoryEntity.getName(), categoryEntity.getImage());
         BeanUtils.copyProperties(categoryEntity, categoryDto);
 
-        Set<ProductAdminResponse.ProductStockAdminResponse> stockDto = product.getStocks().stream().map(stock -> new ProductAdminResponse.ProductStockAdminResponse(stock.getId(), stock.getQuantity(), stock.getProductPhotos().stream().toList().getFirst().getImageUrl(), stock.getPrice())).collect(Collectors.toSet());
-        return new ProductAdminResponse(product.getId(), product.getName(), product.getDescription(), product.getCreatedAt(), createdByDto, product.getUpdatedAt(), updatedByDto, categoryDto, stockDto);
+        Set<ProductAdminResponse.ProductStockAdminResponse> stockDto = product.getStocks().stream()
+                .map(stock -> new ProductAdminResponse.ProductStockAdminResponse(stock.getId(), stock.getQuantity(),
+                        stock.getProductPhotos().stream().toList().getFirst().getImageUrl(), stock.getPrice()))
+                .collect(Collectors.toSet());
+        return new ProductAdminResponse(product.getId(), product.getName(), product.getDescription(),
+                product.getCreatedAt(), createdByDto, product.getUpdatedAt(), updatedByDto, categoryDto, stockDto);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public void deleteProductById(Integer id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm với ID: " + id));
+        productRepository.delete(product);
     }
 
 }
