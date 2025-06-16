@@ -128,6 +128,14 @@ public class ProductServiceImpl implements ProductService {
         return products.map(this::convertProductToProductUserResponse);
     }
 
+    @Override
+    public ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId) {
+        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
+                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+        );
+        return convertProductToProductUserResponse(product);
+    }
+
     public ProductUserResponse convertProductToProductUserResponse(Product product) {
         Set<ProductUserResponse.ProductStockResponse> stockDtos = new LinkedHashSet<>();
         for (Stock stock : product.getStocks()) {
