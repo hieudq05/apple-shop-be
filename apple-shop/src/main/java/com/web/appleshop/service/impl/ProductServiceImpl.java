@@ -16,9 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void createProduct(CreateProductRequest request) {
 
-        User createdBy = userRepository.findByUsername(request.getCreatedBy()).orElseThrow(() -> new NotFoundException("User not found with identifier: " + request.getCreatedBy()));
+        User createdBy = userRepository.getUserByEmail(request.getCreatedBy()).orElseThrow(() -> new NotFoundException("User not found with identifier: " + request.getCreatedBy()));
 
         Category category;
         if (request.getCategory().getId() != null) {
