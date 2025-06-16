@@ -25,7 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private static final Logger log = LoggerFactory.getLogger(CustomAuthExceptionHandler.class);
 
     @Override
     protected void doFilterInternal(

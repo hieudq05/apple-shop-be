@@ -48,7 +48,6 @@ class ProductServiceImplTest {
         sampleUser.setFirstName("John");
         sampleUser.setLastName("Doe");
         sampleUser.setImage("user.jpg");
-        sampleUser.setUsername("admin");
 
         Category sampleCategory = new Category();
         sampleCategory.setId(1);
