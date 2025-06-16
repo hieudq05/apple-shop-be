@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,5 +41,11 @@ public class AdminProductController {
                 productAdminResponsePage.getTotalElements()
         );
         return ResponseEntity.ok(ApiResponse.success(productAdminResponsePage.getContent(), "Get all products successfully", pageableResponse));
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<ApiResponse<String>> deleteProductById(@PathVariable("id") Integer id) {
+        productService.deleteProductById(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Xóa Sản phẩm thành công với id : " + id));
     }
 }
