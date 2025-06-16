@@ -10,4 +10,5 @@ public interface ProductService {
     void createProduct(CreateProductRequest request);
     Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable);
     Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable);
+    ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId);
 }

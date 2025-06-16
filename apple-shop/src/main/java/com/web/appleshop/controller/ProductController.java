@@ -32,8 +32,9 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(productUserResponsePage.getContent(), "Get all products successfully", pageableResponse));
     }
 
-    @PostMapping
-    public String createProduct() {
-        return "Create product";
+    @GetMapping("{categoryId}/{productId}")
+    public ResponseEntity<ApiResponse<ProductUserResponse>> getProduct(@PathVariable Integer categoryId, @PathVariable Integer productId) {
+        ProductUserResponse productUserResponse = productService.getProductByProductIdForUser(categoryId, productId);
+        return ResponseEntity.ok(ApiResponse.success(productUserResponse, "Get product successfully"));
     }
 }
