@@ -224,7 +224,7 @@ class CreateProductStockRequestValidationTest {
                 .quantity(100)
                 .price(new BigDecimal("999.99"))
                 .productPhotos(Set.of(createValidPhoto()))
-                .instanceProperties(Set.of(createValidInstance()));
+                .instanceProperty(Set.of(createValidInstance()));
     }
 
     private CreateProductRequest.CreateProductStockRequest.CreateProductColorRequest createValidColor() {
@@ -251,7 +251,7 @@ class CreateProductStockRequestValidationTest {
         private Integer quantity = 100;
         private BigDecimal price = new BigDecimal("999.99");
         private Set<CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest> productPhotos;
-        private Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> instanceProperties;
+        private CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest instanceProperty;
 
         public CreateProductStockRequestBuilder color(CreateProductRequest.CreateProductStockRequest.CreateProductColorRequest color) {
             this.color = color;
@@ -273,13 +273,12 @@ class CreateProductStockRequestValidationTest {
             return this;
         }
 
-        public CreateProductStockRequestBuilder instanceProperties(Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> instanceProperties) {
-            this.instanceProperties = instanceProperties;
+        public CreateProductStockRequestBuilder instanceProperty(Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> instanceProperties) {
             return this;
         }
 
         public CreateProductRequest.CreateProductStockRequest build() {
-            return new CreateProductRequest.CreateProductStockRequest(color, quantity, price, productPhotos, instanceProperties);
+            return new CreateProductRequest.CreateProductStockRequest(color, quantity, price, productPhotos, instanceProperty);
         }
     }
 }

@@ -75,7 +75,7 @@ public class CreateProductRequest implements Serializable {
         @NotNull(message = "Không được bỏ trống thuộc tính kho sản phẩm.")
         @NotEmpty(message = "Danh sách thuộc tính kho sản phẩm không được rỗng.")
         @Valid
-        Set<CreateProductInstanceRequest> instanceProperties;
+        CreateProductInstanceRequest instanceProperty;
 
         /**
          * DTO for {@link com.web.appleshop.entity.Color}

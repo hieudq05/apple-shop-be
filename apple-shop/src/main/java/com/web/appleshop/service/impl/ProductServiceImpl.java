@@ -3,6 +3,7 @@ package com.web.appleshop.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
+import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.ProductAdminResponse;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.entity.*;
@@ -13,6 +14,8 @@ import com.web.appleshop.service.ProductService;
 import com.web.appleshop.util.UploadUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -108,16 +112,14 @@ public class ProductServiceImpl implements ProductService {
             BeanUtils.copyProperties(stockRequest, stock);
             stock.setProduct(product);
 
-            for (CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest instanceRequest : stockRequest.getInstanceProperties()) {
-                InstanceProperty instanceProperty;
-                if (instanceRequest.getId() != null) {
-                    instanceProperty = instancePropertyRepository.findById(instanceRequest.getId()).orElseThrow(() -> new NotFoundException("Instance property not found with id: " + instanceRequest.getId()));
-                } else {
-                    instanceProperty = InstanceProperty.builder().name(instanceRequest.getName()).createdBy(createdBy).createdAt(LocalDateTime.now()).stocks(new LinkedHashSet<>()).build();
-                    instanceProperty = instancePropertyRepository.save(instanceProperty);
-                }
-                instanceProperty.addStock(stock);
+            InstanceProperty instanceProperty;
+            if (stockRequest.getInstanceProperty().getId() != null) {
+                instanceProperty = instancePropertyRepository.findById(stockRequest.getInstanceProperty().getId()).orElseThrow(() -> new NotFoundException("Instance property not found with id: " + stockRequest.getInstanceProperty().getId()));
+            } else {
+                instanceProperty = InstanceProperty.builder().name(stockRequest.getInstanceProperty().getName()).createdBy(createdBy).createdAt(LocalDateTime.now()).stocks(new LinkedHashSet<>()).build();
+                instanceProperty = instancePropertyRepository.save(instanceProperty);
             }
+            stock.setInstance(instanceProperty);
 
             stock = stockRepository.save(stock);
 
@@ -147,6 +149,61 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
     }
 
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Override
+    public void updateProduct(Integer categoryId, Integer productId, String productJson, Map<String, MultipartFile> files, Integer[] productPhotoDeletions, User updatedBy) {
+        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(() -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId));
+        ObjectMapper objectMapper = new ObjectMapper();
+        UpdateProductRequest productRequest;
+
+        try {
+            productRequest = objectMapper.readValue(productJson, UpdateProductRequest.class);
+        } catch (JsonProcessingException e) {
+            log.info(e.getMessage());
+            throw new BadRequestException("Lỗi khi chuyển đổi dữ liệu sản phẩm.");
+        }
+
+        product.setName(productRequest.getName());
+        product.setDescription(productRequest.getDescription());
+        product.setUpdatedAt(LocalDateTime.now());
+        product.setUpdatedBy(userRepository.getUserByEmail(updatedBy.getEmail()).orElseThrow(() -> new NotFoundException("User not found with email: " + updatedBy.getEmail())));
+
+        Category category;
+        if (productRequest.getCategory().getId() != null) {
+            category = categoryRepository.findById(productRequest.getCategory().getId()).orElseThrow(() -> new NotFoundException("Category not found with id: " + productRequest.getCategory().getId()));
+            category.setName(productRequest.getCategory().getName());
+            category.setImage(
+                    productRequest.getCategory().getImage() instanceof MultipartFile
+                            ? uploadUtils.uploadFile((MultipartFile) productRequest.getCategory().getImage())
+                            : productRequest.getCategory().getImage().toString()
+            );
+        } else {
+            category = Category.builder()
+                    .name(productRequest.getCategory().getName())
+                    .image(
+                            productRequest.getCategory().getImage() instanceof MultipartFile
+                                    ? uploadUtils.uploadFile((MultipartFile) productRequest.getCategory().getImage())
+                                    : productRequest.getCategory().getImage().toString()
+                    )
+                    .build();
+            category = categoryRepository.save(category);
+        }
+        product.setCategory(category);
+
+
+
+        Set<Stock> stocks = product.getStocks();
+        for (Integer productPhotoDeletion : productPhotoDeletions) {
+            for (Stock stock : stocks) {
+                stock.getProductPhotos().removeIf(photo -> photo.getId().equals(productPhotoDeletion));
+            }
+        }
+
+        product.setStocks(stocks);
+
+    }
+
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @Override
     public Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable) {
@@ -173,8 +230,8 @@ public class ProductServiceImpl implements ProductService {
         for (Stock stock : product.getStocks()) {
             ProductUserResponse.ProductStockResponse.StockColorResponse colorDto = new ProductUserResponse.ProductStockResponse.StockColorResponse(stock.getColor().getId(), stock.getColor().getName(), stock.getColor().getHexCode());
             Set<ProductUserResponse.ProductStockResponse.StockPhotoResponse> photoDtos = stock.getProductPhotos().stream().map(photo -> new ProductUserResponse.ProductStockResponse.StockPhotoResponse(photo.getId(), photo.getImageUrl(), photo.getAlt())).collect(Collectors.toSet());
-            Set<ProductUserResponse.ProductStockResponse.StockInstanceResponse> instanceDtos = stock.getInstanceProperties().stream().map(instance -> new ProductUserResponse.ProductStockResponse.StockInstanceResponse(instance.getId(), instance.getName(), instance.getCreatedAt())).collect(Collectors.toSet());
-            stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDtos));
+            ProductUserResponse.ProductStockResponse.StockInstanceResponse instanceDto = new ProductUserResponse.ProductStockResponse.StockInstanceResponse(stock.getInstance().getId(), stock.getInstance().getName(), stock.getInstance().getCreatedAt());
+            stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDto));
         }
 
         return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos);
@@ -203,12 +260,13 @@ public class ProductServiceImpl implements ProductService {
         try {
             productRequest = objectMapper.readValue(requestData, CreateProductRequest.class);
         } catch (JsonProcessingException e) {
+            log.info(e.getMessage());
             throw new BadRequestException("Lỗi khi chuyển đổi dữ liệu sản phẩm.");
         }
 
         // Xử lý ảnh category
         if (productRequest.getCategory().getImage() != null &&
-            productRequest.getCategory().getImage().toString().startsWith("placeholder_")) {
+                productRequest.getCategory().getImage().toString().startsWith("placeholder_")) {
             String placeholderKey = productRequest.getCategory().getImage().toString();
             if (files.containsKey(placeholderKey)) {
                 productRequest.setCategory(
@@ -225,7 +283,7 @@ public class ProductServiceImpl implements ProductService {
         Set<CreateProductRequest.CreateProductFeatureRequest> updatedFeatures = new HashSet<>();
         for (CreateProductRequest.CreateProductFeatureRequest featureRequest : productRequest.getFeatures()) {
             if (featureRequest.getImage() != null &&
-                featureRequest.getImage().toString().startsWith("placeholder_")) {
+                    featureRequest.getImage().toString().startsWith("placeholder_")) {
                 String placeholderKey = featureRequest.getImage().toString();
                 if (files.containsKey(placeholderKey)) {
                     updatedFeatures.add(
@@ -250,7 +308,7 @@ public class ProductServiceImpl implements ProductService {
             Set<CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest> updatedPhotos = new HashSet<>();
             for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest.getProductPhotos()) {
                 if (photoRequest.getImageUrl() != null &&
-                    photoRequest.getImageUrl().toString().startsWith("placeholder_")) {
+                        photoRequest.getImageUrl().toString().startsWith("placeholder_")) {
                     String placeholderKey = photoRequest.getImageUrl().toString();
                     if (files.containsKey(placeholderKey)) {
                         updatedPhotos.add(

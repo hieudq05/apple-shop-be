@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.mapping.Join;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
@@ -45,17 +46,8 @@ public class Stock {
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SavedProduct> savedProducts = new LinkedHashSet<>();
 
-    @ManyToMany(mappedBy = "stocks")
-    private Set<InstanceProperty> instanceProperties = new LinkedHashSet<>();
-
-    public void addInstanceProperty(InstanceProperty instanceProperty) {
-        this.instanceProperties.add(instanceProperty);
-        instanceProperty.getStocks().add(this);
-    }
-
-    public void removeInstanceProperty(InstanceProperty instanceProperty) {
-        this.instanceProperties.remove(instanceProperty);
-        instanceProperty.getStocks().remove(this);
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "instance")
+    private InstanceProperty instance;
 
 }
