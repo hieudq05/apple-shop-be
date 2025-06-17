@@ -1,12 +1,16 @@
 package com.web.appleshop.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
 import com.web.appleshop.dto.response.ProductAdminResponse;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.entity.*;
+import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.*;
 import com.web.appleshop.service.ProductService;
+import com.web.appleshop.util.UploadUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -14,9 +18,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,11 +39,14 @@ public class ProductServiceImpl implements ProductService {
     private final StockRepository stockRepository;
     private final ProductPhotoRepository productPhotoRepository;
     private final InstancePropertyRepository instancePropertyRepository;
+    private final UploadUtils uploadUtils;
 
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @Override
-    public void createProduct(CreateProductRequest request) {
+    public void createProduct(String requestData, Map<String, MultipartFile> files) {
+
+        CreateProductRequest request = convertRequestDataToCreateProductRequest(requestData, files);
 
         User createdBy = userRepository.getUserByEmail(request.getCreatedBy()).orElseThrow(() -> new NotFoundException("User not found with identifier: " + request.getCreatedBy()));
 
@@ -44,7 +54,14 @@ public class ProductServiceImpl implements ProductService {
         if (request.getCategory().getId() != null) {
             category = categoryRepository.findById(request.getCategory().getId()).orElseThrow(() -> new NotFoundException("Category not found with id: " + request.getCategory().getId()));
         } else {
-            category = Category.builder().name(request.getCategory().getName()).image(request.getCategory().getImage()).build();
+            category = Category.builder()
+                    .name(request.getCategory().getName())
+                    .image(
+                            request.getCategory().getImage() instanceof MultipartFile
+                                    ? uploadUtils.uploadFile((MultipartFile) request.getCategory().getImage())
+                                    : request.getCategory().getImage().toString()
+                    )
+                    .build();
             category = categoryRepository.save(category);
         }
 
@@ -59,7 +76,17 @@ public class ProductServiceImpl implements ProductService {
             if (featureRequest.getId() != null) {
                 feature = featureRepository.findById(featureRequest.getId()).orElseThrow(() -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
             } else {
-                feature = Feature.builder().name(featureRequest.getName()).description(featureRequest.getDescription()).image(featureRequest.getImage()).createdBy(createdBy).products(new LinkedHashSet<>()).build();
+                feature = Feature.builder()
+                        .name(featureRequest.getName())
+                        .description(featureRequest.getDescription())
+                        .image(
+                                featureRequest.getImage() instanceof MultipartFile
+                                        ? uploadUtils.uploadFile((MultipartFile) featureRequest.getImage())
+                                        : featureRequest.getImage().toString()
+                        )
+                        .createdBy(createdBy)
+                        .products(new LinkedHashSet<>())
+                        .build();
                 feature = featureRepository.save(feature);
             }
             feature.addProduct(product);
@@ -97,7 +124,12 @@ public class ProductServiceImpl implements ProductService {
             Set<ProductPhoto> productPhotos = new LinkedHashSet<>();
             for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest.getProductPhotos()) {
                 ProductPhoto productPhoto = new ProductPhoto();
-                BeanUtils.copyProperties(photoRequest, productPhoto);
+                productPhoto.setImageUrl(
+                        photoRequest.getImageUrl() instanceof MultipartFile
+                                ? uploadUtils.uploadFile((MultipartFile) photoRequest.getImageUrl())
+                                : photoRequest.getImageUrl().toString()
+                );
+                productPhoto.setAlt(photoRequest.getAlt());
                 productPhoto.setStock(stock);
                 productPhotos.add(productPhoto);
             }
@@ -164,4 +196,79 @@ public class ProductServiceImpl implements ProductService {
         return new ProductAdminResponse(product.getId(), product.getName(), product.getDescription(), product.getCreatedAt(), createdByDto, product.getUpdatedAt(), updatedByDto, categoryDto, stockDto);
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public CreateProductRequest convertRequestDataToCreateProductRequest(String requestData, Map<String, MultipartFile> files) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        CreateProductRequest productRequest;
+        try {
+            productRequest = objectMapper.readValue(requestData, CreateProductRequest.class);
+        } catch (JsonProcessingException e) {
+            throw new BadRequestException("Lỗi khi chuyển đổi dữ liệu sản phẩm.");
+        }
+
+        // Xử lý ảnh category
+        if (productRequest.getCategory().getImage() != null &&
+            productRequest.getCategory().getImage().toString().startsWith("placeholder_")) {
+            String placeholderKey = productRequest.getCategory().getImage().toString();
+            if (files.containsKey(placeholderKey)) {
+                productRequest.setCategory(
+                        new CreateProductRequest.CreateProductCategoryRequest(
+                                productRequest.getCategory().getId(),
+                                productRequest.getCategory().getName(),
+                                files.get(placeholderKey)
+                        )
+                );
+            }
+        }
+
+        // Xử lý ảnh features
+        Set<CreateProductRequest.CreateProductFeatureRequest> updatedFeatures = new HashSet<>();
+        for (CreateProductRequest.CreateProductFeatureRequest featureRequest : productRequest.getFeatures()) {
+            if (featureRequest.getImage() != null &&
+                featureRequest.getImage().toString().startsWith("placeholder_")) {
+                String placeholderKey = featureRequest.getImage().toString();
+                if (files.containsKey(placeholderKey)) {
+                    updatedFeatures.add(
+                            new CreateProductRequest.CreateProductFeatureRequest(
+                                    featureRequest.getId(),
+                                    featureRequest.getName(),
+                                    featureRequest.getDescription(),
+                                    files.get(placeholderKey)
+                            )
+                    );
+                } else {
+                    updatedFeatures.add(featureRequest);
+                }
+            } else {
+                updatedFeatures.add(featureRequest);
+            }
+        }
+        productRequest.setFeatures(updatedFeatures);
+
+        // Xử lý ảnh product photos
+        for (CreateProductRequest.CreateProductStockRequest stockRequest : productRequest.getStocks()) {
+            Set<CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest> updatedPhotos = new HashSet<>();
+            for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest.getProductPhotos()) {
+                if (photoRequest.getImageUrl() != null &&
+                    photoRequest.getImageUrl().toString().startsWith("placeholder_")) {
+                    String placeholderKey = photoRequest.getImageUrl().toString();
+                    if (files.containsKey(placeholderKey)) {
+                        updatedPhotos.add(
+                                new CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest(
+                                        files.get(placeholderKey),
+                                        photoRequest.getAlt()
+                                )
+                        );
+                    } else {
+                        updatedPhotos.add(photoRequest);
+                    }
+                } else {
+                    updatedPhotos.add(photoRequest);
+                }
+            }
+            stockRequest.setProductPhotos(updatedPhotos);
+        }
+
+        return productRequest;
+    }
 }

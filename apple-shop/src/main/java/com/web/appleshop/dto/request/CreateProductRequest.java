@@ -1,23 +1,25 @@
 package com.web.appleshop.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.web.appleshop.entity.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.URL;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Set;
 
 /**
  * DTO for {@link com.web.appleshop.entity.Product}
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Value
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateProductRequest implements Serializable {
     @NotBlank(message = "Không được bỏ trống tên sản phẩm.")
     @Length(max = 255, message = "Tên sản phẩm không được vượt quá 255 ký tự.")
@@ -45,7 +47,9 @@ public class CreateProductRequest implements Serializable {
     @Valid
     Set<CreateProductRequest.CreateProductStockRequest> stocks;
 
-    @Value
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class CreateProductStockRequest implements Serializable {
 
         @NotNull(message = "Không được bỏ trống màu sắc.")
@@ -76,7 +80,9 @@ public class CreateProductRequest implements Serializable {
         /**
          * DTO for {@link com.web.appleshop.entity.Color}
          */
-        @Value
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
         public static class CreateProductColorRequest implements Serializable {
             Integer id;
 
@@ -92,11 +98,12 @@ public class CreateProductRequest implements Serializable {
         /**
          * DTO for {@link com.web.appleshop.entity.ProductPhoto}
          */
-        @Value
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
         public static class CreateProductPhotoRequest implements Serializable {
-            @NotBlank(message = "URL ảnh không được bỏ trống.")
-            @URL(message = "URL ảnh không hợp lệ.")
-            String imageUrl;
+            @NotNull(message = "URL ảnh không được bỏ trống.")
+            Object imageUrl;
 
             @Length(max = 255, message = "Mô tả ảnh không được vượt quá 255 ký tự.")
             String alt;
@@ -105,7 +112,9 @@ public class CreateProductRequest implements Serializable {
         /**
          * DTO for {@link com.web.appleshop.entity.InstanceProperty}
          */
-        @Value
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
         public static class CreateProductInstanceRequest implements Serializable {
             Integer id;
 
@@ -114,7 +123,9 @@ public class CreateProductRequest implements Serializable {
         }
     }
 
-    @Value
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class CreateProductFeatureRequest implements Serializable {
         Integer id;
 
@@ -124,18 +135,19 @@ public class CreateProductRequest implements Serializable {
         @Length(max = 500, message = "Mô tả tính năng không được vượt quá 500 ký tự.")
         String description;
 
-        @URL(message = "URL ảnh tính năng không hợp lệ.")
-        String image;
+        @NotNull(message = "Không được bỏ trống ảnh tính năng.")
+        Object image;
     }
 
-    @Value
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class CreateProductCategoryRequest implements Serializable {
         Integer id;
 
         @Length(max = 255, message = "Tên danh mục không được vượt quá 255 ký tự.")
         String name;
 
-        @URL(message = "URL ảnh danh mục không hợp lệ.")
-        String image;
+        Object image;
     }
 }

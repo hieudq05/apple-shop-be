@@ -1,5 +1,7 @@
 package com.web.appleshop.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
@@ -10,8 +12,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("admin/products")
@@ -23,9 +27,12 @@ public class AdminProductController {
         this.productService = productService;
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<String>> createProduct(@Valid @RequestBody CreateProductRequest request) {
-        productService.createProduct(request);
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<String>> createProduct(
+            @RequestPart("product") String productJson,
+            @RequestParam Map<String, MultipartFile> files
+            ) {
+        productService.createProduct(productJson, files);
         return ResponseEntity.ok(ApiResponse.success(null, "Product created successfully"));
     }
 

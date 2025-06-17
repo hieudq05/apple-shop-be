@@ -1,7 +1,9 @@
 package com.web.appleshop.util;
 
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +13,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.UUID;
 
+@Component
 public class UploadUtils {
     public static final String UPLOAD_DIR = "./uploads/";
     public static final String[] ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif"};
@@ -34,7 +37,7 @@ public class UploadUtils {
         return totalSize <= MAX_TOTAL_SIZE;
     }
 
-    public static String uploadFile(MultipartFile file) {
+    public String uploadFile(MultipartFile file) {
         Path uploadPath = Paths.get(UPLOAD_DIR);
 
         if (file.isEmpty()) {
@@ -64,6 +67,6 @@ public class UploadUtils {
             throw new IllegalStateException("Lỗi khi lưu file ảnh.", e);
         }
 
-        return "/uploads/" + uniqueFilename;
+        return ServletUriComponentsBuilder.fromCurrentContextPath().path("/uploads/"+uniqueFilename).toUriString();
     }
 }
