@@ -46,12 +46,12 @@ class AdminProductIntegrationTest {
         // Create sample data for testing
         ProductAdminResponse.ProductOwnerAdminResponse createdBy =
             new ProductAdminResponse.ProductOwnerAdminResponse(
-                1, "admin@test.com", "Test", "Admin", "test.jpg", "testadmin"
+                1, "admin@test.com", "Test", "Admin", "test.jpg"
             );
 
         ProductAdminResponse.ProductUpdatedAdminResponse updatedBy =
             new ProductAdminResponse.ProductUpdatedAdminResponse(
-                1, "admin@test.com", "Test", "Admin", "test.jpg", "testadmin"
+                1, "admin@test.com", "Test", "Admin", "test.jpg"
             );
 
         ProductAdminResponse.ProductCategoryAdminResponse category =
@@ -100,8 +100,6 @@ class AdminProductIntegrationTest {
         assertThat(response.getBody().getData().getFirst().getId()).isEqualTo(1);
         assertThat(response.getBody().getData().getFirst().getName()).isEqualTo("Test iPhone");
         assertThat(response.getBody().getData().getFirst().getDescription()).isEqualTo("Test iPhone description");
-        assertThat(response.getBody().getData().getFirst().getCreatedBy().getUsername()).isEqualTo("testadmin");
-        assertThat(response.getBody().getData().getFirst().getUpdatedBy().getUsername()).isEqualTo("testadmin");
         assertThat(response.getBody().getData().getFirst().getCategory().getName()).isEqualTo("Test Electronics");
         assertThat(response.getBody().getData().getFirst().getStocks()).hasSize(1);
         assertThat(response.getBody().getMeta()).isNotNull();

@@ -178,8 +178,7 @@ class ProductServiceImplTest {
         assertThat(result.getCreatedBy().getEmail()).isEqualTo("admin@example.com");
         assertThat(result.getCreatedBy().getFirstName()).isEqualTo("John");
         assertThat(result.getCreatedBy().getLastName()).isEqualTo("Doe");
-        assertThat(result.getCreatedBy().getUsername()).isEqualTo("admin");
-        
+
         // Verify updatedBy mapping
         assertThat(result.getUpdatedBy()).isNotNull();
         assertThat(result.getUpdatedBy().getId()).isEqualTo(1);

@@ -43,12 +43,12 @@ class AdminProductControllerTest {
         // Create sample data for testing
         ProductAdminResponse.ProductOwnerAdminResponse createdBy = 
             new ProductAdminResponse.ProductOwnerAdminResponse(
-                1, "admin@example.com", "John", "Doe", "image.jpg", "admin"
+                1, "admin@example.com", "John", "Doe", "image.jpg"
             );
 
         ProductAdminResponse.ProductUpdatedAdminResponse updatedBy = 
             new ProductAdminResponse.ProductUpdatedAdminResponse(
-                1, "admin@example.com", "John", "Doe", "image.jpg", "admin"
+                1, "admin@example.com", "John", "Doe", "image.jpg"
             );
 
         ProductAdminResponse.ProductCategoryAdminResponse category = 
