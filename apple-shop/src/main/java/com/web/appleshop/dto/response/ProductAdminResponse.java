@@ -34,7 +34,6 @@ public class ProductAdminResponse implements Serializable {
         String firstName;
         String lastName;
         String image;
-        String username;
     }
 
     /**
@@ -47,7 +46,6 @@ public class ProductAdminResponse implements Serializable {
         String firstName;
         String lastName;
         String image;
-        String username;
     }
 
     /**

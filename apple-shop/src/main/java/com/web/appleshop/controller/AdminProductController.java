@@ -1,15 +1,11 @@
 package com.web.appleshop.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.web.appleshop.dto.request.CreateProductRequest;
-import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.ProductAdminResponse;
 import com.web.appleshop.entity.User;
-import com.web.appleshop.security.JwtAuthenticationFilter;
 import com.web.appleshop.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,15 +18,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("admin/products")
+@RequiredArgsConstructor
 public class AdminProductController {
 
     private final ProductService productService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    public AdminProductController(ProductService productService, JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.productService = productService;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
 
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<String>> createProduct(
@@ -65,5 +56,11 @@ public class AdminProductController {
                 productAdminResponsePage.getTotalElements()
         );
         return ResponseEntity.ok(ApiResponse.success(productAdminResponsePage.getContent(), "Get all products successfully", pageableResponse));
+    }
+
+    @GetMapping("{categoryId}/{productId}")
+    public ResponseEntity<ApiResponse<ProductAdminResponse>> getProduct(@PathVariable Integer categoryId, @PathVariable Integer productId) {
+        ProductAdminResponse productAdminResponse = productService.getProductByProductIdForAdmin(categoryId, productId);
+        return ResponseEntity.ok(ApiResponse.success(productAdminResponse, "Get product successfully"));
     }
 }

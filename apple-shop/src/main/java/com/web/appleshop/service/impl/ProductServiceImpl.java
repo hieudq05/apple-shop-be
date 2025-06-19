@@ -329,6 +329,15 @@ public class ProductServiceImpl implements ProductService {
         return convertProductToProductUserResponse(product);
     }
 
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId) {
+        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
+                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+        );
+        return convertProductToProductAdminResponse(product);
+    }
+
     public ProductUserResponse convertProductToProductUserResponse(Product product) {
         Set<ProductUserResponse.ProductStockResponse> stockDtos = new LinkedHashSet<>();
         for (Stock stock : product.getStocks()) {
@@ -344,10 +353,10 @@ public class ProductServiceImpl implements ProductService {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public ProductAdminResponse convertProductToProductAdminResponse(Product product) {
         User createdByEntity = product.getCreatedBy();
-        ProductAdminResponse.ProductOwnerAdminResponse createdByDto = new ProductAdminResponse.ProductOwnerAdminResponse(createdByEntity.getId(), createdByEntity.getEmail(), createdByEntity.getFirstName(), createdByEntity.getLastName(), createdByEntity.getImage(), createdByEntity.getUsername());
+        ProductAdminResponse.ProductOwnerAdminResponse createdByDto = new ProductAdminResponse.ProductOwnerAdminResponse(createdByEntity.getId(), createdByEntity.getEmail(), createdByEntity.getFirstName(), createdByEntity.getLastName(), createdByEntity.getImage());
 
         User updatedByEntity = product.getUpdatedBy();
-        ProductAdminResponse.ProductUpdatedAdminResponse updatedByDto = new ProductAdminResponse.ProductUpdatedAdminResponse(updatedByEntity.getId(), updatedByEntity.getEmail(), updatedByEntity.getFirstName(), updatedByEntity.getLastName(), updatedByEntity.getImage(), updatedByEntity.getUsername());
+        ProductAdminResponse.ProductUpdatedAdminResponse updatedByDto = new ProductAdminResponse.ProductUpdatedAdminResponse(updatedByEntity.getId(), updatedByEntity.getEmail(), updatedByEntity.getFirstName(), updatedByEntity.getLastName(), updatedByEntity.getImage());
 
         Category categoryEntity = product.getCategory();
         ProductAdminResponse.ProductCategoryAdminResponse categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(categoryEntity.getId(), categoryEntity.getName(), categoryEntity.getImage());
