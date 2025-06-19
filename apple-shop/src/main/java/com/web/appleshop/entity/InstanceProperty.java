@@ -34,23 +34,7 @@ public class InstanceProperty {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @ManyToMany(cascade = {
-            CascadeType.MERGE,
-            CascadeType.PERSIST,
-            CascadeType.REFRESH
-    }, fetch = FetchType.EAGER)
-    @JoinTable(name = "stock_instances",
-            joinColumns = @JoinColumn(name = "instance_id"),
-            inverseJoinColumns = @JoinColumn(name = "stock_id"))
+    @OneToMany(mappedBy = "instance")
     private Set<Stock> stocks = new LinkedHashSet<>();
 
-    public void addStock(Stock stock) {
-        this.stocks.add(stock);
-        stock.getInstanceProperties().add(this);
-    }
-
-    public void removeStock(Stock stock) {
-        this.stocks.remove(stock);
-        stock.getInstanceProperties().remove(this);
-    }
 }

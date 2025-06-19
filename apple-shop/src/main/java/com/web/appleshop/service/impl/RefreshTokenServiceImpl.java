@@ -13,8 +13,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
-    public void save(RefreshToken refreshToken) {
-        refreshTokenRepository.save(refreshToken);
+    public RefreshToken save(RefreshToken refreshToken) {
+        return refreshTokenRepository.save(refreshToken);
     }
 
 

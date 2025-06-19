@@ -1,0 +1,89 @@
+{
+  "success": true,
+  "message": "Get all products successfully",
+  "data": [
+    {
+      "id": 22,
+      "name": "iPhone XS Max",
+      "description": "This is demo description.",
+      "createdAt": "2025-06-17T06:36:09.733",
+      "createdBy": {
+        "id": 9,
+        "email": "hieuu8a@gmail.com",
+        "firstName": "Duong Quoc",
+        "lastName": "Hieu",
+        "image": "https://lh3.googleusercontent.com/a/ACg8ocKLPy6rah2Eda_rvkyYH7KsU_cRub9RvAbbs8d7Iu9E4Y2Vw6I=s576-c-no",
+        "username": "hieuu8a@gmail.com"
+      },
+      "updatedAt": "2025-06-19T23:01:17.973",
+      "updatedBy": {
+        "id": 9,
+        "email": "hieuu8a@gmail.com",
+        "firstName": "Duong Quoc",
+        "lastName": "Hieu",
+        "image": "https://lh3.googleusercontent.com/a/ACg8ocKLPy6rah2Eda_rvkyYH7KsU_cRub9RvAbbs8d7Iu9E4Y2Vw6I=s576-c-no",
+        "username": "hieuu8a@gmail.com"
+      },
+      "category": {
+        "id": 17,
+        "name": "iPhone",
+        "image": "placeholder_category1"
+      },
+      "stocks": [
+        {
+          "id": 44,
+          "quantity": 26,
+          "imageUrl": "http://localhost:8080/api/v1/uploads/9946b8b2-d03b-4951-92e7-30a65db568b0_%20-3.jpg",
+          "price": 9999999.00
+        },
+        {
+          "id": 45,
+          "quantity": 26,
+          "imageUrl": "http://localhost:8080/api/v1/uploads/169575f3-488d-4dbe-8f05-a68aacb74a2f_%20-2.jpg",
+          "price": 23900000.00
+        },
+        {
+          "id": 46,
+          "quantity": 26,
+          "imageUrl": "http://localhost:8080/api/v1/uploads/9e1b83a5-c943-4f05-b23f-aa8fd743063a_%20-4.jpg",
+          "price": 23900000.00
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "name": "iPhone XS Max",
+      "description": "This is demo description.",
+      "createdAt": "2025-06-17T13:59:52.053",
+      "createdBy": {
+        "id": 9,
+        "email": "hieuu8a@gmail.com",
+        "firstName": "Duong Quoc",
+        "lastName": "Hieu",
+        "image": "https://lh3.googleusercontent.com/a/ACg8ocKLPy6rah2Eda_rvkyYH7KsU_cRub9RvAbbs8d7Iu9E4Y2Vw6I=s576-c-no",
+        "username": "hieuu8a@gmail.com"
+      },
+      "updatedAt": "2025-06-17T13:59:52.053",
+      "updatedBy": {
+        "id": 9,
+        "email": "hieuu8a@gmail.com",
+        "firstName": "Duong Quoc",
+        "lastName": "Hieu",
+        "image": "https://lh3.googleusercontent.com/a/ACg8ocKLPy6rah2Eda_rvkyYH7KsU_cRub9RvAbbs8d7Iu9E4Y2Vw6I=s576-c-no",
+        "username": "hieuu8a@gmail.com"
+      },
+      "category": {
+        "id": 11,
+        "name": "iPhone",
+        "image": "https://apple.com"
+      },
+      "stocks": []
+    }
+  ],
+  "meta": {
+    "currentPage": 0,
+    "pageSize": 2,
+    "totalPage": 1,
+    "totalElements": 2
+  }
+}

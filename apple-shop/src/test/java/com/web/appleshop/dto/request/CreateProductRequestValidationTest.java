@@ -237,7 +237,7 @@ class CreateProductRequestValidationTest {
                 100,
                 new BigDecimal("999.99"),
                 Set.of(createValidPhoto()),
-                Set.of(createValidInstance())
+                createValidInstance()
         );
     }
 
