@@ -104,10 +104,9 @@ public class JwtServiceImpl implements JwtService {
         String refreshToken = buildToken(new HashMap<>(), userDetails, refreshExpiration);
 
         Claims claims = extractAllClaims(refreshToken);
+        RefreshToken refreshTokenEntity = refreshTokenService.save(createRefreshTokenEntity(userDetails, claims, "Bearer " + refreshToken));
 
-        refreshTokenService.save(createRefreshTokenEntity(userDetails, claims, "Bearer " + refreshToken));
-
-        return "Bearer " + refreshToken;
+        return refreshTokenEntity.getToken();
     }
 
     /**
@@ -174,7 +173,7 @@ public class JwtServiceImpl implements JwtService {
         if (!this.isTokenValid(token, userDetails)) {
             throw new BadRequestException("Your refresh token is invalid.");
         }
-        refreshTokenRepository.findRefreshTokenByToken(token)
+        RefreshToken refreshTokenEntity = refreshTokenRepository.findRefreshTokenByToken("Bearer " + token)
                 .orElseThrow(() -> new BadRequestException("Your refresh token is invalid."));
     }
 

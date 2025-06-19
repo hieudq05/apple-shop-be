@@ -6,8 +6,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.hibernate.ResourceClosedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -22,6 +25,8 @@ import java.io.OutputStream;
 @Component
 public class CustomAuthExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(CustomAuthExceptionHandler.class);
+
     /**
      * Phương thức này sẽ được gọi khi có lỗi xác thực (AuthenticationException).
      * Ví dụ: sai username/password, token không hợp lệ, chưa đăng nhập...
@@ -35,14 +40,16 @@ public class CustomAuthExceptionHandler implements AuthenticationEntryPoint, Acc
         String errorCode = "UNAUTHORIZED";
         String errorMessage = authException.getMessage();
 
-        if(authException instanceof DisabledException) {
+        if (authException instanceof DisabledException) {
             errorCode = "USER_DISABLED";
             errorMessage = "Tài khoản của bạn đã bị vô hiệu hóa hoặc chưa được kích hoạt.";
-        } else if(authException instanceof BadCredentialsException) {
+        } else if (authException instanceof BadCredentialsException) {
             errorMessage = "Email hoặc mật khẩu không chính xác.";
-        } else if(authException instanceof InsufficientAuthenticationException) {
+        } else if (authException instanceof InsufficientAuthenticationException) {
             errorMessage = "Bạn không có quyền truy cập vào tài nguyên này.";
         }
+
+        log.warn("Throw exception: {}", authException.getClass());
 
         ApiResponse<Object> apiResponse = ApiResponse.error(
                 errorCode,

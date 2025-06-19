@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 public interface UserService {
     UserDetails findByEmail(String email);
 
-    User findUserByLoginIdentifier(String loginIdentifier);
+    User findUserByLoginIdentifier(String email);
 
     void save(User user);
 
