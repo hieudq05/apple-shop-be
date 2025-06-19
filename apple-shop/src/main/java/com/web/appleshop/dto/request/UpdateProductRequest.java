@@ -1,9 +1,7 @@
 package com.web.appleshop.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -93,6 +91,8 @@ public class UpdateProductRequest implements Serializable {
         Integer quantity;
 
         @NotNull(message = "Không được bỏ trống giá sản phẩm.")
+        @DecimalMin(value = "0.0", inclusive = false, message = "Giá sản phẩm phải lớn hơn 0.")
+        @DecimalMax(value = "999999999.99", message = "Giá sản phẩm không được vượt quá 999,999,999.99.")
         BigDecimal price;
 
         @NotNull(message = "Không được bỏ trống ảnh sản phẩm.")
