@@ -113,7 +113,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
-    private CartItemResponse convertCartItemToCartItemResponse(CartItem cartItem) {
+    public CartItemResponse convertCartItemToCartItemResponse(CartItem cartItem) {
         CartItemResponse cartItemResponse = new CartItemResponse();
         cartItemResponse.setId(cartItem.getId());
         cartItemResponse.setQuantity(cartItem.getQuantity());
