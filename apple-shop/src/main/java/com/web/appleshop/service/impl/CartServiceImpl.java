@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -57,7 +58,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public CartItem updateCartItem(Integer cartItemId, Integer quantity) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        CartItem cartItem = cartItemRepository.findCartItemById(cartItemId)
+        CartItem cartItem = cartItemRepository.findCartItemByIdAndUserId(cartItemId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng."));
         if (quantity == 0) {
             cartItemRepository.delete(cartItem);
@@ -72,8 +73,12 @@ public class CartServiceImpl implements CartService {
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     @Transactional
     public void deleteCartItem(Integer cartItemId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CartItem cartItem = cartItemRepository.findCartItemByIdAndUserId(cartItemId, user.getId())
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng."));
+
         try {
-            cartItemRepository.deleteCartItemById(cartItemId);
+            cartItemRepository.delete(cartItem);
         } catch (DataAccessException e) {
             log.warn(e.getMessage());
             throw new BadRequestException("Xảy ra lỗi khi xóa sản phẩm trong giỏ hàng. Vui lòng thử lại.");
