@@ -4,6 +4,7 @@ import com.web.appleshop.dto.request.AddCartItemRequest;
 import com.web.appleshop.entity.CartItem;
 import com.web.appleshop.entity.Stock;
 import com.web.appleshop.entity.User;
+import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.StockRepository;
@@ -52,6 +53,8 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @Transactional
     public CartItem updateCartItem(Integer cartItemId, Integer quantity) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         CartItem cartItem = cartItemRepository.findCartItemById(cartItemId)
@@ -63,6 +66,18 @@ public class CartServiceImpl implements CartService {
         validateQuantity(cartItem.getStock(), cartItem, quantity);
         cartItem.setQuantity(quantity);
         return cartItemRepository.save(cartItem);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @Transactional
+    public void deleteCartItem(Integer cartItemId) {
+        try {
+            cartItemRepository.deleteCartItemById(cartItemId);
+        } catch (DataAccessException e) {
+            log.warn(e.getMessage());
+            throw new BadRequestException("Xảy ra lỗi khi xóa sản phẩm trong giỏ hàng. Vui lòng thử lại.");
+        }
     }
 
     private void validateQuantity(Stock stock, CartItem cartItem, Integer requestQuantity) {
