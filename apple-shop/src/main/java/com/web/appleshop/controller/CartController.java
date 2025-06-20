@@ -32,4 +32,10 @@ public class CartController {
         cartService.deleteCartItem(cartItemId);
         return ResponseEntity.ok(ApiResponse.success(null, "Cart item deleted successfully"));
     }
+
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<String>> deleteAllCartItems() {
+        cartService.deleteAllCartItems();
+        return ResponseEntity.ok(ApiResponse.success(null, "All cart items deleted successfully"));
+    }
 }

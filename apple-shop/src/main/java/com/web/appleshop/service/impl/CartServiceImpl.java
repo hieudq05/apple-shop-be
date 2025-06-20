@@ -80,7 +80,18 @@ public class CartServiceImpl implements CartService {
         try {
             cartItemRepository.delete(cartItem);
         } catch (DataAccessException e) {
-            log.warn(e.getMessage());
+            throw new BadRequestException("Xảy ra lỗi khi xóa sản phẩm trong giỏ hàng. Vui lòng thử lại.");
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @Transactional
+    @Override
+    public void deleteAllCartItems() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        try {
+            cartItemRepository.deleteAllByUserId(user.getId());
+        } catch (DataAccessException e) {
             throw new BadRequestException("Xảy ra lỗi khi xóa sản phẩm trong giỏ hàng. Vui lòng thử lại.");
         }
     }
