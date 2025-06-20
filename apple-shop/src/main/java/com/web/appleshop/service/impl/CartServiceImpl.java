@@ -31,10 +31,7 @@ public class CartServiceImpl implements CartService {
         Stock stock = stockRepository.findById(cartItemRequest.getStockId()).orElseThrow(
                 () -> new NotFoundException("Không tìm thấy sản phẩm hoặc sản phẩm không có trong kho.")
         );
-        if (stock.getQuantity() < cartItemRequest.getQuantity()) {
-            throw new IllegalArgumentException("Sản phẩm này đã hết hàng.");
-        }
-        stock.setQuantity(stock.getQuantity() - cartItemRequest.getQuantity());
+
         cartItem = cartItemRepository.findCartItemByUserIdAndStock_Id(user.getId(), stock.getId()).orElse(
                 CartItem.builder()
                         .stock(stock)
@@ -44,6 +41,11 @@ public class CartServiceImpl implements CartService {
                         .quantity(0)
                         .build()
         );
+        if (stock.getQuantity() < cartItemRequest.getQuantity() + cartItem.getQuantity()) {
+            throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
+        } else if (cartItemRequest.getQuantity() + cartItem.getQuantity() > 10) {
+            throw new IllegalArgumentException("Bạn chỉ có thể mua tối đa 10 sản phẩm trong một lần. Liên hệ với chúng tôi để đặt hàng với số lượng lớn hơn.");
+        }
 
         cartItem.setQuantity(cartItemRequest.getQuantity() + cartItem.getQuantity());
         return cartItemRepository.save(cartItem);
