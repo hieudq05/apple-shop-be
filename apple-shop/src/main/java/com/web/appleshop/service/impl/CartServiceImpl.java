@@ -74,7 +74,7 @@ public class CartServiceImpl implements CartService {
     public void deleteCartItem(Integer cartItemId) {
         try {
             cartItemRepository.deleteCartItemById(cartItemId);
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
             log.warn(e.getMessage());
             throw new BadRequestException("Xảy ra lỗi khi xóa sản phẩm trong giỏ hàng. Vui lòng thử lại.");
         }
