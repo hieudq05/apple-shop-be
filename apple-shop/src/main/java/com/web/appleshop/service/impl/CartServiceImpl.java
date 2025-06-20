@@ -8,8 +8,11 @@ import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.service.CartService;
+import com.web.appleshop.exception.IllegalArgumentException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
 
+    private static final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);
     private final StockRepository stockRepository;
     private final CartItemRepository cartItemRepository;
 
@@ -41,13 +45,32 @@ public class CartServiceImpl implements CartService {
                         .quantity(0)
                         .build()
         );
-        if (stock.getQuantity() < cartItemRequest.getQuantity() + cartItem.getQuantity()) {
-            throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
-        } else if (cartItemRequest.getQuantity() + cartItem.getQuantity() > 10) {
-            throw new IllegalArgumentException("Bạn chỉ có thể mua tối đa 10 sản phẩm trong một lần. Liên hệ với chúng tôi để đặt hàng với số lượng lớn hơn.");
-        }
+        validateQuantity(stock, cartItem, cartItemRequest.getQuantity() + cartItem.getQuantity());
 
         cartItem.setQuantity(cartItemRequest.getQuantity() + cartItem.getQuantity());
         return cartItemRepository.save(cartItem);
+    }
+
+    @Override
+    public CartItem updateCartItem(Integer cartItemId, Integer quantity) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CartItem cartItem = cartItemRepository.findCartItemById(cartItemId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm trong giỏ hàng."));
+        if (quantity == 0) {
+            cartItemRepository.delete(cartItem);
+            return null;
+        }
+        validateQuantity(cartItem.getStock(), cartItem, quantity);
+        cartItem.setQuantity(quantity);
+        return cartItemRepository.save(cartItem);
+    }
+
+    private void validateQuantity(Stock stock, CartItem cartItem, Integer requestQuantity) {
+        if (stock.getQuantity() < requestQuantity) {
+            throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
+        }
+        if (requestQuantity > 10) {
+            throw new IllegalArgumentException("Bạn chỉ có thể thêm tối đa 10 sản phẩm trong giỏ hàng. Liên hệ với chúng tôi để đặt hàng với số lượng lớn hơn.");
+        }
     }
 }
