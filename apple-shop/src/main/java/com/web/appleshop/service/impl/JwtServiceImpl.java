@@ -1,6 +1,8 @@
 package com.web.appleshop.service.impl;
 
 import com.web.appleshop.entity.RefreshToken;
+import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.repository.RefreshTokenRepository;
 import com.web.appleshop.service.JwtService;
 import com.web.appleshop.service.RefreshTokenService;
 import com.web.appleshop.service.UserService;
@@ -8,6 +10,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -23,8 +27,10 @@ import java.util.function.Function;
 
 @Service
 public class JwtServiceImpl implements JwtService {
+    private static final Logger log = LoggerFactory.getLogger(JwtServiceImpl.class);
     private final RefreshTokenService refreshTokenService;
     private final UserService userService;
+    private final RefreshTokenRepository refreshTokenRepository;
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
 
@@ -34,9 +40,10 @@ public class JwtServiceImpl implements JwtService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
-    public JwtServiceImpl(RefreshTokenService refreshTokenService, UserService userService) {
+    public JwtServiceImpl(RefreshTokenService refreshTokenService, UserService userService, RefreshTokenRepository refreshTokenRepository) {
         this.refreshTokenService = refreshTokenService;
         this.userService = userService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     /**
@@ -46,14 +53,14 @@ public class JwtServiceImpl implements JwtService {
      * @return String
      */
     public String extractUsername(String token) {
-        return null;
+        return extractClaim(token, Claims::getSubject);
     }
 
     /**
      * Trích xuất một claim cụ thể từ token.
      *
      * @param token          JWT token
-     * @param claimsResolver - Một function để lấy claim mong muốn
+     * @param claimsResolver Một function để lấy claim mong muốn
      * @return T - Giá trị của claim
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -97,10 +104,9 @@ public class JwtServiceImpl implements JwtService {
         String refreshToken = buildToken(new HashMap<>(), userDetails, refreshExpiration);
 
         Claims claims = extractAllClaims(refreshToken);
+        RefreshToken refreshTokenEntity = refreshTokenService.save(createRefreshTokenEntity(userDetails, claims, "Bearer " + refreshToken));
 
-        refreshTokenService.save(createRefreshToken(userDetails, claims, refreshToken));
-
-        return "Bearer " + refreshToken;
+        return refreshTokenEntity.getToken();
     }
 
     /**
@@ -162,6 +168,15 @@ public class JwtServiceImpl implements JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    @Override
+    public void validateRefreshToken(String token, UserDetails userDetails) {
+        if (!this.isTokenValid(token, userDetails)) {
+            throw new BadRequestException("Your refresh token is invalid.");
+        }
+        RefreshToken refreshTokenEntity = refreshTokenRepository.findRefreshTokenByToken("Bearer " + token)
+                .orElseThrow(() -> new BadRequestException("Your refresh token is invalid."));
+    }
+
     /**
      * Trích xuất toàn bộ payload (claims) từ token.
      *
@@ -187,7 +202,7 @@ public class JwtServiceImpl implements JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private RefreshToken createRefreshToken(UserDetails userDetails, Claims claims, String refreshToken) {
+    private RefreshToken createRefreshTokenEntity(UserDetails userDetails, Claims claims, String refreshToken) {
         RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setToken(refreshToken);
         refreshTokenEntity.setIssuedAt(claims.getIssuedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());

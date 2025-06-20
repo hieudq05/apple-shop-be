@@ -1,8 +1,7 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
@@ -12,16 +11,19 @@ import java.util.Set;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "instance_properties")
 public class InstanceProperty {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Nationalized
-    @Column(name = "Name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @ColumnDefault("getdate()")
@@ -32,10 +34,7 @@ public class InstanceProperty {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @ManyToMany
-    @JoinTable(name = "stock_instances",
-            joinColumns = @JoinColumn(name = "instance_id"),
-            inverseJoinColumns = @JoinColumn(name = "stock_id"))
+    @OneToMany(mappedBy = "instance")
     private Set<Stock> stocks = new LinkedHashSet<>();
 
 }

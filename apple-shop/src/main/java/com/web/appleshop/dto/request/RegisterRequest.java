@@ -26,10 +26,6 @@ public class RegisterRequest {
     @Past(message = "Ngày sinh phải là một ngày trong quá khứ.")
     LocalDate birth;
 
-    @NotBlank(message = "Tên đăng nhập không được để trống.")
-    @Length(min = 5, max = 155, message = "Tên đăng nhập phải có độ dài từ 5 đến 155 kí tự.")
-    String username;
-
     @NotBlank(message = "Email không được để trống.")
     @Email(message = "Email không đúng định dạng.")
     @Length(min = 5, max = 255, message = "Email phải có độ dài từ 5 đến 255 kí tự.")

@@ -1,0 +1,445 @@
+package com.web.appleshop.service.impl;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.web.appleshop.dto.request.CreateProductRequest;
+import com.web.appleshop.dto.request.UpdateProductRequest;
+import com.web.appleshop.dto.response.ProductAdminResponse;
+import com.web.appleshop.dto.response.ProductUserResponse;
+import com.web.appleshop.entity.*;
+import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.exception.NotFoundException;
+import com.web.appleshop.repository.*;
+import com.web.appleshop.service.ProductService;
+import com.web.appleshop.util.UploadUtils;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ProductServiceImpl implements ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
+    private final FeatureRepository featureRepository;
+    private final ColorRepository colorRepository;
+    private final StockRepository stockRepository;
+    private final ProductPhotoRepository productPhotoRepository;
+    private final InstancePropertyRepository instancePropertyRepository;
+    private final UploadUtils uploadUtils;
+
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Override
+    public void createProduct(String requestData, Map<String, MultipartFile> files) {
+
+        CreateProductRequest request = convertRequestDataToCreateProductRequest(requestData, files);
+
+        User createdBy = userRepository.getUserByEmail(request.getCreatedBy()).orElseThrow(() -> new NotFoundException("User not found with identifier: " + request.getCreatedBy()));
+
+        Category category;
+        if (request.getCategory().getId() != null) {
+            category = categoryRepository.findById(request.getCategory().getId()).orElseThrow(() -> new NotFoundException("Category not found with id: " + request.getCategory().getId()));
+        } else {
+            category = Category.builder()
+                    .name(request.getCategory().getName())
+                    .image(
+                            request.getCategory().getImage() instanceof MultipartFile
+                                    ? uploadUtils.uploadFile((MultipartFile) request.getCategory().getImage())
+                                    : request.getCategory().getImage().toString()
+                    )
+                    .build();
+            category = categoryRepository.save(category);
+        }
+
+        Product product = new Product();
+        BeanUtils.copyProperties(request, product);
+        product.setCreatedBy(createdBy);
+        product.setCategory(category);
+        product.setUpdatedBy(createdBy);
+
+        for (CreateProductRequest.CreateProductFeatureRequest featureRequest : request.getFeatures()) {
+            Feature feature;
+            if (featureRequest.getId() != null) {
+                feature = featureRepository.findById(featureRequest.getId()).orElseThrow(() -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
+            } else {
+                feature = Feature.builder()
+                        .name(featureRequest.getName())
+                        .description(featureRequest.getDescription())
+                        .image(
+                                featureRequest.getImage() instanceof MultipartFile
+                                        ? uploadUtils.uploadFile((MultipartFile) featureRequest.getImage())
+                                        : featureRequest.getImage().toString()
+                        )
+                        .createdBy(createdBy)
+                        .products(new LinkedHashSet<>())
+                        .build();
+                feature = featureRepository.save(feature);
+            }
+            feature.addProduct(product);
+        }
+
+        product = productRepository.save(product);
+
+        Set<Stock> stocks = new LinkedHashSet<>();
+        for (CreateProductRequest.CreateProductStockRequest stockRequest : request.getStocks()) {
+            Color color;
+            if (stockRequest.getColor().getId() != null) {
+                color = colorRepository.findById(stockRequest.getColor().getId()).orElseThrow(() -> new NotFoundException("Color not found with id: " + stockRequest.getColor().getId()));
+            } else {
+                color = Color.builder().name(stockRequest.getColor().getName()).hexCode(stockRequest.getColor().getHexCode()).build();
+            }
+            color = colorRepository.save(color);
+
+            Stock stock = new Stock();
+            BeanUtils.copyProperties(stockRequest, stock);
+            stock.setProduct(product);
+
+            InstanceProperty instanceProperty;
+            if (stockRequest.getInstanceProperty().getId() != null) {
+                instanceProperty = instancePropertyRepository.findById(stockRequest.getInstanceProperty().getId()).orElseThrow(() -> new NotFoundException("Instance property not found with id: " + stockRequest.getInstanceProperty().getId()));
+            } else {
+                instanceProperty = InstanceProperty.builder().name(stockRequest.getInstanceProperty().getName()).createdBy(createdBy).createdAt(LocalDateTime.now()).stocks(new LinkedHashSet<>()).build();
+                instanceProperty = instancePropertyRepository.save(instanceProperty);
+            }
+            stock.setInstance(instanceProperty);
+
+            stock = stockRepository.save(stock);
+
+            Set<ProductPhoto> productPhotos = new LinkedHashSet<>();
+            for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest.getProductPhotos()) {
+                ProductPhoto productPhoto = new ProductPhoto();
+                productPhoto.setImageUrl(
+                        photoRequest.getImageUrl() instanceof MultipartFile
+                                ? uploadUtils.uploadFile((MultipartFile) photoRequest.getImageUrl())
+                                : photoRequest.getImageUrl().toString()
+                );
+                productPhoto.setAlt(photoRequest.getAlt());
+                productPhoto.setStock(stock);
+                productPhotos.add(productPhoto);
+            }
+
+            if (!productPhotos.isEmpty()) {
+                productPhotoRepository.saveAll(productPhotos);
+                stock.setProductPhotos(productPhotos);
+            }
+            stock.setColor(color);
+
+            stocks.add(stock);
+        }
+
+        product.setStocks(stocks);
+        productRepository.save(product);
+    }
+
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Override
+    public void updateProduct(Integer categoryId, Integer productId, String productJson, Map<String, MultipartFile> files, Integer[] productPhotoDeletions, User updatedBy) {
+        // 1. Tải các entity gốc từ DB
+        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId)
+                .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId));
+
+        User persistentUpdatedBy = userRepository.getUserByEmail(updatedBy.getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + updatedBy.getEmail()));
+
+        // 2. Chuyển đổi JSON string thành DTO
+        ObjectMapper objectMapper = new ObjectMapper();
+        UpdateProductRequest productRequest;
+        try {
+            productRequest = objectMapper.readValue(productJson, UpdateProductRequest.class);
+        } catch (JsonProcessingException e) {
+            log.info(e.getMessage());
+            throw new BadRequestException("Lỗi khi chuyển đổi dữ liệu sản phẩm.");
+        }
+
+        // 3. Cập nhật các thuộc tính của Product
+        product.setName(productRequest.getName());
+        product.setDescription(productRequest.getDescription());
+        product.setUpdatedAt(LocalDateTime.now());
+        product.setUpdatedBy(persistentUpdatedBy);
+
+        // 4. Xử lý Category (Logic gốc của bạn)
+        Category category;
+        if (productRequest.getCategory().getId() != null) {
+            category = categoryRepository.findById(productRequest.getCategory().getId())
+                    .orElseThrow(() -> new NotFoundException("Category not found with id: " + productRequest.getCategory().getId()));
+            category.setName(productRequest.getCategory().getName());
+            category.setImage(
+                    productRequest.getCategory().getImage() instanceof MultipartFile
+                            ? uploadUtils.uploadFile((MultipartFile) productRequest.getCategory().getImage())
+                            : productRequest.getCategory().getImage().toString()
+            );
+        } else {
+            category = Category.builder()
+                    .name(productRequest.getCategory().getName())
+                    .image(
+                            productRequest.getCategory().getImage() instanceof MultipartFile
+                                    ? uploadUtils.uploadFile((MultipartFile) productRequest.getCategory().getImage())
+                                    : productRequest.getCategory().getImage().toString()
+                    )
+                    .build();
+            category = categoryRepository.save(category); // Cần save vì là entity mới
+        }
+        product.setCategory(category);
+
+        // 5. SỬA LỖI: Xử lý collection Features
+        Set<Feature> managedFeatures = product.getFeatures();
+        managedFeatures.clear(); // Xóa các mối quan hệ cũ
+
+        Set<Feature> newFeaturesToAdd = productRequest.getFeatures().stream().map(featureRequest -> {
+            Feature feature;
+            if (featureRequest.getId() != null) {
+                feature = featureRepository.findById(featureRequest.getId())
+                        .orElseThrow(() -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
+            } else {
+                feature = Feature.builder()
+                        .name(featureRequest.getName())
+                        .description(featureRequest.getDescription())
+                        .image(
+                                featureRequest.getImage() instanceof MultipartFile
+                                        ? uploadUtils.uploadFile((MultipartFile) featureRequest.getImage())
+                                        : featureRequest.getImage().toString()
+                        )
+                        .createdBy(persistentUpdatedBy)
+                        .products(new LinkedHashSet<>())
+                        .build();
+                feature = featureRepository.save(feature); // Cần save vì là entity mới
+            }
+            feature.addProduct(product);
+            return feature;
+        }).collect(Collectors.toSet());
+
+        managedFeatures.addAll(newFeaturesToAdd); // Thêm các mối quan hệ mới vào collection đang được quản lý
+
+        // 6. SỬA LỖI: Xử lý collection Stocks
+        Set<Stock> managedStocks = product.getStocks();
+        managedStocks.clear(); // Xóa các stock cũ. Do có orphanRemoval=true, Hibernate sẽ xóa chúng khỏi DB.
+
+        Set<Stock> newStocksToAdd = productRequest.getStocks().stream().map(stockRequest -> {
+            Stock stock;
+            if (stockRequest.getId() != null) {
+                stock = stockRepository.findById(stockRequest.getId()).orElseGet(Stock::new);
+            } else {
+                stock = new Stock();
+            }
+
+            stock.setProduct(product); // Luôn thiết lập mối quan hệ ngược lại
+            stock.setQuantity(stockRequest.getQuantity());
+            stock.setPrice(stockRequest.getPrice());
+
+            // Xử lý Color (Logic gốc của bạn)
+            Color color;
+            if (stockRequest.getColor().getId() != null) {
+                color = colorRepository.findById(stockRequest.getColor().getId())
+                        .orElseThrow(() -> new NotFoundException("Color not found with id: " + stockRequest.getColor().getId()));
+                color.setName(stockRequest.getColor().getName());
+                color.setHexCode(stockRequest.getColor().getHexCode());
+            } else {
+                color = Color.builder()
+                        .name(stockRequest.getColor().getName())
+                        .hexCode(stockRequest.getColor().getHexCode())
+                        .build();
+                color = colorRepository.save(color); // Cần save vì là entity mới
+            }
+            stock.setColor(color);
+
+            // Xử lý InstanceProperty (Logic gốc của bạn)
+            InstanceProperty instanceProperty;
+            if (stockRequest.getInstanceProperty().getId() != null) {
+                instanceProperty = instancePropertyRepository.findById(stockRequest.getInstanceProperty().getId())
+                        .orElseThrow(() -> new NotFoundException("Instance property not found with id: " + stockRequest.getInstanceProperty().getId()));
+                instanceProperty.setName(stockRequest.getInstanceProperty().getName());
+            } else {
+                instanceProperty = InstanceProperty.builder()
+                        .name(stockRequest.getInstanceProperty().getName())
+                        .createdBy(persistentUpdatedBy)
+                        .createdAt(LocalDateTime.now())
+                        .stocks(new LinkedHashSet<>())
+                        .build();
+                instanceProperty = instancePropertyRepository.save(instanceProperty); // Cần save vì là entity mới
+            }
+            stock.setInstance(instanceProperty);
+
+            // SỬA LỖI: Xử lý collection ProductPhotos lồng bên trong
+            Set<ProductPhoto> managedPhotos = stock.getProductPhotos();
+            managedPhotos.clear();
+
+            Set<ProductPhoto> newPhotosToAdd = stockRequest.getProductPhotos().stream().map(photoRequest -> {
+                ProductPhoto productPhoto;
+                if (photoRequest.getId() != null) {
+                    productPhoto = productPhotoRepository.findById(photoRequest.getId())
+                            .orElseThrow(() -> new NotFoundException("Product photo not found with id: " + photoRequest.getId()));
+                } else {
+                    productPhoto = new ProductPhoto();
+                }
+                productPhoto.setStock(stock); // Thiết lập mối quan hệ ngược
+                productPhoto.setImageUrl(
+                        photoRequest.getImageUrl() instanceof MultipartFile
+                                ? uploadUtils.uploadFile((MultipartFile) photoRequest.getImageUrl())
+                                : photoRequest.getImageUrl().toString()
+                );
+                productPhoto.setAlt(photoRequest.getAlt());
+                return productPhoto;
+            }).collect(Collectors.toSet());
+
+            managedPhotos.addAll(newPhotosToAdd);
+
+            return stock;
+        }).collect(Collectors.toSet());
+
+        managedStocks.addAll(newStocksToAdd);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Override
+    public Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable) {
+        Page<Product> products = productRepository.findAll(pageable);
+        return products.map(this::convertProductToProductAdminResponse);
+    }
+
+    @Override
+    public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
+        Page<Product> products = productRepository.findAllByCategory_Id(categoryId, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
+        return products.map(this::convertProductToProductUserResponse);
+    }
+
+    @Override
+    public ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId) {
+        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
+                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+        );
+        return convertProductToProductUserResponse(product);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId) {
+        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
+                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+        );
+        return convertProductToProductAdminResponse(product);
+    }
+
+    public ProductUserResponse convertProductToProductUserResponse(Product product) {
+        Set<ProductUserResponse.ProductStockResponse> stockDtos = new LinkedHashSet<>();
+        for (Stock stock : product.getStocks()) {
+            ProductUserResponse.ProductStockResponse.StockColorResponse colorDto = new ProductUserResponse.ProductStockResponse.StockColorResponse(stock.getColor().getId(), stock.getColor().getName(), stock.getColor().getHexCode());
+            Set<ProductUserResponse.ProductStockResponse.StockPhotoResponse> photoDtos = stock.getProductPhotos().stream().map(photo -> new ProductUserResponse.ProductStockResponse.StockPhotoResponse(photo.getId(), photo.getImageUrl(), photo.getAlt())).collect(Collectors.toSet());
+            ProductUserResponse.ProductStockResponse.StockInstanceResponse instanceDto = new ProductUserResponse.ProductStockResponse.StockInstanceResponse(stock.getInstance().getId(), stock.getInstance().getName(), stock.getInstance().getCreatedAt());
+            stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDto));
+        }
+
+        return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public ProductAdminResponse convertProductToProductAdminResponse(Product product) {
+        User createdByEntity = product.getCreatedBy();
+        ProductAdminResponse.ProductOwnerAdminResponse createdByDto = new ProductAdminResponse.ProductOwnerAdminResponse(createdByEntity.getId(), createdByEntity.getEmail(), createdByEntity.getFirstName(), createdByEntity.getLastName(), createdByEntity.getImage());
+
+        User updatedByEntity = product.getUpdatedBy();
+        ProductAdminResponse.ProductUpdatedAdminResponse updatedByDto = new ProductAdminResponse.ProductUpdatedAdminResponse(updatedByEntity.getId(), updatedByEntity.getEmail(), updatedByEntity.getFirstName(), updatedByEntity.getLastName(), updatedByEntity.getImage());
+
+        Category categoryEntity = product.getCategory();
+        ProductAdminResponse.ProductCategoryAdminResponse categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(categoryEntity.getId(), categoryEntity.getName(), categoryEntity.getImage());
+        BeanUtils.copyProperties(categoryEntity, categoryDto);
+
+        Set<ProductAdminResponse.ProductStockAdminResponse> stockDto = product.getStocks().stream().map(stock -> new ProductAdminResponse.ProductStockAdminResponse(stock.getId(), stock.getQuantity(), stock.getProductPhotos().stream().toList().getFirst().getImageUrl(), stock.getPrice())).collect(Collectors.toSet());
+        return new ProductAdminResponse(product.getId(), product.getName(), product.getDescription(), product.getCreatedAt(), createdByDto, product.getUpdatedAt(), updatedByDto, categoryDto, stockDto);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public CreateProductRequest convertRequestDataToCreateProductRequest(String requestData, Map<String, MultipartFile> files) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        CreateProductRequest productRequest;
+        try {
+            productRequest = objectMapper.readValue(requestData, CreateProductRequest.class);
+        } catch (JsonProcessingException e) {
+            log.info(e.getMessage());
+            throw new BadRequestException("Lỗi khi chuyển đổi dữ liệu sản phẩm.");
+        }
+
+        // Xử lý ảnh category
+        if (productRequest.getCategory().getImage() != null &&
+                productRequest.getCategory().getImage().toString().startsWith("placeholder_")) {
+            String placeholderKey = productRequest.getCategory().getImage().toString();
+            if (files.containsKey(placeholderKey)) {
+                productRequest.setCategory(
+                        new CreateProductRequest.CreateProductCategoryRequest(
+                                productRequest.getCategory().getId(),
+                                productRequest.getCategory().getName(),
+                                files.get(placeholderKey)
+                        )
+                );
+            }
+        }
+
+        // Xử lý ảnh features
+        Set<CreateProductRequest.CreateProductFeatureRequest> updatedFeatures = new HashSet<>();
+        for (CreateProductRequest.CreateProductFeatureRequest featureRequest : productRequest.getFeatures()) {
+            if (featureRequest.getImage() != null &&
+                    featureRequest.getImage().toString().startsWith("placeholder_")) {
+                String placeholderKey = featureRequest.getImage().toString();
+                if (files.containsKey(placeholderKey)) {
+                    updatedFeatures.add(
+                            new CreateProductRequest.CreateProductFeatureRequest(
+                                    featureRequest.getId(),
+                                    featureRequest.getName(),
+                                    featureRequest.getDescription(),
+                                    files.get(placeholderKey)
+                            )
+                    );
+                } else {
+                    updatedFeatures.add(featureRequest);
+                }
+            } else {
+                updatedFeatures.add(featureRequest);
+            }
+        }
+        productRequest.setFeatures(updatedFeatures);
+
+        // Xử lý ảnh product photos
+        for (CreateProductRequest.CreateProductStockRequest stockRequest : productRequest.getStocks()) {
+            Set<CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest> updatedPhotos = new HashSet<>();
+            for (CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest photoRequest : stockRequest.getProductPhotos()) {
+                if (photoRequest.getImageUrl() != null &&
+                        photoRequest.getImageUrl().toString().startsWith("placeholder_")) {
+                    String placeholderKey = photoRequest.getImageUrl().toString();
+                    if (files.containsKey(placeholderKey)) {
+                        updatedPhotos.add(
+                                new CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest(
+                                        files.get(placeholderKey),
+                                        photoRequest.getAlt()
+                                )
+                        );
+                    } else {
+                        updatedPhotos.add(photoRequest);
+                    }
+                } else {
+                    updatedPhotos.add(photoRequest);
+                }
+            }
+            stockRequest.setProductPhotos(updatedPhotos);
+        }
+
+        return productRequest;
+    }
+}

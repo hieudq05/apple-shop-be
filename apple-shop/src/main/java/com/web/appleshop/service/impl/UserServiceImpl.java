@@ -1,7 +1,6 @@
 package com.web.appleshop.service.impl;
 
 import com.web.appleshop.entity.User;
-import com.web.appleshop.exception.ForbiddenException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.UserService;
@@ -19,15 +18,15 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails findByLoginIdentifier(String loginIdentifier) {
-        return userRepository.findByUsernameOrEmailOrPhone(loginIdentifier, loginIdentifier, loginIdentifier)
-                .orElseThrow(() -> new NotFoundException("User not found with identifier: " + loginIdentifier));
+    public UserDetails findByEmail(String email) {
+        return userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
     }
 
     @Override
-    public User findUserByLoginIdentifier(String loginIdentifier) {
-        User user = userRepository.getUserByUsernameOrEmailOrPhone(loginIdentifier, loginIdentifier, loginIdentifier)
-                .orElseThrow(() -> new NotFoundException("User not found with identifier: " + loginIdentifier));
+    public User findUserByLoginIdentifier(String email) {
+        User user = userRepository.getUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
         return user;
     }
 
@@ -35,4 +34,5 @@ public class UserServiceImpl implements UserService {
     public void save(User user) {
         userRepository.save(user);
     }
+
 }

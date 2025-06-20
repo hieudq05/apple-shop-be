@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "promotions")
+@DynamicInsert
 public class Promotion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,7 +67,11 @@ public class Promotion {
     @ManyToMany(mappedBy = "promotions")
     private Set<Category> categories = new LinkedHashSet<>();
 
-    @ManyToMany
+    @ManyToMany(cascade = {
+            CascadeType.MERGE,
+            CascadeType.PERSIST,
+            CascadeType.REFRESH
+    }, fetch = FetchType.EAGER)
     @JoinTable(
             name = "promotion_product",
             joinColumns = @JoinColumn(name = "promotions_id"),

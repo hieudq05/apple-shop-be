@@ -44,3 +44,6 @@ server:
 otp:
   expired.in: 5
   length: 6
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID}

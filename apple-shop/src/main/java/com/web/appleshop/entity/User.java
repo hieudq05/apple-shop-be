@@ -2,9 +2,7 @@ package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
@@ -23,6 +21,9 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "\"users\"")
 @DynamicInsert
 public class User implements UserDetails {
@@ -33,11 +34,11 @@ public class User implements UserDetails {
     private Integer id;
 
     @Nationalized
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Nationalized
-    @Column(name = "phone", nullable = false, length = 20)
+    @Column(name = "phone", nullable = false, length = 20, unique = true)
     private String phone;
 
     @Nationalized
@@ -87,14 +88,10 @@ public class User implements UserDetails {
     @Column(name = "enabled")
     private Boolean enabled;
 
-    @Column(name = "username", nullable = false, length = 155)
-    private String username;
-
-    @NotNull
     @Column(name = "birth", nullable = false)
     private LocalDate birth;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -150,6 +147,11 @@ public class User implements UserDetails {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .toList();
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
     }
 
     @Override

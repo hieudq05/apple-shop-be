@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @JsonInclude(JsonInclude.Include.NON_NULL) // Không trả về trường có giá trị null
 @Getter
 @Setter
@@ -47,6 +49,13 @@ public class ApiResponse<T> {
         ApiResponse<T> response = new ApiResponse<>();
         response.success = false;
         response.error = new ErrorResponse(errorCode, errorMessage);
+        return response;
+    }
+
+    public static <T> ApiResponse<T> error(String errorCode, String errorMessage, List<ValidationErrorDetail> errors) {
+        ApiResponse<T> response = new ApiResponse<>();
+        response.success = false;
+        response.error = new ErrorResponse(errorCode, errorMessage, errors);
         return response;
     }
 }

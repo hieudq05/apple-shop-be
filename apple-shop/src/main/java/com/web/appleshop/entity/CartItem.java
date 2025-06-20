@@ -3,12 +3,14 @@ package com.web.appleshop.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "cart_items")
+@DynamicInsert
 public class CartItem {
     @Id
     @Column(name = "id", nullable = false)
