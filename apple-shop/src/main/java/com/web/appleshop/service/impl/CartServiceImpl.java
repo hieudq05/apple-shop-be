@@ -8,11 +8,11 @@ import com.web.appleshop.entity.Promotion;
 import com.web.appleshop.entity.Stock;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.exception.IllegalArgumentException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.service.CartService;
-import com.web.appleshop.exception.IllegalArgumentException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,7 +33,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
 
-    private static final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);
     private final StockRepository stockRepository;
     private final CartItemRepository cartItemRepository;
 
@@ -106,11 +106,13 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public Page<CartItemResponse> getCartItems(Pageable pageable) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return cartItemRepository.findCartItemsByUserId(user.getId(), pageable).map(this::convertCartItemToCartItemResponse);
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     private CartItemResponse convertCartItemToCartItemResponse(CartItem cartItem) {
         CartItemResponse cartItemResponse = new CartItemResponse();
         cartItemResponse.setId(cartItem.getId());
@@ -163,6 +165,7 @@ public class CartServiceImpl implements CartService {
         return cartItemResponse;
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     private void validateQuantity(Stock stock, CartItem cartItem, Integer requestQuantity) {
         if (stock.getQuantity() < requestQuantity) {
             throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
