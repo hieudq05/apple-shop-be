@@ -1,6 +1,5 @@
 package com.web.appleshop.repository;
 
-import com.web.appleshop.dto.response.CartItemResponse;
 import com.web.appleshop.entity.CartItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
