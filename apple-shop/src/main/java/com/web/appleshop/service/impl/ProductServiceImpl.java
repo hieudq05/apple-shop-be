@@ -343,7 +343,7 @@ public class ProductServiceImpl implements ProductService {
         for (Stock stock : product.getStocks()) {
             ProductUserResponse.ProductStockResponse.StockColorResponse colorDto = new ProductUserResponse.ProductStockResponse.StockColorResponse(stock.getColor().getId(), stock.getColor().getName(), stock.getColor().getHexCode());
             Set<ProductUserResponse.ProductStockResponse.StockPhotoResponse> photoDtos = stock.getProductPhotos().stream().map(photo -> new ProductUserResponse.ProductStockResponse.StockPhotoResponse(photo.getId(), photo.getImageUrl(), photo.getAlt())).collect(Collectors.toSet());
-            ProductUserResponse.ProductStockResponse.StockInstanceResponse instanceDto = new ProductUserResponse.ProductStockResponse.StockInstanceResponse(stock.getInstance().getId(), stock.getInstance().getName(), stock.getInstance().getCreatedAt());
+            ProductUserResponse.ProductStockResponse.StockInstanceResponse instanceDto = new ProductUserResponse.ProductStockResponse.StockInstanceResponse(stock.getInstance().getId(), stock.getInstance().getName());
             stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDto));
         }
 

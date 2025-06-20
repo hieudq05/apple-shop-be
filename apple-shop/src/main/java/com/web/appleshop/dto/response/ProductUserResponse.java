@@ -56,7 +56,6 @@ public class ProductUserResponse implements Serializable {
         public static class StockInstanceResponse implements Serializable {
             Integer id;
             String name;
-            LocalDateTime createdAt;
         }
     }
 }
