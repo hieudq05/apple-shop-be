@@ -1,6 +1,8 @@
 package com.web.appleshop.repository;
 
 import com.web.appleshop.entity.CartItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -12,4 +14,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Integer> , J
     Optional<CartItem> findCartItemByIdAndUserId(Integer id, Integer userId);
 
     void deleteAllByUserId(Integer userId);
+
+    Page<CartItem> findCartItemsByUserId(Integer userId, Pageable pageable);
 }
