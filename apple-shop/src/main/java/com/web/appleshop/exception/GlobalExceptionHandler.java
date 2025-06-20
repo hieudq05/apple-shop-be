@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleBadRequestException(
             BadRequestException e
     ) {
-        log.warn("Bad request from client: {}", e.getMessage());
+        log.error("Bad request from client: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(String.valueOf(HttpStatus.BAD_REQUEST.value()), e.getMessage());
 
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleNotFoundException(
             NotFoundException e
     ) {
-        log.warn("Not found: {}", e.getMessage());
+        log.error("Not found: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(String.valueOf(HttpStatus.NOT_FOUND.value()), e.getMessage());
 
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleForbiddenException(
             ForbiddenException e
     ) {
-        log.warn("Forbidden: {}", e.getMessage());
+        log.error("Forbidden: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(String.valueOf(HttpStatus.FORBIDDEN.value()), e.getMessage());
 
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleIllegalStateException(
             IllegalStateException e
     ) {
-        log.warn("Illegal state: {}", e.getMessage());
+        log.error("Illegal state: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()), e.getMessage());
 
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e
     ) {
-        log.warn("Validation error: {}", e.getMessage());
+        log.error("Validation error: {}", e.getMessage());
 
         // 1. Tạo danh sách để chứa các chi tiết lỗi
         List<ValidationErrorDetail> validationErrorDetails = new ArrayList<>();
@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
             IllegalArgumentException e
     ) {
-        log.warn("Illegal argument: {}", e.getMessage());
+        log.error("Illegal argument: {}", e.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(String.valueOf(HttpStatus.BAD_REQUEST.value()), e.getMessage());
 
