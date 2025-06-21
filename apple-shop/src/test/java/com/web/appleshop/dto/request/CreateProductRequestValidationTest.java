@@ -253,9 +253,11 @@ class CreateProductRequestValidationTest {
         );
     }
 
-    private CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest createValidInstance() {
-        return new CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest(
-                1, "128GB"
+    private Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> createValidInstance() {
+        return Set.of(
+                new CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest(
+                        1, "128GB"
+                )
         );
     }
 

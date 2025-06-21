@@ -99,7 +99,7 @@ public class UpdateProductRequest implements Serializable {
         Set<ProductPhotoDto> productPhotos;
 
         @NotNull(message = "Không được bỏ trống thuộc tính kho sản phẩm.")
-        InstancePropertyDto instanceProperty;
+        Set<InstancePropertyDto> instanceProperties;
 
         /**
          * DTO for {@link com.web.appleshop.entity.Color}

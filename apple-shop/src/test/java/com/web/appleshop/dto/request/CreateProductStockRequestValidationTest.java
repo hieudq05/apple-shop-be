@@ -251,7 +251,7 @@ class CreateProductStockRequestValidationTest {
         private Integer quantity = 100;
         private BigDecimal price = new BigDecimal("999.99");
         private Set<CreateProductRequest.CreateProductStockRequest.CreateProductPhotoRequest> productPhotos;
-        private CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest instanceProperty;
+        private Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> instanceProperty;
 
         public CreateProductStockRequestBuilder color(CreateProductRequest.CreateProductStockRequest.CreateProductColorRequest color) {
             this.color = color;

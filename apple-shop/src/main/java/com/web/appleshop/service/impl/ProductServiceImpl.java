@@ -24,10 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -112,14 +109,23 @@ public class ProductServiceImpl implements ProductService {
             BeanUtils.copyProperties(stockRequest, stock);
             stock.setProduct(product);
 
-            InstanceProperty instanceProperty;
-            if (stockRequest.getInstanceProperty().getId() != null) {
-                instanceProperty = instancePropertyRepository.findById(stockRequest.getInstanceProperty().getId()).orElseThrow(() -> new NotFoundException("Instance property not found with id: " + stockRequest.getInstanceProperty().getId()));
-            } else {
-                instanceProperty = InstanceProperty.builder().name(stockRequest.getInstanceProperty().getName()).createdBy(createdBy).createdAt(LocalDateTime.now()).stocks(new LinkedHashSet<>()).build();
-                instanceProperty = instancePropertyRepository.save(instanceProperty);
-            }
-            stock.setInstance(instanceProperty);
+            Set<InstanceProperty> instanceProperties = stockRequest.getInstanceProperties().stream().map(instanceRequest -> {
+                InstanceProperty instanceProperty;
+                if (instanceRequest.getId() != null) {
+                    instanceProperty = instancePropertyRepository.findById(instanceRequest.getId())
+                            .orElseThrow(() -> new NotFoundException("Instance property not found with id: " + instanceRequest.getId()));
+                    instanceProperty.setName(instanceRequest.getName());
+                } else {
+                    instanceProperty = InstanceProperty.builder()
+                            .name(instanceRequest.getName())
+                            .createdBy(createdBy)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    instanceProperty = instancePropertyRepository.save(instanceProperty); // Cần save vì là entity mới
+                }
+                return instanceProperty;
+            }).collect(Collectors.toSet());
+            stock.setInstanceProperties(instanceProperties);
 
             stock = stockRepository.save(stock);
 
@@ -146,6 +152,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         product.setStocks(stocks);
+
         productRepository.save(product);
     }
 
@@ -262,21 +269,24 @@ public class ProductServiceImpl implements ProductService {
             stock.setColor(color);
 
             // Xử lý InstanceProperty (Logic gốc của bạn)
-            InstanceProperty instanceProperty;
-            if (stockRequest.getInstanceProperty().getId() != null) {
-                instanceProperty = instancePropertyRepository.findById(stockRequest.getInstanceProperty().getId())
-                        .orElseThrow(() -> new NotFoundException("Instance property not found with id: " + stockRequest.getInstanceProperty().getId()));
-                instanceProperty.setName(stockRequest.getInstanceProperty().getName());
-            } else {
-                instanceProperty = InstanceProperty.builder()
-                        .name(stockRequest.getInstanceProperty().getName())
-                        .createdBy(persistentUpdatedBy)
-                        .createdAt(LocalDateTime.now())
-                        .stocks(new LinkedHashSet<>())
-                        .build();
-                instanceProperty = instancePropertyRepository.save(instanceProperty); // Cần save vì là entity mới
-            }
-            stock.setInstance(instanceProperty);
+            Set<InstanceProperty> instanceProperties = stockRequest.getInstanceProperties().stream().map(instanceRequest -> {
+                InstanceProperty instanceProperty;
+                if (instanceRequest.getId() != null) {
+                    instanceProperty = instancePropertyRepository.findById(instanceRequest.getId())
+                            .orElseThrow(() -> new NotFoundException("Instance property not found with id: " + instanceRequest.getId()));
+                    instanceProperty.setName(instanceRequest.getName());
+                } else {
+                    instanceProperty = InstanceProperty.builder()
+                            .name(instanceRequest.getName())
+                            .createdBy(persistentUpdatedBy)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    instanceProperty = instancePropertyRepository.save(instanceProperty); // Cần save vì là entity mới
+                }
+                return instanceProperty;
+            }).collect(Collectors.toSet());
+
+            stock.setInstanceProperties(instanceProperties);
 
             // SỬA LỖI: Xử lý collection ProductPhotos lồng bên trong
             Set<ProductPhoto> managedPhotos = stock.getProductPhotos();
@@ -343,7 +353,7 @@ public class ProductServiceImpl implements ProductService {
         for (Stock stock : product.getStocks()) {
             ProductUserResponse.ProductStockResponse.StockColorResponse colorDto = new ProductUserResponse.ProductStockResponse.StockColorResponse(stock.getColor().getId(), stock.getColor().getName(), stock.getColor().getHexCode());
             Set<ProductUserResponse.ProductStockResponse.StockPhotoResponse> photoDtos = stock.getProductPhotos().stream().map(photo -> new ProductUserResponse.ProductStockResponse.StockPhotoResponse(photo.getId(), photo.getImageUrl(), photo.getAlt())).collect(Collectors.toSet());
-            ProductUserResponse.ProductStockResponse.StockInstanceResponse instanceDto = new ProductUserResponse.ProductStockResponse.StockInstanceResponse(stock.getInstance().getId(), stock.getInstance().getName());
+            Set<ProductUserResponse.ProductStockResponse.StockInstanceResponse> instanceDto = stock.getInstanceProperties().stream().map(instanceProperty -> new ProductUserResponse.ProductStockResponse.StockInstanceResponse(instanceProperty.getId(), instanceProperty.getName())).collect(Collectors.toSet());
             stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDto));
         }
 

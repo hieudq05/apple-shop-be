@@ -71,6 +71,6 @@ public class CartItemResponse implements Serializable {
         Integer quantity;
         BigDecimal price;
         Set<ProductUserResponse.ProductStockResponse.StockPhotoResponse> productPhotos;
-        ProductUserResponse.ProductStockResponse.StockInstanceResponse instance;
+        Set<ProductUserResponse.ProductStockResponse.StockInstanceResponse> instance;
     }
 }

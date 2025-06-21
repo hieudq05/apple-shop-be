@@ -34,7 +34,11 @@ public class InstanceProperty {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @OneToMany(mappedBy = "instance")
+    @ManyToMany(mappedBy = "instanceProperties", cascade = {
+            CascadeType.MERGE,
+            CascadeType.PERSIST,
+            CascadeType.REFRESH
+    }, fetch = FetchType.EAGER)
     private Set<Stock> stocks = new LinkedHashSet<>();
 
 }
