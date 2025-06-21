@@ -28,7 +28,6 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthExceptionHandler customAuthExceptionHandler;
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.
@@ -39,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/otp/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/payments/vnpay-callback").permitAll()
+                        .requestMatchers("/webhooks/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)

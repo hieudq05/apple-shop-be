@@ -1,6 +1,9 @@
 package com.web.appleshop.entity;
 
+import com.web.appleshop.enums.OrderStatus;
+import com.web.appleshop.enums.PaymentType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -28,8 +31,8 @@ public class Order {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "payment_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type", nullable = false, length = 55)
     private PaymentType paymentType;
 
     @ColumnDefault("getdate()")
@@ -37,7 +40,7 @@ public class Order {
     private LocalDateTime approveAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "approve_by", nullable = false)
+    @JoinColumn(name = "approve_by")
     private User approveBy;
 
     @Nationalized
@@ -76,11 +79,15 @@ public class Order {
     @Column(name = "country", length = 100)
     private String country;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 55)
     private OrderStatus status;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
+
+    @Size(max = 255)
+    @Column(name = "shipping_tracking_code")
+    private String shippingTrackingCode;
 
 }
