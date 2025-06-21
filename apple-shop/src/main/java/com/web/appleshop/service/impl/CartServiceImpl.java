@@ -154,10 +154,7 @@ public class CartServiceImpl implements CartService {
                 cartItem.getStock().getQuantity(),
                 cartItem.getStock().getPrice(),
                 cartItem.getStock().getProductPhotos().stream().map(photo -> new ProductUserResponse.ProductStockResponse.StockPhotoResponse(photo.getId(), photo.getImageUrl(), photo.getAlt())).collect(Collectors.toSet()),
-                new ProductUserResponse.ProductStockResponse.StockInstanceResponse(
-                        cartItem.getStock().getInstance().getId(),
-                        cartItem.getStock().getInstance().getName()
-                )
+                cartItem.getStock().getInstanceProperties().stream().map(instance -> new ProductUserResponse.ProductStockResponse.StockInstanceResponse(instance.getId(), instance.getName())).collect(Collectors.toSet())
         );
 
         cartItemResponse.setProduct(productDto);

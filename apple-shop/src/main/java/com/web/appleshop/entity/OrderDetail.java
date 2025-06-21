@@ -58,4 +58,10 @@ public class OrderDetail {
     @Column(name = "version_name", nullable = false, length = 50)
     private String versionName;
 
+    @NotNull
+    @Nationalized
+    @Lob
+    @Column(name = "image_url", nullable = false)
+    private String imageUrl;
+
 }

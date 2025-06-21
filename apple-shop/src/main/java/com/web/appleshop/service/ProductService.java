@@ -11,9 +11,14 @@ import java.util.Map;
 
 public interface ProductService {
     void createProduct(String productJson, Map<String, MultipartFile> files);
+
     void updateProduct(Integer categoryId, Integer productId, String productJson, Map<String, MultipartFile> files, Integer[] productPhotoDeletions, User updatedBy);
+
     Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable);
+
     Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable);
+
     ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId);
+
     ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId);
 }

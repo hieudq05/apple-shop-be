@@ -38,16 +38,18 @@ public class Stock {
     private BigDecimal price;
 
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CartItem> cartItems = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductPhoto> productPhotos = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SavedProduct> savedProducts = new LinkedHashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "instance")
-    private InstanceProperty instance;
+    @OneToMany(mappedBy = "stock")
+    private Set<CartItem> cartItems = new LinkedHashSet<>();
+
+    @ManyToMany
+    @JoinTable(name = "stock_instances",
+            joinColumns = @JoinColumn(name = "stock_id"),
+            inverseJoinColumns = @JoinColumn(name = "instance_id"))
+    private Set<InstanceProperty> instanceProperties = new LinkedHashSet<>();
 
 }

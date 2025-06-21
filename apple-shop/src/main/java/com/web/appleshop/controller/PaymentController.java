@@ -53,8 +53,6 @@ public class PaymentController {
     ) {
         int paymentStatus = vnPayService.orderReturn(request);
 
-        log.info("Payment status: {}", paymentStatus);
-
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String transactionId = request.getParameter("vnp_TxnRef");
         String responseCode = request.getParameter("vnp_ResponseCode");
