@@ -2,6 +2,7 @@ package com.web.appleshop.service;
 
 import com.web.appleshop.dto.request.UserCreateOrderRequest;
 import com.web.appleshop.dto.response.OrderUserResponse;
+import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.entity.Order;
 import com.web.appleshop.entity.OrderDetail;
 import com.web.appleshop.enums.PaymentType;
@@ -17,4 +18,6 @@ public interface OrderService {
     BigDecimal calculateTotalPrice(Set<OrderDetail> orderDetails);
 
     Page<OrderUserResponse> getOrdersForUser(Pageable pageable);
+
+    OrderAdminResponse getOrderDetailByIdForAdmin(Integer id);
 }

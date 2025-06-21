@@ -1,8 +1,8 @@
 package com.web.appleshop.integration;
 
-import com.web.appleshop.controller.AdminProductController;
+import com.web.appleshop.controller.admin.AdminProductController;
 import com.web.appleshop.dto.response.ApiResponse;
-import com.web.appleshop.dto.response.ProductAdminResponse;
+import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

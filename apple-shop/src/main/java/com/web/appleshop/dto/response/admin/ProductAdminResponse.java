@@ -1,4 +1,4 @@
-package com.web.appleshop.dto.response;
+package com.web.appleshop.dto.response.admin;
 
 import lombok.*;
 

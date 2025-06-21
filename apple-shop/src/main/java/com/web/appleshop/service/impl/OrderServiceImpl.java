@@ -2,6 +2,7 @@ package com.web.appleshop.service.impl;
 
 import com.web.appleshop.dto.request.UserCreateOrderRequest;
 import com.web.appleshop.dto.response.OrderUserResponse;
+import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
@@ -10,6 +11,7 @@ import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.OrderRepository;
 import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.service.OrderService;
+import com.web.appleshop.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -32,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final StockRepository stockRepository;
+    private final UserService userService;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -104,6 +107,36 @@ public class OrderServiceImpl implements OrderService {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Page<Order> orders = orderRepository.findOrdersByCreatedBy(user, pageable);
         return orders.map(this::convertOrderToOrderUserResponse);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public OrderAdminResponse getOrderDetailByIdForAdmin(Integer id) {
+        Order order = orderRepository.findOrderById(id).orElseThrow(() -> new BadRequestException("Order not found with id: " + id));
+        return convertOrderToOrderAdminResponse(order);
+    }
+
+    private OrderAdminResponse convertOrderToOrderAdminResponse(Order order) {
+        return new OrderAdminResponse(
+                order.getId(),
+                userService.convertUserToProductOwnerAdminResponse(order.getCreatedBy()),
+                order.getCreatedAt(),
+                order.getPaymentType(),
+                order.getApproveAt(),
+                order.getApproveBy() == null ? null : userService.convertUserToProductOwnerAdminResponse(order.getApproveBy()),
+                order.getFirstName(),
+                order.getLastName(),
+                order.getEmail(),
+                order.getPhone(),
+                order.getAddress(),
+                order.getWard(),
+                order.getDistrict(),
+                order.getProvince(),
+                order.getCountry(),
+                order.getStatus(),
+                order.getOrderDetails().stream().map(this::convertOrderDetailToOrderDetailDto).collect(Collectors.toSet()),
+                order.getShippingTrackingCode()
+        );
     }
 
     private OrderUserResponse convertOrderToOrderUserResponse(Order order) {

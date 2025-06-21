@@ -1,5 +1,6 @@
 package com.web.appleshop.service.impl;
 
+import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.UserRepository;
@@ -33,6 +34,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public void save(User user) {
         userRepository.save(user);
+    }
+
+    @Override
+    public ProductAdminResponse.ProductOwnerAdminResponse convertUserToProductOwnerAdminResponse(User user) {
+        return new ProductAdminResponse.ProductOwnerAdminResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getImage()
+        );
     }
 
 }
