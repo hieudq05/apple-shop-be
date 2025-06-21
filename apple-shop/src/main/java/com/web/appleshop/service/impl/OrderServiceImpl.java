@@ -75,6 +75,9 @@ public class OrderServiceImpl implements OrderService {
             orderDetails.add(orderDetail);
 
             Stock stock = cartItem.getStock();
+            if (stock.getQuantity() < cartItem.getQuantity()) {
+                throw new BadRequestException("Số lượng sản phẩm trong kho không đủ.");
+            }
             stock.setQuantity(stock.getQuantity() - cartItem.getQuantity());
             stockRepository.save(stock);
 
