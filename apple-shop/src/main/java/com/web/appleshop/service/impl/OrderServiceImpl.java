@@ -7,8 +7,8 @@ import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.repository.CartItemRepository;
-import com.web.appleshop.repository.OrderDetailRepository;
 import com.web.appleshop.repository.OrderRepository;
+import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
+    private final StockRepository stockRepository;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -72,6 +73,13 @@ public class OrderServiceImpl implements OrderService {
             ).collect(Collectors.joining(", ")));
             orderDetail.setImageUrl(cartItem.getStock().getProductPhotos().stream().findFirst().get().getImageUrl());
             orderDetails.add(orderDetail);
+
+            Stock stock = cartItem.getStock();
+            if (stock.getQuantity() < cartItem.getQuantity()) {
+                throw new BadRequestException("Số lượng sản phẩm trong kho không đủ.");
+            }
+            stock.setQuantity(stock.getQuantity() - cartItem.getQuantity());
+            stockRepository.save(stock);
 
             totalPrice = totalPrice.add(cartItem.getStock().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
 
