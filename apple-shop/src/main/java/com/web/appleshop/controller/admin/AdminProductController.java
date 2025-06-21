@@ -1,8 +1,8 @@
-package com.web.appleshop.controller;
+package com.web.appleshop.controller.admin;
 
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
-import com.web.appleshop.dto.response.ProductAdminResponse;
+import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.service.ProductService;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,8 @@
 package com.web.appleshop.controller;
 
+import com.web.appleshop.controller.admin.AdminProductController;
 import com.web.appleshop.dto.response.ApiResponse;
-import com.web.appleshop.dto.response.ProductAdminResponse;
+import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 

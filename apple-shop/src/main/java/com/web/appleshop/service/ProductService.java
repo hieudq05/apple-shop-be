@@ -1,6 +1,6 @@
 package com.web.appleshop.service;
 
-import com.web.appleshop.dto.response.ProductAdminResponse;
+import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.entity.User;
 import org.springframework.data.domain.Page;

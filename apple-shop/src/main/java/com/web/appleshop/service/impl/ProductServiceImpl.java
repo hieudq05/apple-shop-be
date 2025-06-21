@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
 import com.web.appleshop.dto.request.UpdateProductRequest;
-import com.web.appleshop.dto.response.ProductAdminResponse;
+import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.exception.BadRequestException;
