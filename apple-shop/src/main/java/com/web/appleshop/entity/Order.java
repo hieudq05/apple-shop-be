@@ -83,4 +83,19 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
 
+
+     @Nationalized
+    @Column(name = "cancel_reason", length = 500)
+    private String cancelReason; // Thêm trường lý do hủy
+
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt; // Thêm thời điểm hủy
+
+    // ... getters and setters ...
+    
+    public void cancel(String reason) {
+        this.cancelReason = reason;
+        this.cancelledAt = LocalDateTime.now();
+    }
+
 }

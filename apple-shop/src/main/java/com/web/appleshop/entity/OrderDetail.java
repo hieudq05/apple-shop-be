@@ -58,4 +58,9 @@ public class OrderDetail {
     @Column(name = "version_name", nullable = false, length = 50)
     private String versionName;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_id")
+    private Stock stock;
+
 }
