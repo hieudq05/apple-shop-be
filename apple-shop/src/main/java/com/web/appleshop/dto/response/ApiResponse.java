@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 
-@JsonInclude(JsonInclude.Include.NON_NULL) // Không trả về trường có giá trị null
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
 public class ApiResponse<T> {
@@ -16,7 +16,6 @@ public class ApiResponse<T> {
     private ErrorResponse error;
 
     private ApiResponse() {
-        //  Đặt constructor mặc định là private để tránh việc tạo instance trực tiếp từ lớp này
     }
 
     public static <T> ApiResponse<T> success(T data, String message) {
@@ -49,4 +48,14 @@ public class ApiResponse<T> {
         response.error = new ErrorResponse(errorCode, errorMessage);
         return response;
     }
+
+    // ✅ Bổ sung cho controller dễ gọi
+    public static <T> ApiResponse<T> ok(String message, T data) {
+        return success(data, message);
+    }
+
+    public static <T> ApiResponse<T> fail(String message) {
+        return error("BAD_REQUEST", message);
+    }
 }
+
