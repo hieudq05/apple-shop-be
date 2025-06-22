@@ -70,6 +70,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason(reason);
     }
 
+    
     private void restoreStockQuantities(Order order) {
         for (OrderDetail detail : order.getOrderDetails()) {
             try {

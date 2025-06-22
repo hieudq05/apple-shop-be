@@ -62,5 +62,6 @@ public class OrderDetail {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_id")
     private Stock stock;
+    
 
 }

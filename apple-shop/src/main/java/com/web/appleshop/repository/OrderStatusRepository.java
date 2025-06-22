@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface OrderStatusRepository extends JpaRepository<OrderStatus, Integer> , JpaSpecificationExecutor<OrderStatus> {
   Optional<OrderStatus> findByName(String name);
+  
   }

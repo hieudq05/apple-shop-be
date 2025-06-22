@@ -83,6 +83,7 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
 
+    
 
      @Nationalized
     @Column(name = "cancel_reason", length = 500)

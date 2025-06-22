@@ -10,4 +10,5 @@ public class CancelOrderDTO {
     public void setReason(String reason) {
         this.reason = reason;
     }
+    
 }

@@ -11,4 +11,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface OrderRepository extends JpaRepository<Order, Integer> , JpaSpecificationExecutor<Order> {
   @EntityGraph(attributePaths = {"orderDetails", "orderDetails.stock"})
     Optional<Order> findByIdWithDetails(Integer id);
+    
   }

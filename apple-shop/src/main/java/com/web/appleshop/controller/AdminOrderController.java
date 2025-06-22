@@ -24,7 +24,6 @@ public class AdminOrderController {
     public AdminOrderController(OrderService orderService) {
         this.orderService = orderService;
     }
-
     @PostMapping("{id}/cancel")
     public ResponseEntity<Map<String, String>> cancelOrder(
             @PathVariable Integer id,

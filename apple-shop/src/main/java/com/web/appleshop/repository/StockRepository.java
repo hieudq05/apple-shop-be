@@ -16,7 +16,7 @@ public interface StockRepository extends JpaRepository<Stock, Integer> , JpaSpec
     
     @Query("SELECT s FROM Stock s JOIN s.color c WHERE s.product = :product AND c.name = :colorName")
     Optional<Stock> findByProductAndColorName(
-        @Param("product") Product product, 
+        @Param("product") Product product,
         @Param("colorName") String colorName
     );
   }
