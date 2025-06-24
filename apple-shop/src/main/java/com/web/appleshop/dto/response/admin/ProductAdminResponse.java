@@ -21,6 +21,7 @@ public class ProductAdminResponse implements Serializable {
     ProductOwnerAdminResponse createdBy;
     LocalDateTime updatedAt;
     ProductUpdatedAdminResponse updatedBy;
+    Set<FeatureAdminResponse> features;
     ProductCategoryAdminResponse category;
     Set<ProductStockAdminResponse> stocks;
 
@@ -65,7 +66,51 @@ public class ProductAdminResponse implements Serializable {
     public static class ProductStockAdminResponse implements Serializable {
         Integer id;
         Integer quantity;
-        String imageUrl;
+        ColorAdminResponse color;
+        Set<ProductImageAdminResponse> productPhotos;
+        Set<InstancePropertyDto> instanceProperties;
         BigDecimal price;
+
+        /**
+         * DTO for {@link com.web.appleshop.entity.ProductPhoto}
+         */
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class ProductImageAdminResponse implements Serializable {
+            Integer id;
+            String imageUrl;
+            String alt;
+        }
+
+        /**
+         * DTO for {@link com.web.appleshop.entity.Color}
+         */
+        @Value
+        public static class ColorAdminResponse implements Serializable {
+            Integer id;
+            String name;
+            String hexCode;
+        }
+
+        /**
+         * DTO for {@link com.web.appleshop.entity.InstanceProperty}
+         */
+        @Value
+        public static class InstancePropertyDto implements Serializable {
+            Integer id;
+            String name;
+        }
+    }
+
+    /**
+     * DTO for {@link com.web.appleshop.entity.Feature}
+     */
+    @Value
+    public static class FeatureAdminResponse implements Serializable {
+        Integer id;
+        String name;
+        String description;
+        String image;
     }
 }

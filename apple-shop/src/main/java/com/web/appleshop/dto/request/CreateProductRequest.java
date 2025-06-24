@@ -53,7 +53,6 @@ public class CreateProductRequest implements Serializable {
     public static class CreateProductStockRequest implements Serializable {
 
         @NotNull(message = "Không được bỏ trống màu sắc.")
-        @Valid
         CreateProductStockRequest.CreateProductColorRequest color;
 
         @NotNull(message = "Không được bỏ trống số lượng sản phẩm.")

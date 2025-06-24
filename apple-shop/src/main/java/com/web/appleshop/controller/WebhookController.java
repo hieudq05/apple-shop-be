@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class WebhookController {
     @PostMapping("nhanhvn-callback")
     public String nhanhvnCallback() {
-        // TODO: Implement webhook for Nhanh.vn
         return "OK";
     }
 }
