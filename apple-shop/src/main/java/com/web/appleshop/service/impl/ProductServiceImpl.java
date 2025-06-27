@@ -4,23 +4,28 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
 import com.web.appleshop.dto.request.UpdateProductRequest;
-import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.dto.response.ProductUserResponse;
+import com.web.appleshop.dto.response.ValidationErrorDetail;
+import com.web.appleshop.dto.response.admin.*;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.exception.NotFoundException;
+import com.web.appleshop.exception.ValidationException;
 import com.web.appleshop.repository.*;
 import com.web.appleshop.service.ProductService;
 import com.web.appleshop.util.UploadUtils;
-import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -33,6 +38,7 @@ public class ProductServiceImpl implements ProductService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
     private final ProductRepository productRepository;
+    private final Validator validator;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final FeatureRepository featureRepository;
@@ -172,6 +178,19 @@ public class ProductServiceImpl implements ProductService {
         UpdateProductRequest productRequest;
         try {
             productRequest = objectMapper.readValue(productJson, UpdateProductRequest.class);
+
+            // Validate the request
+            Set<ConstraintViolation<UpdateProductRequest>> violations = validator.validate(productRequest);
+            if (!violations.isEmpty()) {
+                List<ValidationErrorDetail> validationErrors = new ArrayList<>();
+                for (ConstraintViolation<UpdateProductRequest> violation : violations) {
+                    validationErrors.add(new ValidationErrorDetail(
+                            violation.getPropertyPath().toString(),
+                            violation.getMessage()
+                    ));
+                }
+                throw new ValidationException("Lỗi dữ liệu sản phẩm", validationErrors);
+            }
         } catch (JsonProcessingException e) {
             log.info(e.getMessage());
             throw new BadRequestException("Lỗi khi chuyển đổi dữ liệu sản phẩm.");
@@ -318,20 +337,90 @@ public class ProductServiceImpl implements ProductService {
         managedStocks.addAll(newStocksToAdd);
     }
 
+    @Deprecated(forRemoval = true)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
     @Override
     public Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable) {
-        Page<Product> products = productRepository.findAll(pageable);
+        Page<Product> products = productRepository.findAllWithRelationships(pageable);
         return products.map(this::convertProductToProductAdminResponse);
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
     @Override
+    public Page<ProductAdminListDto> getAllProductsForAdminV1(Pageable pageable) {
+        Page<ProductAdminListDto> productsPage = productRepository.findProductAdminList(pageable);
+        List<ProductAdminListDto> productsList = productsPage.getContent();
+
+        if (productsList.isEmpty()) {
+            return productsPage;
+        }
+
+        Map<Integer, ProductAdminListDto> productDtoMap = productsList.stream()
+                .collect(Collectors.toMap(ProductAdminListDto::getId, dto -> dto));
+        List<Integer> productIds = new ArrayList<>(productDtoMap.keySet());
+
+        Set<ProductFeatureDto> productFeatures = productRepository.findFeaturesForProducts(productIds);
+
+        for (ProductFeatureDto pfDto : productFeatures) {
+            // Tìm product DTO cha dựa vào productId trong DTO trung gian
+            ProductAdminListDto parentProduct = productDtoMap.get(pfDto.productId());
+            if (parentProduct != null) {
+                // Tạo DTO feature cuối cùng và thêm vào set của product cha
+                parentProduct.getFeatures().add(
+                        new FeatureSummaryDto(pfDto.featureId(), pfDto.featureName(), pfDto.featureImage())
+                );
+            }
+        }
+
+        Set<StockSummaryDto> stockSummaries = stockRepository.findStockSummariesForProducts(productIds);
+        Map<Integer, StockSummaryDto> stockDtoMap = new HashMap<>();
+        for (StockSummaryDto stockDto : stockSummaries) {
+            stockDtoMap.put(stockDto.getId(), stockDto);
+            ProductAdminListDto parentProduct = productDtoMap.get(stockDto.getProductId());
+            if (parentProduct != null) {
+                parentProduct.getStocks().add(stockDto);
+            }
+        }
+
+        Set<Integer> stockIds = stockDtoMap.keySet();
+        if (stockIds.isEmpty()) {
+            return new PageImpl<>(productsList, pageable, productsPage.getTotalElements());
+        }
+
+        Set<StockPhotoDtoLink> photoLinks = productPhotoRepository.findPhotosForStocks(stockIds);
+        for (StockPhotoDtoLink link : photoLinks) {
+            StockSummaryDto parentStock = stockDtoMap.get(link.stockId());
+            if (parentStock != null) {
+                parentStock.getProductPhotos().add(
+                        new StockSummaryDto.ProductPhotoDto(link.photoId(), link.imageUrl(), link.alt())
+                );
+            }
+        }
+
+        Set<StockInstanceDto> stockProperties = instancePropertyRepository.findInstancesForProducts(stockIds);
+        for (StockInstanceDto spDto : stockProperties) {
+            StockSummaryDto parentStock = stockDtoMap.get(spDto.stockId());
+            if (parentStock != null) {
+                parentStock.getInstanceProperties().add(
+                        new StockSummaryDto.InstancePropertyDto(spDto.instanceId(), spDto.instanceName())
+                );
+            }
+        }
+
+        return new PageImpl<>(productsList, pageable, productsPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
         Page<Product> products = productRepository.findAllByCategory_Id(categoryId, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
         return products.map(this::convertProductToProductUserResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId) {
         Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
                 () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
@@ -340,6 +429,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId) {
         Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
@@ -372,8 +462,36 @@ public class ProductServiceImpl implements ProductService {
         ProductAdminResponse.ProductCategoryAdminResponse categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(categoryEntity.getId(), categoryEntity.getName(), categoryEntity.getImage());
         BeanUtils.copyProperties(categoryEntity, categoryDto);
 
-        Set<ProductAdminResponse.ProductStockAdminResponse> stockDto = product.getStocks().stream().map(stock -> new ProductAdminResponse.ProductStockAdminResponse(stock.getId(), stock.getQuantity(), stock.getProductPhotos().stream().toList().getFirst().getImageUrl(), stock.getPrice())).collect(Collectors.toSet());
-        return new ProductAdminResponse(product.getId(), product.getName(), product.getDescription(), product.getCreatedAt(), createdByDto, product.getUpdatedAt(), updatedByDto, categoryDto, stockDto);
+        Set<ProductAdminResponse.ProductStockAdminResponse> stockDto = product.getStocks().stream().map(stock -> new ProductAdminResponse.ProductStockAdminResponse(
+                stock.getId(),
+                stock.getQuantity(),
+                new ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse(
+                        stock.getColor().getId(),
+                        stock.getColor().getName(),
+                        stock.getColor().getHexCode()
+                ),
+                stock.getProductPhotos().stream().map(
+                        productPhoto -> new ProductAdminResponse.ProductStockAdminResponse.ProductImageAdminResponse(productPhoto.getId(), productPhoto.getImageUrl(), productPhoto.getAlt())
+                ).collect(Collectors.toSet()),
+                stock.getInstanceProperties().stream().map(instanceProperty ->
+                        new ProductAdminResponse.ProductStockAdminResponse.InstancePropertyDto(
+                                instanceProperty.getId(),
+                                instanceProperty.getName()
+                        )
+                ).collect(Collectors.toSet()),
+                stock.getPrice())
+        ).collect(Collectors.toSet());
+
+        Set<ProductAdminResponse.FeatureAdminResponse> featureDtos = product.getFeatures().stream().map(feature ->
+                new ProductAdminResponse.FeatureAdminResponse(
+                        feature.getId(),
+                        feature.getName(),
+                        feature.getDescription(),
+                        feature.getImage()
+                )
+        ).collect(Collectors.toSet());
+
+        return new ProductAdminResponse(product.getId(), product.getName(), product.getDescription(), product.getCreatedAt(), createdByDto, product.getUpdatedAt(), updatedByDto, featureDtos, categoryDto, stockDto);
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
@@ -382,6 +500,19 @@ public class ProductServiceImpl implements ProductService {
         CreateProductRequest productRequest;
         try {
             productRequest = objectMapper.readValue(requestData, CreateProductRequest.class);
+
+            // Validate the request
+            Set<ConstraintViolation<CreateProductRequest>> violations = validator.validate(productRequest);
+            if (!violations.isEmpty()) {
+                List<ValidationErrorDetail> validationErrors = new ArrayList<>();
+                for (ConstraintViolation<CreateProductRequest> violation : violations) {
+                    validationErrors.add(new ValidationErrorDetail(
+                            violation.getPropertyPath().toString(),
+                            violation.getMessage()
+                    ));
+                }
+                throw new ValidationException("Lỗi dữ liệu sản phẩm", validationErrors);
+            }
         } catch (JsonProcessingException e) {
             log.info(e.getMessage());
             throw new BadRequestException("Lỗi khi chuyển đổi dữ liệu sản phẩm.");

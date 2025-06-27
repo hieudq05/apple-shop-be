@@ -9,6 +9,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    show-sql: true
   data:
     redis:
       host: ${REDIS_HOST}

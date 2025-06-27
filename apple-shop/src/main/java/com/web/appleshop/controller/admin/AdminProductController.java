@@ -2,6 +2,7 @@ package com.web.appleshop.controller.admin;
 
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
+import com.web.appleshop.dto.response.admin.ProductAdminListDto;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.service.ProductService;
@@ -46,9 +47,9 @@ public class AdminProductController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductAdminResponse>>> getAllProducts(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+    public ResponseEntity<ApiResponse<List<ProductAdminListDto>>> getAllProducts(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
-        Page<ProductAdminResponse> productAdminResponsePage = productService.getAllProductsForAdmin(pageable);
+        Page<ProductAdminListDto> productAdminResponsePage = productService.getAllProductsForAdminV1(pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 productAdminResponsePage.getNumber(),
                 productAdminResponsePage.getSize(),
