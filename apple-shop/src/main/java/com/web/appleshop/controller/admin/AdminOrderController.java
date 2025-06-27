@@ -6,6 +6,7 @@ import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.dto.response.admin.OrderSummaryDto;
 import com.web.appleshop.entity.Order;
+import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,13 +31,11 @@ public class AdminOrderController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<OrderSummaryProjection>>> getOrderSummary(
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
-            @RequestParam(required = false) Boolean asc
+            @RequestParam(required = false) Integer size
             ) {
         Pageable pageable = Pageable
                 .ofSize(size != null ? size : 6)
-                .withPage(page != null ? page : 0)
-                ;
+                .withPage(page != null ? page : 0);
         Page<OrderSummaryProjection> orderSummaryPage = orderService.getOrdersSummaryForAdmin(pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 orderSummaryPage.getNumber(),
@@ -46,5 +45,14 @@ public class AdminOrderController {
         );
         return ResponseEntity.ok(ApiResponse.success(orderSummaryPage.getContent(), "Get order summary successfully", pageableResponse));
     }
+
+    @PatchMapping("{orderId}/status")
+    public ResponseEntity<ApiResponse<String>> updateOrderStatus(@PathVariable Integer orderId, @RequestParam String status) {
+        OrderStatus newStatus = OrderStatus.valueOf(status);
+        orderService.updateOrderStatus(orderId, newStatus);
+        return ResponseEntity.ok(ApiResponse.success(null, "Update order status successfully"));
+    }
+
+
 
 }

@@ -12,7 +12,9 @@ import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.OrderRepository;
 import com.web.appleshop.repository.StockRepository;
+import com.web.appleshop.service.MailService;
 import com.web.appleshop.service.OrderService;
+import com.web.appleshop.service.OrderStatusManager;
 import com.web.appleshop.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final StockRepository stockRepository;
     private final UserService userService;
+    private final OrderStatusManager orderStatusManager;
+    private final MailService mailService;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -121,6 +125,23 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderSummaryProjection> getOrdersSummaryForAdmin(Pageable pageable) {
         return orderRepository.findAllBy(pageable);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public Order updateOrderStatus(Integer orderId, OrderStatus status) {
+        Order order = orderRepository.findOrderById(orderId).orElseThrow(() -> new BadRequestException("Order not found with id: " + orderId));
+        if (!orderStatusManager.isValidTransition(order.getStatus(), status)) {
+            throw new BadRequestException("Trạng thái đích không hợp lệ!");
+        }
+
+        OrderStatus oldStatus = order.getStatus();
+
+        order.setStatus(status);
+        String mailSubject = "Cập nhật trạng thái đơn hàng #" + (orderId);
+        mailService.sendUpdateOrderStatusMail(order.getEmail(), mailSubject, status, orderId, oldStatus);
+
+        return orderRepository.save(order);
     }
 
     private OrderAdminResponse convertOrderToOrderAdminResponse(Order order) {
