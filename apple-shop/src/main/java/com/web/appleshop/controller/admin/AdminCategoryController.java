@@ -1,7 +1,7 @@
 package com.web.appleshop.controller.admin;
 
 
-import com.web.appleshop.dto.request.UpdateProductRequest;
+import com.web.appleshop.dto.projection.CategoryInfoView;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.service.CategoryService;
@@ -23,9 +23,9 @@ class AdminCategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UpdateProductRequest.CategoryDto>>> getAllCategories(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+    public ResponseEntity<ApiResponse<List<CategoryInfoView>>> getAllCategories(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
-        Page<UpdateProductRequest.CategoryDto> categoryDtos = categoryService.getCategoriesForAdmin(pageable);
+        Page<CategoryInfoView> categoryDtos = categoryService.getCategoriesForAdmin(pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 categoryDtos.getNumber(),
                 categoryDtos.getSize(),

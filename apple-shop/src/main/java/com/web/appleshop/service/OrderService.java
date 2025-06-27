@@ -1,8 +1,10 @@
 package com.web.appleshop.service;
 
+import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.request.UserCreateOrderRequest;
 import com.web.appleshop.dto.response.OrderUserResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
+import com.web.appleshop.dto.response.admin.OrderSummaryDto;
 import com.web.appleshop.entity.Order;
 import com.web.appleshop.entity.OrderDetail;
 import com.web.appleshop.enums.PaymentType;
@@ -20,4 +22,6 @@ public interface OrderService {
     Page<OrderUserResponse> getOrdersForUser(Pageable pageable);
 
     OrderAdminResponse getOrderDetailByIdForAdmin(Integer id);
+
+    Page<OrderSummaryProjection> getOrdersSummaryForAdmin(Pageable pageable);
 }

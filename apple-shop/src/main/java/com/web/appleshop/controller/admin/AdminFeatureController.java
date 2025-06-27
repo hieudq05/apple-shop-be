@@ -1,8 +1,8 @@
 package com.web.appleshop.controller.admin;
 
+import com.web.appleshop.dto.projection.FeatureInfoView;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
-import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.service.FeatureService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,12 +22,12 @@ class AdminFeatureController {
     private final FeatureService featureService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductAdminResponse.FeatureAdminResponse>>> getAllFeatures(
+    public ResponseEntity<ApiResponse<List<FeatureInfoView>>> getAllFeatures(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
     ) {
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
-        Page<ProductAdminResponse.FeatureAdminResponse> features = featureService.getFeaturesForAdmin(pageable);
+        Page<FeatureInfoView> features = featureService.getFeaturesForAdmin(pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 features.getNumber(),
                 features.getSize(),

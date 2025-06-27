@@ -1,8 +1,10 @@
 package com.web.appleshop.service.impl;
 
+import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.request.UserCreateOrderRequest;
 import com.web.appleshop.dto.response.OrderUserResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
+import com.web.appleshop.dto.response.admin.OrderSummaryDto;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
@@ -114,6 +116,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderAdminResponse getOrderDetailByIdForAdmin(Integer id) {
         Order order = orderRepository.findOrderById(id).orElseThrow(() -> new BadRequestException("Order not found with id: " + id));
         return convertOrderToOrderAdminResponse(order);
+    }
+
+    @Override
+    public Page<OrderSummaryProjection> getOrdersSummaryForAdmin(Pageable pageable) {
+        return orderRepository.findAllBy(pageable);
     }
 
     private OrderAdminResponse convertOrderToOrderAdminResponse(Order order) {
