@@ -27,4 +27,6 @@ public interface OrderService {
     Page<OrderSummaryProjection> getOrdersSummaryForAdmin(Pageable pageable);
 
     Order updateOrderStatus(Integer orderId, OrderStatus status);
+
+    Order cancelOrder(Integer orderId);
 }

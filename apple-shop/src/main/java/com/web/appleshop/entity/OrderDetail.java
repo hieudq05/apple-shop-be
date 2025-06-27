@@ -64,4 +64,8 @@ public class OrderDetail {
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_id", nullable = false)
+    private Stock stock;
+
 }

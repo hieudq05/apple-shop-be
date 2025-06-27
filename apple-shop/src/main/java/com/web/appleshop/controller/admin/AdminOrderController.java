@@ -32,7 +32,7 @@ public class AdminOrderController {
     public ResponseEntity<ApiResponse<List<OrderSummaryProjection>>> getOrderSummary(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
-            ) {
+    ) {
         Pageable pageable = Pageable
                 .ofSize(size != null ? size : 6)
                 .withPage(page != null ? page : 0);
@@ -53,6 +53,10 @@ public class AdminOrderController {
         return ResponseEntity.ok(ApiResponse.success(null, "Update order status successfully"));
     }
 
-
+    @PostMapping("{orderId}/cancel")
+    public ResponseEntity<ApiResponse<String>> cancelOrder(@PathVariable Integer orderId) {
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Cancel order successfully"));
+    }
 
 }

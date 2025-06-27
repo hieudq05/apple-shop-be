@@ -21,4 +21,6 @@ public interface StockRepository extends JpaRepository<Stock, Integer>, JpaSpeci
                 WHERE s.product.id IN :productIds
             """)
     Set<StockSummaryDto> findStockSummariesForProducts(@Param("productIds") List<Integer> productIds);
+
+    Set<Stock> findStockByIdIn(Collection<Integer> ids);
 }
