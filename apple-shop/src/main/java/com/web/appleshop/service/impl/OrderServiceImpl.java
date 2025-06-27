@@ -12,10 +12,7 @@ import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.OrderRepository;
 import com.web.appleshop.repository.StockRepository;
-import com.web.appleshop.service.MailService;
-import com.web.appleshop.service.OrderService;
-import com.web.appleshop.service.OrderStatusManager;
-import com.web.appleshop.service.UserService;
+import com.web.appleshop.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -27,9 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final OrderStatusManager orderStatusManager;
     private final MailService mailService;
+    private final StockService stockService;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -88,6 +84,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("Số lượng sản phẩm trong kho không đủ.");
             }
             stock.setQuantity(stock.getQuantity() - cartItem.getQuantity());
+            orderDetail.setStock(stock);
             stockRepository.save(stock);
 
             totalPrice = totalPrice.add(cartItem.getStock().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
@@ -123,12 +120,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public Page<OrderSummaryProjection> getOrdersSummaryForAdmin(Pageable pageable) {
         return orderRepository.findAllBy(pageable);
     }
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional
     public Order updateOrderStatus(Integer orderId, OrderStatus status) {
         Order order = orderRepository.findOrderById(orderId).orElseThrow(() -> new BadRequestException("Order not found with id: " + orderId));
         if (!orderStatusManager.isValidTransition(order.getStatus(), status)) {
@@ -140,6 +139,28 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(status);
         String mailSubject = "Cập nhật trạng thái đơn hàng #" + (orderId);
         mailService.sendUpdateOrderStatusMail(order.getEmail(), mailSubject, status, orderId, oldStatus);
+
+        return orderRepository.save(order);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional
+    public Order cancelOrder(Integer orderId) {
+        Order order = orderRepository.findOrderById(orderId).orElseThrow(() -> new BadRequestException("Order not found with id: " + orderId));
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BadRequestException("Không thể chuyển đổi trạng thái " + order.getStatus() + " sang trạng thái " + OrderStatus.CANCELLED);
+        }
+        if (!orderStatusManager.isValidTransition(order.getStatus(), OrderStatus.CANCELLED)) {
+            throw new BadRequestException("Không thể huỷ đơn hàng với trạng thái " + order.getStatus() + ".");
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+
+        Map<Integer, Integer> stockIdQuantityMap = new HashMap<>();
+        for (OrderDetail orderDetail : order.getOrderDetails()) {
+            stockIdQuantityMap.put(orderDetail.getStock().getId(), orderDetail.getQuantity());
+        }
+        stockService.refundedStocks(stockIdQuantityMap);
 
         return orderRepository.save(order);
     }

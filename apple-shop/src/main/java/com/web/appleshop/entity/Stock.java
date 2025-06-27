@@ -52,4 +52,8 @@ public class Stock {
             inverseJoinColumns = @JoinColumn(name = "instance_id"))
     private Set<InstanceProperty> instanceProperties = new LinkedHashSet<>();
 
+
+    @OneToMany(mappedBy = "stock")
+    private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
+
 }
