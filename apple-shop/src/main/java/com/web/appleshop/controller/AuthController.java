@@ -8,13 +8,11 @@ import com.web.appleshop.dto.request.RegisterRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.AuthenticationResponse;
 import com.web.appleshop.dto.response.OtpResponse;
+import com.web.appleshop.entity.Role;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.repository.RefreshTokenRepository;
-import com.web.appleshop.service.GoogleAuthService;
-import com.web.appleshop.service.JwtService;
-import com.web.appleshop.service.OtpService;
-import com.web.appleshop.service.UserService;
+import com.web.appleshop.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -31,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @RestController
 @RequestMapping("auth")
@@ -46,6 +45,7 @@ public class AuthController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final GoogleAuthService googleAuthService;
     private final Environment environment;
+    private final RoleService roleService;
 
     @PostMapping("login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -72,6 +72,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<OtpResponse>> register(@Valid @RequestBody RegisterRequest request) {
         User userEntity = new User();
         BeanUtils.copyProperties(request, userEntity);
+        userEntity.setRoles(roleService.findRoleByName("ROLE_USER"));
         userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
 
         userService.save(userEntity);

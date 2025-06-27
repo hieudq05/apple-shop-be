@@ -7,6 +7,7 @@ import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.dto.response.admin.OrderSummaryDto;
 import com.web.appleshop.entity.Order;
 import com.web.appleshop.entity.OrderDetail;
+import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,4 +25,6 @@ public interface OrderService {
     OrderAdminResponse getOrderDetailByIdForAdmin(Integer id);
 
     Page<OrderSummaryProjection> getOrdersSummaryForAdmin(Pageable pageable);
+
+    Order updateOrderStatus(Integer orderId, OrderStatus status);
 }
