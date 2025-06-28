@@ -9,6 +9,7 @@ import com.web.appleshop.entity.*;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.OrderRepository;
 import com.web.appleshop.repository.StockRepository;
@@ -129,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF', 'ROLE_USER')")
     @Transactional
     public Order updateOrderStatus(Integer orderId, OrderStatus status) {
         Order order = orderRepository.findOrderById(orderId).orElseThrow(() -> new BadRequestException("Order not found with id: " + orderId));
@@ -151,6 +152,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public Order cancelOrder(Integer orderId) {
         Order order = orderRepository.findOrderById(orderId).orElseThrow(() -> new BadRequestException("Order not found with id: " + orderId));
+        OrderStatus oldStatus = order.getStatus();
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BadRequestException("Không thể chuyển đổi trạng thái " + order.getStatus() + " sang trạng thái " + OrderStatus.CANCELLED);
         }
@@ -164,6 +166,41 @@ public class OrderServiceImpl implements OrderService {
             stockIdQuantityMap.put(orderDetail.getStock().getId(), orderDetail.getQuantity());
         }
         stockService.refundedStocks(stockIdQuantityMap);
+
+        String mailSubject = "Bạn đã huỷ đơn hàng #" + (orderId);
+        mailService.sendUpdateOrderStatusMail(order.getEmail(), mailSubject, OrderStatus.CANCELLED, orderId, oldStatus);
+
+        return orderRepository.save(order);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @Transactional
+    public Order cancelOrderForUser(Integer orderId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Order order = orderRepository.findOrderById(orderId).orElseThrow(
+                () -> new NotFoundException("Order not found with id: " + orderId)
+        );
+        OrderStatus oldStatus = order.getStatus();
+        if (!Objects.equals(order.getCreatedBy().getId(), user.getId())) {
+            throw new BadRequestException("Không tồn tại đơn hàng mã: " + orderId);
+        }
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BadRequestException("Không thể chuyển đổi trạng thái " + order.getStatus() + " sang trạng thái " + OrderStatus.CANCELLED);
+        }
+        if (!orderStatusManager.isValidTransition(order.getStatus(), OrderStatus.CANCELLED)) {
+            throw new BadRequestException("Không thể huỷ đơn hàng với trạng thái " + order.getStatus() + ".");
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+
+        Map<Integer, Integer> stockIdQuantityMap = new HashMap<>();
+        for (OrderDetail orderDetail : order.getOrderDetails()) {
+            stockIdQuantityMap.put(orderDetail.getStock().getId(), orderDetail.getQuantity());
+        }
+        stockService.refundedStocks(stockIdQuantityMap);
+
+        String mailSubject = "Bạn đã huỷ đơn hàng #" + (orderId);
+        mailService.sendUpdateOrderStatusMail(order.getEmail(), mailSubject, OrderStatus.CANCELLED, orderId, oldStatus);
 
         return orderRepository.save(order);
     }
