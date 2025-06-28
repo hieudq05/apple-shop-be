@@ -29,4 +29,6 @@ public interface OrderService {
     Order updateOrderStatus(Integer orderId, OrderStatus status);
 
     Order cancelOrder(Integer orderId);
+
+    Order cancelOrderForUser(Integer orderId);
 }

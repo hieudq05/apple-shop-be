@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,5 +29,11 @@ public class OrderController {
                 orders.getTotalElements()
         );
         return ResponseEntity.ok(ApiResponse.success(orders.getContent(), "Get orders successfully", pageableResponse));
+    }
+
+    @PostMapping("{orderId}/cancel")
+    public ResponseEntity<ApiResponse<String>> cancelOrder(@PathVariable Integer orderId) {
+        orderService.cancelOrderForUser(orderId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Cancel order successfully"));
     }
 }
