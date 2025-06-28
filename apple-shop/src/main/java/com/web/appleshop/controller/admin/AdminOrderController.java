@@ -4,8 +4,6 @@ import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
-import com.web.appleshop.dto.response.admin.OrderSummaryDto;
-import com.web.appleshop.entity.Order;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
