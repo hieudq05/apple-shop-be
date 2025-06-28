@@ -175,6 +175,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @Transactional
     public Order cancelOrderForUser(Integer orderId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Order order = orderRepository.findOrderById(orderId).orElseThrow(
