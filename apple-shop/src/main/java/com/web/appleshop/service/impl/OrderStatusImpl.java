@@ -35,20 +35,4 @@ public class OrderStatusImpl implements OrderStatusService {
         return orderRepository.save(order);
     }
 
-    private void performActionsForStatus(Order order, OrderStatus newStatus) {
-        switch (newStatus) {
-            case PENDING_PAYMENT:
-                // Xử lý khi đơn hàng đang chờ thanh toán
-                break;
-            case FAILED_PAYMENT:
-                // Xử lý khi thanh toán thất bại
-                break;
-            case PAID:
-                // Xử lý khi thanh toán thành công
-                break;
-            case PROCESSING:
-                // Xử lý khi đơn hàng đang được xử lý
-                break;
-        }
-    }
 }
