@@ -1,12 +1,16 @@
 package com.web.appleshop.controller.admin;
 
 import com.web.appleshop.dto.projection.OrderSummaryProjection;
+import com.web.appleshop.dto.request.AdminCreateOrderRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.enums.OrderStatus;
+import com.web.appleshop.enums.PaymentType;
 import com.web.appleshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +22,7 @@ import java.util.List;
 @RequestMapping("admin/orders")
 @RequiredArgsConstructor
 public class AdminOrderController {
+    private static final Logger log = LoggerFactory.getLogger(AdminOrderController.class);
     private final OrderService orderService;
 
     @GetMapping("{orderId}")
@@ -55,6 +60,12 @@ public class AdminOrderController {
     public ResponseEntity<ApiResponse<String>> cancelOrder(@PathVariable Integer orderId) {
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok(ApiResponse.success(null, "Cancel order successfully"));
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<String>> createOrder(@RequestBody AdminCreateOrderRequest[] orderRequests) {
+        orderService.createOrder(orderRequests, PaymentType.VNPAY);
+        return ResponseEntity.ok(ApiResponse.success(null, "Create order successfully"));
     }
 
 }
