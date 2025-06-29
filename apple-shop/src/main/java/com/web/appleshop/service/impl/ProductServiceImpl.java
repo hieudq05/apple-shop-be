@@ -443,7 +443,7 @@ public class ProductServiceImpl implements ProductService {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public void deleteProduct(Integer categoryId, Integer productId) {
         Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
-                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+                () -> new NotFoundException("Sản phẩm với id: " + productId + " và danh mục với id: " + categoryId + " không tồn tại.")
         );
         product.setIsDeleted(true);
         productRepository.save(product);
