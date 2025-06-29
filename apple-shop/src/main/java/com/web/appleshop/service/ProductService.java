@@ -24,4 +24,6 @@ public interface ProductService {
     ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId);
 
     ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId);
+
+    void deleteProduct(Integer categoryId, Integer productId);
 }

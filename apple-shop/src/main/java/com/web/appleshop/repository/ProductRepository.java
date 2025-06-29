@@ -45,4 +45,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
                     WHERE p.id IN :productIds
             """)
     Set<ProductFeatureDto> findFeaturesForProducts(@Param("productIds") Collection<Integer> productIds);
+
+    Optional<Page<Product>> findAllByCategory_IdAndIsDeleted(Integer categoryId, Boolean isDeleted, Pageable pageable);
+
+    Optional<Product> findProductByIdAndCategory_IdAndIsDeleted(Integer id, Integer categoryId, Boolean isDeleted);
 }
