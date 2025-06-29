@@ -4,7 +4,6 @@ import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.request.UserCreateOrderRequest;
 import com.web.appleshop.dto.response.OrderUserResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
-import com.web.appleshop.dto.response.admin.OrderSummaryDto;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
@@ -80,13 +79,9 @@ public class OrderServiceImpl implements OrderService {
             orderDetail.setImageUrl(cartItem.getStock().getProductPhotos().stream().findFirst().get().getImageUrl());
             orderDetails.add(orderDetail);
 
-            Stock stock = cartItem.getStock();
-            if (stock.getQuantity() < cartItem.getQuantity()) {
-                throw new BadRequestException("Số lượng sản phẩm trong kho không đủ.");
-            }
-            stock.setQuantity(stock.getQuantity() - cartItem.getQuantity());
-            orderDetail.setStock(stock);
-            stockRepository.save(stock);
+            cartItem.getStock().setQuantity(cartItem.getStock().getQuantity() - cartItem.getQuantity());
+            orderDetail.setStock(cartItem.getStock());
+            stockRepository.save(cartItem.getStock());
 
             totalPrice = totalPrice.add(cartItem.getStock().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
 
