@@ -64,4 +64,10 @@ public class AdminProductController {
         ProductAdminResponse productAdminResponse = productService.getProductByProductIdForAdmin(categoryId, productId);
         return ResponseEntity.ok(ApiResponse.success(productAdminResponse, "Get product successfully"));
     }
+
+    @DeleteMapping("{categoryId}/{productId}")
+    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Integer categoryId, @PathVariable Integer productId) {
+        productService.deleteProduct(categoryId, productId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Delete product successfully"));
+    }
 }

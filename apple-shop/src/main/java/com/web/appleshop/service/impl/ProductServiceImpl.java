@@ -415,15 +415,15 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
-        Page<Product> products = productRepository.findAllByCategory_Id(categoryId, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
+        Page<Product> products = productRepository.findAllByCategory_IdAndIsDeleted(categoryId, false, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
         return products.map(this::convertProductToProductUserResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId) {
-        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
-                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+        Product product = productRepository.findProductByIdAndCategory_IdAndIsDeleted(productId, categoryId, false).orElseThrow(
+                () -> new NotFoundException("Sản phẩm với id: " + productId + " và danh mục với id: " + categoryId + " không tồn tại.")
         );
         return convertProductToProductUserResponse(product);
     }
@@ -433,9 +433,20 @@ public class ProductServiceImpl implements ProductService {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId) {
         Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
-                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+                () -> new NotFoundException("Sản phẩm với id: " + productId + " và danh mục với id: " + categoryId + " không tồn tại.")
         );
         return convertProductToProductAdminResponse(product);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public void deleteProduct(Integer categoryId, Integer productId) {
+        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
+                () -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId)
+        );
+        product.setIsDeleted(true);
+        productRepository.save(product);
     }
 
     public ProductUserResponse convertProductToProductUserResponse(Product product) {
