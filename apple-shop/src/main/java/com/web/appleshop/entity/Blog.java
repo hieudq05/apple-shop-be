@@ -49,4 +49,8 @@ public class Blog {
     @Column(name = "Status", length = 50)
     private String status;
 
+    @ColumnDefault("0")
+    @Column(name = "is_published")
+    private Boolean isPublished;
+
 }
