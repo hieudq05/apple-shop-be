@@ -47,6 +47,15 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
     }
 
+    @PostMapping("vnpay/payment-url")
+    public ResponseEntity<ApiResponse<PaymentDto.VnPayResponse>> vnpayReturnUrl(
+            HttpServletRequest request,
+            @RequestParam Integer orderId
+    ) {
+        PaymentDto.VnPayResponse response = orderService.createVNPAYPaymentUrlForUser(orderId, request);
+        return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
+    }
+
     @GetMapping("vnpay-callback")
     public ResponseEntity<ApiResponse<PaymentDto.VnPayIpnResponse>> vnpayCallback(
             HttpServletRequest request

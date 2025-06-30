@@ -55,10 +55,6 @@ public class ShippingInfo {
     @Column(name = "province", length = 100)
     private String province;
 
-    @Nationalized
-    @Column(name = "country", length = 100)
-    private String country;
-
     @ColumnDefault("0")
     @Column(name = "is_default")
     private Boolean isDefault;
