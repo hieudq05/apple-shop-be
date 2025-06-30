@@ -282,20 +282,7 @@ public class OrderServiceImpl implements OrderService {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public PaymentDto.VnPayResponse createVNPAYPaymentUrl(Integer orderId, HttpServletRequest request) {
         Order order = getOrderById(orderId);
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            throw new BadRequestException("Đơn hàng không được thanh toán vì đã được thanh toán hoặc đã được hủy.");
-        }
-        String paymentUrl = vnPayService.createPaymentUrl(
-                request,
-                calculateTotalPrice(order.getOrderDetails()).longValue(),
-                "Thanh toan don hang #" + order.getId()
-        );
-
-        return new PaymentDto.VnPayResponse(
-                "00",
-                "Tạo đường dẫn thanh toán thành công",
-                paymentUrl
-        );
+        return getVnPayResponse(request, order);
     }
 
     @Override
@@ -306,9 +293,14 @@ public class OrderServiceImpl implements OrderService {
         if (!Objects.equals(order.getCreatedBy().getId(), user.getId())) {
             throw new BadRequestException("Không tìm thấy đơn hàng mã: " + orderId);
         }
+        return getVnPayResponse(request, order);
+    }
+
+    private PaymentDto.VnPayResponse getVnPayResponse(HttpServletRequest request, Order order) {
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BadRequestException("Đơn hàng không được thanh toán vì đã được thanh toán hoặc đã được hủy.");
         }
+
         String paymentUrl = vnPayService.createPaymentUrl(
                 request,
                 calculateTotalPrice(order.getOrderDetails()).longValue(),
@@ -321,7 +313,6 @@ public class OrderServiceImpl implements OrderService {
                 paymentUrl
         );
     }
-
 
     private OrderAdminResponse convertOrderToOrderAdminResponse(Order order) {
         return new OrderAdminResponse(
