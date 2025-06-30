@@ -1,5 +1,6 @@
 package com.web.appleshop.service.impl;
 
+import com.web.appleshop.dto.projection.BlogForUserInfo;
 import com.web.appleshop.dto.projection.BlogInfo;
 import com.web.appleshop.dto.projection.BlogSummaryInfo;
 import com.web.appleshop.dto.request.CreateBlogRequest;
@@ -99,5 +100,11 @@ class BlogServiceImpl implements BlogService {
         return blogRepository.findBlogById(blogId).orElseThrow(
                 () -> new IllegalArgumentException("Không tìm thấy bài viết.")
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BlogForUserInfo> getListBlogsForUser(Pageable pageable) {
+        return blogRepository.findBlogsByIsPublished(true, pageable);
     }
 }
