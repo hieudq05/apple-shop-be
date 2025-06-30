@@ -86,7 +86,10 @@ public class OrderServiceImpl implements OrderService {
             orderDetail.setVersionName(cartItem.getStock().getInstanceProperties().stream().map(
                     InstanceProperty::getName
             ).collect(Collectors.joining(", ")));
-            orderDetail.setImageUrl(cartItem.getStock().getProductPhotos().stream().findFirst().get().getImageUrl());
+            orderDetail.setImageUrl(cartItem.getStock().getProductPhotos().stream()
+                    .findFirst()
+                    .map(ProductPhoto::getImageUrl)
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh sản phẩm.")));
             orderDetails.add(orderDetail);
 
             cartItem.getStock().setQuantity(cartItem.getStock().getQuantity() - cartItem.getQuantity());
