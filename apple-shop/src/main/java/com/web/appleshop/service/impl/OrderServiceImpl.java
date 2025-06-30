@@ -134,7 +134,6 @@ public class OrderServiceImpl implements OrderService {
             order.setDistrict(orderRequest.getCustomInfo().getDistrict());
             order.setProvince(orderRequest.getCustomInfo().getProvince());
             order.setCountry("Việt Nam");
-            orderRepository.save(order);
 
             Set<OrderDetail> orderDetails = new LinkedHashSet<>();
             for (AdminCreateOrderRequest.OrderDetailRequest orderDetailRequest : orderRequest.getOrderDetails()) {
@@ -157,7 +156,10 @@ public class OrderServiceImpl implements OrderService {
                 orderDetail.setVersionName(stock.getInstanceProperties().stream().map(
                         InstanceProperty::getName
                 ).collect(Collectors.joining(", ")));
-                orderDetail.setImageUrl(stock.getProductPhotos().stream().findFirst().get().getImageUrl());
+                orderDetail.setImageUrl(stock.getProductPhotos().stream()
+                        .findFirst()
+                        .map(ProductPhoto::getImageUrl)
+                        .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh sản phẩm.")));
                 orderDetails.add(orderDetail);
             }
             order.setOrderDetails(orderDetails);
