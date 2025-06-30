@@ -45,9 +45,10 @@ public class CustomAuthExceptionHandler implements AuthenticationEntryPoint, Acc
             errorMessage = "Tài khoản của bạn đã bị vô hiệu hóa hoặc chưa được kích hoạt.";
         } else if (authException instanceof BadCredentialsException) {
             errorMessage = "Email hoặc mật khẩu không chính xác.";
-        } else if (authException instanceof InsufficientAuthenticationException) {
-            errorMessage = "Bạn không có quyền truy cập vào tài nguyên này.";
         }
+//        else if (authException instanceof InsufficientAuthenticationException) {
+//            errorMessage = "Bạn không có quyền truy cập vào tài nguyên này.";
+//        }
 
         log.warn("Throw exception: {}", authException.getClass());
 

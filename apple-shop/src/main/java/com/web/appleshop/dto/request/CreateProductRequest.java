@@ -53,7 +53,6 @@ public class CreateProductRequest implements Serializable {
     public static class CreateProductStockRequest implements Serializable {
 
         @NotNull(message = "Không được bỏ trống màu sắc.")
-        @Valid
         CreateProductStockRequest.CreateProductColorRequest color;
 
         @NotNull(message = "Không được bỏ trống số lượng sản phẩm.")
@@ -75,7 +74,7 @@ public class CreateProductRequest implements Serializable {
         @NotNull(message = "Không được bỏ trống thuộc tính kho sản phẩm.")
         @NotEmpty(message = "Danh sách thuộc tính kho sản phẩm không được rỗng.")
         @Valid
-        CreateProductInstanceRequest instanceProperty;
+        Set<CreateProductInstanceRequest> instanceProperties;
 
         /**
          * DTO for {@link com.web.appleshop.entity.Color}

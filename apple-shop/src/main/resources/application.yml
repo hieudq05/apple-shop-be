@@ -9,6 +9,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    show-sql: true
   data:
     redis:
       host: ${REDIS_HOST}
@@ -27,6 +28,14 @@ spring:
           auth: true
           starttls:
             enable: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: my-group
+      auto-offset-reset: earliest
 
 application:
   security:
@@ -47,3 +56,20 @@ otp:
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}
+
+vnpay:
+  url: ${VNPAY_URL}
+  tmnCode: ${VNPAY_TMN_CODE}
+  secretKey: ${VNPAY_SECRET_KEY}
+  version: ${VNPAY_VERSION}
+  command: ${VNPAY_COMMAND}
+  orderType: ${VNPAY_ORDER_TYPE}
+  returnUrl: ${VNPAY_RETURN_URL}
+  ipnUrl: ${VNPAY_IPN_URL}
+
+ghn:
+  api:
+    url: ${GHN_API_URL}
+    token: ${GHN_TOKEN}
+    client_id: ${GHN_CLIENT_ID}
+    shop_id: ${GHN_SHOP_ID}

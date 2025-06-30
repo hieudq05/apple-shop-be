@@ -27,7 +27,7 @@ public class ProductUserResponse implements Serializable {
         Integer quantity;
         BigDecimal price;
         Set<StockPhotoResponse> productPhotos;
-        StockInstanceResponse instanceProperty;
+        Set<StockInstanceResponse> instanceProperty;
 
         /**
          * DTO for {@link com.web.appleshop.entity.Color}
@@ -56,7 +56,6 @@ public class ProductUserResponse implements Serializable {
         public static class StockInstanceResponse implements Serializable {
             Integer id;
             String name;
-            LocalDateTime createdAt;
         }
     }
 }

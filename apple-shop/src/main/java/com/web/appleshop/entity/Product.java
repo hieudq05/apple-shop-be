@@ -72,6 +72,10 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Stock> stocks = new LinkedHashSet<>();
 
+    @ColumnDefault("0")
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
+
     public void addFeature(Feature feature) {
         this.features.add(feature);
         feature.getProducts().add(this);

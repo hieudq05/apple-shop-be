@@ -1,6 +1,7 @@
 package com.web.appleshop.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,12 +30,17 @@ public class UpdateProductRequest implements Serializable {
     String description;
 
     @NotNull(message = "Không được bỏ trống danh mục sản phẩm.")
+    @Valid
     CategoryDto category;
 
     @NotNull(message = "Không được bỏ trống tính năng sản phẩm.")
+    @NotEmpty(message = "Danh sách tính năng không được rỗng.")
+    @Valid
     Set<FeatureDto> features;
 
     @NotNull(message = "Không được bỏ trống kho sản phẩm.")
+    @NotEmpty(message = "Danh sách kho sản phẩm không được rỗng.")
+    @Valid
     Set<StockDto> stocks;
 
     /**
@@ -85,9 +91,12 @@ public class UpdateProductRequest implements Serializable {
         Integer id;
 
         @NotNull(message = "Không được bỏ trống màu sắc.")
+        @Valid
         ColorDto color;
 
         @NotNull(message = "Không được bỏ trống số lượng sản phẩm.")
+        @Min(value = 0, message = "Số lượng sản phẩm phải lớn hơn hoặc bằng 0.")
+        @Max(value = 999999, message = "Số lượng sản phẩm không được vượt quá 999,999.")
         Integer quantity;
 
         @NotNull(message = "Không được bỏ trống giá sản phẩm.")
@@ -96,10 +105,14 @@ public class UpdateProductRequest implements Serializable {
         BigDecimal price;
 
         @NotNull(message = "Không được bỏ trống ảnh sản phẩm.")
+        @NotEmpty(message = "Danh sách ảnh sản phẩm không được rỗng.")
+        @Valid
         Set<ProductPhotoDto> productPhotos;
 
         @NotNull(message = "Không được bỏ trống thuộc tính kho sản phẩm.")
-        InstancePropertyDto instanceProperty;
+        @NotEmpty(message = "Danh sách thuộc tính kho sản phẩm không được rỗng.")
+        @Valid
+        Set<InstancePropertyDto> instanceProperties;
 
         /**
          * DTO for {@link com.web.appleshop.entity.Color}

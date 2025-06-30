@@ -1,6 +1,6 @@
 package com.web.appleshop.service.impl;
 
-import com.web.appleshop.dto.response.ProductAdminResponse;
+import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.entity.Category;
 import com.web.appleshop.entity.Product;
 import com.web.appleshop.entity.Stock;
