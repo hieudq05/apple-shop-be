@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/otp/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/blogs/**").permitAll()
                         .requestMatchers("/payments/vnpay-callback").permitAll()
                         .requestMatchers("/webhooks/**").permitAll()
                         .anyRequest().authenticated()

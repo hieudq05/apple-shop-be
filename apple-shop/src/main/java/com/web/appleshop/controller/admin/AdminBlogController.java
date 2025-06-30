@@ -69,5 +69,4 @@ class AdminBlogController {
         return ResponseEntity.ok(ApiResponse.success(null, "Toggle publish blog successfully"));
     }
 
-
 }

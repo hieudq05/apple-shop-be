@@ -1,5 +1,6 @@
 package com.web.appleshop.service;
 
+import com.web.appleshop.dto.projection.BlogForUserInfo;
 import com.web.appleshop.dto.projection.BlogInfo;
 import com.web.appleshop.dto.projection.BlogSummaryInfo;
 import com.web.appleshop.dto.request.CreateBlogRequest;
@@ -20,4 +21,6 @@ public interface BlogService {
     Blog updateBlog(Integer blogId, CreateBlogRequest request, MultipartFile fileImage);
 
     BlogInfo getBlogByIdForAdmin(Integer blogId);
+
+    Page<BlogForUserInfo> getListBlogsForUser(Pageable pageable);
 }
