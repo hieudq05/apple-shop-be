@@ -72,15 +72,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public UserAdminInfoDto getUserInfoForAdmin(Integer userId) {
-        UserAdminInfoDto user;
-        try {
-            user = userRepository.findUserById(userId);
-        } catch (Exception e) {
-            throw new NotFoundException("Không tìm thấy người dùng nào có id: " + userId);
-        }
-        return user;
+        User user = userRepository.findUserWithRolesById(userId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng nào có id: " + userId));
+
+        return convertToUserAdminInfoDto(user);
     }
 
+    private UserAdminInfoDto convertToUserAdminInfoDto(User user) {
+        // Convert roles to RoleDto set
+        var roleDtos = user.getRoles().stream()
+                .map(role -> UserAdminInfoDto.RoleDto.builder()
+                        .id(role.getId())
+                        .name(role.getName())
+                        .build())
+                .collect(java.util.stream.Collectors.toSet());
 
+        return UserAdminInfoDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .image(user.getImage())
+                .createdAt(user.getCreatedAt())
+                .enabled(user.getEnabled())
+                .birth(user.getBirth())
+                .roles(roleDtos)
+                .build();
+    }
 }

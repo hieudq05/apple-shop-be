@@ -26,11 +26,6 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     Page<UserAdminSummaryInfo> findUsersBy(Pageable pageable);
 
-    @Query("SELECT new com.web.appleshop.dto.response.admin.UserAdminInfoDto(" +
-            "u.id, u.email, u.phone, u.firstName, u.lastName, " +
-            "u.image, u.createdAt, u.enabled, u.birth, " +
-            "(SELECT new com.web.appleshop.dto.response.admin.UserAdminInfoDto.RoleDto(r.id, r.name) FROM u.roles r)) " +
-            "FROM User u LEFT JOIN FETCH u.roles " +
-            "WHERE u.id = :id")
-    UserAdminInfoDto findUserById(Integer id);
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.id = :id")
+    Optional<User> findUserWithRolesById(@Param("id") Integer id);
 }
