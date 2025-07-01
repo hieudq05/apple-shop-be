@@ -121,7 +121,7 @@ public class AuthController {
         if (password.length() < 8) {
             throw new BadRequestException("Mật khẩu phải có 8 ký tự trở lên. Vui lòng nhập mật khẩu có 8 ký tự trở lên. (Password: " + password + " )");
         }
-        if (password.length() > 50) {
+        if (password.length() > 32) {
             throw new BadRequestException("Mật khẩu không được quá 32 ký tự. Vui lòng nhập mật khẩu không quá 32 ký tự. (Password: " + password + " )");
         }
         if (!passwordResetService.validatePasswordResetToken(token)) {
