@@ -23,4 +23,5 @@ public interface UserService {
     Page<UserAdminSummaryInfo> getListUserSummary(Pageable pageable);
 
     UserAdminInfoDto getUserInfoForAdmin(Integer userId);
+
 }

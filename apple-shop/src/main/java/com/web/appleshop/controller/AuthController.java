@@ -10,12 +10,9 @@ import com.web.appleshop.dto.response.AuthenticationResponse;
 import com.web.appleshop.dto.response.OtpResponse;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.BadRequestException;
-import com.web.appleshop.repository.RefreshTokenRepository;
 import com.web.appleshop.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -34,16 +31,15 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JwtService jwtService;
     private final OtpService otpService;
     private final PasswordEncoder passwordEncoder;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final GoogleAuthService googleAuthService;
     private final Environment environment;
     private final RoleService roleService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -100,6 +96,39 @@ public class AuthController {
         AuthenticationResponse response = new AuthenticationResponse(accessToken, refreshToken);
 
         return ResponseEntity.ok(ApiResponse.success(response, "Verified successfully, you can login now!"));
+    }
+
+    @PostMapping("forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestParam("email") String email) {
+        if (email.isEmpty()) {
+            throw new BadRequestException("Không có email nào được nhập. Vui lòng nhập email để đặt lại mật khẩu.");
+        }
+        passwordResetService.requestPasswordReset(email);
+        return ResponseEntity.ok(ApiResponse.success(null, "Password reset email sent successfully"));
+    }
+
+    @PostMapping("reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(
+            @RequestParam("token") String token,
+            @RequestParam("password") String password
+    ) {
+        if (token.isEmpty()) {
+            throw new BadRequestException("Không có token nào được nhập. Vui lòng nhập token để đặt lại mật khẩu. (Token: " + token + " )");
+        }
+        if (password.isEmpty()) {
+            throw new BadRequestException("Không có mật khẩu nào được nhập. Vui lòng nhập mật khẩu để đặt lại.");
+        }
+        if (password.length() < 8) {
+            throw new BadRequestException("Mật khẩu phải có 8 ký tự trở lên. Vui lòng nhập mật khẩu có 8 ký tự trở lên. (Password: " + password + " )");
+        }
+        if (password.length() > 32) {
+            throw new BadRequestException("Mật khẩu không được quá 32 ký tự. Vui lòng nhập mật khẩu không quá 32 ký tự. (Password: " + password + " )");
+        }
+        if (!passwordResetService.validatePasswordResetToken(token)) {
+            throw new BadRequestException("Request reset password was error, please try again or request a new one. (Token: " + token + " )");
+        }
+        passwordResetService.resetPassword(token, passwordEncoder.encode(password));
+        return ResponseEntity.ok(ApiResponse.success(null, "Password reset successful"));
     }
 
     @PostMapping("refresh-token")
