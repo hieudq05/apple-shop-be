@@ -192,6 +192,7 @@ public class JwtServiceImpl implements JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException e) {
+            logger.warn("Token expired: {}", token, e);
             throw new BadRequestException("Your refresh token is expired.");
         }
         return claims;
