@@ -8,7 +8,6 @@ import com.web.appleshop.dto.request.RegisterRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.AuthenticationResponse;
 import com.web.appleshop.dto.response.OtpResponse;
-import com.web.appleshop.entity.Role;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.repository.RefreshTokenRepository;
@@ -29,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @RestController
 @RequestMapping("auth")

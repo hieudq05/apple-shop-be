@@ -1,6 +1,9 @@
 package com.web.appleshop.service.impl;
 
+import com.web.appleshop.dto.projection.UserAdminSummaryInfo;
+import com.web.appleshop.dto.projection.UserInfo;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
+import com.web.appleshop.dto.response.admin.UserAdminInfoDto;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.UserRepository;
@@ -8,8 +11,13 @@ import com.web.appleshop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -46,5 +54,33 @@ public class UserServiceImpl implements UserService {
                 user.getImage()
         );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserInfo getUserInfo() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findUserByEnabledAndId(true, user.getId()).orElseThrow(
+                () -> new NotFoundException("Không tìm thấy người dùng nào có id: " + user.getId())
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public Page<UserAdminSummaryInfo> getListUserSummary(Pageable pageable) {
+        return userRepository.findUsersBy(pageable);
+    }
+
+    @Override
+    public UserAdminInfoDto getUserInfoForAdmin(Integer userId) {
+        UserAdminInfoDto user;
+        try {
+            user = userRepository.findUserById(userId);
+        } catch (Exception e) {
+            throw new NotFoundException("Không tìm thấy người dùng nào có id: " + userId);
+        }
+        return user;
+    }
+
 
 }
