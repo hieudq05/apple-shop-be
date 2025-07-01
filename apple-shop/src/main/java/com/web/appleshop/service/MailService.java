@@ -2,16 +2,15 @@ package com.web.appleshop.service;
 
 import com.web.appleshop.dto.MailSender;
 import com.web.appleshop.enums.OrderStatus;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MailService {
-    private final JavaMailSenderImpl mailSender;
     private final MailProducer mailProducer;
+    private final String frontendUrl = "http://localhost:5173/";
+    private final String backendUrl = "http://localhost:8080/";
 
-    public MailService(JavaMailSenderImpl mailSender, MailProducer mailProducer) {
-        this.mailSender = mailSender;
+    public MailService(MailProducer mailProducer) {
         this.mailProducer = mailProducer;
     }
 
@@ -30,7 +29,7 @@ public class MailService {
     }
 
     public void sendResetPasswordMail(String to, String token) {
-        String resetUrl = "http://localhost:5173/reset-password?url=http://localhost:8080/api/v1/auth/reset-password?token=" + token;
+        String resetUrl = frontendUrl + "reset-password?url=" + backendUrl + "?token=" + token;
         String subject = "Reset Password";
         String body = "[RESET PASSWORD] To reset your password, please click the link below: " + resetUrl;
         sendMail(to, subject, body);
