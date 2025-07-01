@@ -2,7 +2,6 @@ package com.web.appleshop.service;
 
 import com.web.appleshop.dto.MailSender;
 import com.web.appleshop.enums.OrderStatus;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +26,13 @@ public class MailService {
 
     public void sendUpdateOrderStatusMail(String to, String subject, OrderStatus newStatus, Integer orderId, OrderStatus oldStatus) {
         String body = "[UPDATE ORDER] Your order with id " + orderId + " has been " + newStatus.toString() + " from " + oldStatus.toString();
+        sendMail(to, subject, body);
+    }
+
+    public void sendResetPasswordMail(String to, String token) {
+        String resetUrl = "http://localhost:5173/reset-password?url=http://localhost:8080/api/v1/auth/reset-password?token=" + token;
+        String subject = "Reset Password";
+        String body = "[RESET PASSWORD] To reset your password, please click the link below: " + resetUrl;
         sendMail(to, subject, body);
     }
 }
