@@ -461,6 +461,48 @@ public class ProductServiceImpl implements ProductService {
         return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos);
     }
 
+    public ProductAdminListDto convertProductToProductAdminListDto(Product product) {
+        return ProductAdminListDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .createdAt(product.getCreatedAt())
+                .createdBy(product.getCreatedBy().getFirstName() + " " + product.getCreatedBy().getLastName())
+                .categoryId(product.getCategory().getId())
+                .categoryName(product.getCategory().getName())
+                .features(product.getFeatures().stream().map(feature ->
+                        FeatureSummaryDto.builder()
+                                .id(feature.getId())
+                                .name(feature.getName())
+                                .image(feature.getImage())
+                                .build()
+                ).collect(Collectors.toSet()))
+                .stocks(product.getStocks().stream().map(stock ->
+                        StockSummaryDto.builder()
+                                .id(stock.getId())
+                                .quantity(stock.getQuantity())
+                                .price(stock.getPrice())
+                                .productPhotos(stock.getProductPhotos().stream().map(photo ->
+                                        StockSummaryDto.ProductPhotoDto.builder()
+                                                .id(photo.getId())
+                                                .imageUrl(photo.getImageUrl())
+                                                .alt(photo.getAlt())
+                                                .build()
+                                ).collect(Collectors.toSet()))
+                                .instanceProperties(stock.getInstanceProperties().stream().map(instanceProperty ->
+                                        StockSummaryDto.InstancePropertyDto.builder()
+                                                .id(instanceProperty.getId())
+                                                .name(instanceProperty.getName())
+                                                .build()
+                                ).collect(Collectors.toSet()))
+                                .colorId(stock.getColor().getId())
+                                .colorName(stock.getColor().getName())
+                                .colorHexCode(stock.getColor().getHexCode())
+                                .build()
+                ).collect(Collectors.toSet()))
+                .build();
+    }
+
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public ProductAdminResponse convertProductToProductAdminResponse(Product product) {
         User createdByEntity = product.getCreatedBy();

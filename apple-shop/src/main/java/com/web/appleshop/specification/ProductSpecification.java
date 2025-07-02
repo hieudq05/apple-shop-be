@@ -3,9 +3,11 @@ package com.web.appleshop.specification;
 import com.web.appleshop.dto.request.ProductSearchCriteria;
 import com.web.appleshop.entity.*;
 import jakarta.persistence.criteria.*;
+import jakarta.persistence.criteria.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -86,7 +88,7 @@ public class ProductSpecification {
      */
     private static void addDescriptionFilter(String description, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (StringUtils.hasText(description)) {
-            predicates.add(cb.like(cb.lower(root.get("description")), "%" + description.toLowerCase() + "%"));
+            predicates.add(cb.like(root.get("description"), "%" + description.toLowerCase() + "%"));
         }
     }
 
@@ -95,9 +97,11 @@ public class ProductSpecification {
      */
     private static void addKeywordSearchFilter(String keyword, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (StringUtils.hasText(keyword)) {
-            String searchPattern = "%" + keyword.toLowerCase() + "%";
-            Predicate nameMatch = cb.like(cb.lower(root.get("name")), searchPattern);
-            Predicate descriptionMatch = cb.like(cb.lower(root.get("description")), searchPattern);
+            String lowerSearchPattern = "%" + keyword.toLowerCase() + "%";
+            String upperSearchPattern = "%" + keyword.toUpperCase() + "%";
+
+            Predicate nameMatch = cb.like(cb.lower(root.get("name")), lowerSearchPattern);
+            Predicate descriptionMatch = cb.like(root.get("description"), upperSearchPattern);
             predicates.add(cb.or(nameMatch, descriptionMatch));
         }
     }
@@ -123,8 +127,8 @@ public class ProductSpecification {
     /**
      * Add feature filters
      */
-    private static void addFeatureFilters(Set<Integer> featureIds, Set<String> featureNames, 
-                                        Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+    private static void addFeatureFilters(Set<Integer> featureIds, Set<String> featureNames,
+                                          Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (featureIds != null && !featureIds.isEmpty()) {
             Join<Product, Feature> featureJoin = root.join("features", JoinType.INNER);
             predicates.add(featureJoin.get("id").in(featureIds));
@@ -143,8 +147,8 @@ public class ProductSpecification {
     /**
      * Add color filters through stocks
      */
-    private static void addColorFilters(Set<Integer> colorIds, Set<String> colorNames, 
-                                      Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+    private static void addColorFilters(Set<Integer> colorIds, Set<String> colorNames,
+                                        Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (colorIds != null && !colorIds.isEmpty()) {
             Join<Product, Stock> stockJoin = root.join("stocks", JoinType.INNER);
             predicates.add(stockJoin.get("color").get("id").in(colorIds));
@@ -164,15 +168,15 @@ public class ProductSpecification {
     /**
      * Add price range filter
      */
-    private static void addPriceRangeFilter(java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice, 
-                                          Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+    private static void addPriceRangeFilter(BigDecimal minPrice, BigDecimal maxPrice,
+                                            Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (minPrice != null || maxPrice != null) {
             Join<Product, Stock> stockJoin = root.join("stocks", JoinType.INNER);
-            
+
             if (minPrice != null) {
                 predicates.add(cb.greaterThanOrEqualTo(stockJoin.get("price"), minPrice));
             }
-            
+
             if (maxPrice != null) {
                 predicates.add(cb.lessThanOrEqualTo(stockJoin.get("price"), maxPrice));
             }
@@ -182,15 +186,15 @@ public class ProductSpecification {
     /**
      * Add quantity range filter
      */
-    private static void addQuantityRangeFilter(Integer minQuantity, Integer maxQuantity, 
-                                             Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+    private static void addQuantityRangeFilter(Integer minQuantity, Integer maxQuantity,
+                                               Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (minQuantity != null || maxQuantity != null) {
             Join<Product, Stock> stockJoin = root.join("stocks", JoinType.INNER);
-            
+
             if (minQuantity != null) {
                 predicates.add(cb.greaterThanOrEqualTo(stockJoin.get("quantity"), minQuantity));
             }
-            
+
             if (maxQuantity != null) {
                 predicates.add(cb.lessThanOrEqualTo(stockJoin.get("quantity"), maxQuantity));
             }
@@ -200,20 +204,20 @@ public class ProductSpecification {
     /**
      * Add date range filters
      */
-    private static void addDateRangeFilters(ProductSearchCriteria criteria, Root<Product> root, 
-                                          CriteriaBuilder cb, List<Predicate> predicates) {
+    private static void addDateRangeFilters(ProductSearchCriteria criteria, Root<Product> root,
+                                            CriteriaBuilder cb, List<Predicate> predicates) {
         if (criteria.getCreatedAfter() != null) {
             predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), criteria.getCreatedAfter()));
         }
-        
+
         if (criteria.getCreatedBefore() != null) {
             predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), criteria.getCreatedBefore()));
         }
-        
+
         if (criteria.getUpdatedAfter() != null) {
             predicates.add(cb.greaterThanOrEqualTo(root.get("updatedAt"), criteria.getUpdatedAfter()));
         }
-        
+
         if (criteria.getUpdatedBefore() != null) {
             predicates.add(cb.lessThanOrEqualTo(root.get("updatedAt"), criteria.getUpdatedBefore()));
         }
@@ -222,12 +226,12 @@ public class ProductSpecification {
     /**
      * Add creator filters
      */
-    private static void addCreatorFilters(Integer createdById, String createdByEmail, 
-                                        Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+    private static void addCreatorFilters(Integer createdById, String createdByEmail,
+                                          Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (createdById != null) {
             predicates.add(cb.equal(root.get("createdBy").get("id"), createdById));
         }
-        
+
         if (StringUtils.hasText(createdByEmail)) {
             predicates.add(cb.like(cb.lower(root.get("createdBy").get("email")), "%" + createdByEmail.toLowerCase() + "%"));
         }
@@ -248,8 +252,8 @@ public class ProductSpecification {
     /**
      * Add instance property filters
      */
-    private static void addInstancePropertyFilters(Set<Integer> instancePropertyIds, Set<String> instancePropertyNames, 
-                                                 Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+    private static void addInstancePropertyFilters(Set<Integer> instancePropertyIds, Set<String> instancePropertyNames,
+                                                   Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (instancePropertyIds != null && !instancePropertyIds.isEmpty()) {
             Join<Product, Stock> stockJoin = root.join("stocks", JoinType.INNER);
             Join<Stock, InstanceProperty> instanceJoin = stockJoin.join("instanceProperties", JoinType.INNER);
@@ -292,15 +296,15 @@ public class ProductSpecification {
      */
     private static boolean hasJoins(ProductSearchCriteria criteria) {
         return (criteria.getFeatureIds() != null && !criteria.getFeatureIds().isEmpty()) ||
-               (criteria.getFeatureNames() != null && !criteria.getFeatureNames().isEmpty()) ||
-               (criteria.getColorIds() != null && !criteria.getColorIds().isEmpty()) ||
-               (criteria.getColorNames() != null && !criteria.getColorNames().isEmpty()) ||
-               criteria.getMinPrice() != null || criteria.getMaxPrice() != null ||
-               criteria.getMinQuantity() != null || criteria.getMaxQuantity() != null ||
-               (criteria.getInstancePropertyIds() != null && !criteria.getInstancePropertyIds().isEmpty()) ||
-               (criteria.getInstancePropertyNames() != null && !criteria.getInstancePropertyNames().isEmpty()) ||
-               (criteria.getInStock() != null && criteria.getInStock()) ||
-               (criteria.getPromotionIds() != null && !criteria.getPromotionIds().isEmpty());
+                (criteria.getFeatureNames() != null && !criteria.getFeatureNames().isEmpty()) ||
+                (criteria.getColorIds() != null && !criteria.getColorIds().isEmpty()) ||
+                (criteria.getColorNames() != null && !criteria.getColorNames().isEmpty()) ||
+                criteria.getMinPrice() != null || criteria.getMaxPrice() != null ||
+                criteria.getMinQuantity() != null || criteria.getMaxQuantity() != null ||
+                (criteria.getInstancePropertyIds() != null && !criteria.getInstancePropertyIds().isEmpty()) ||
+                (criteria.getInstancePropertyNames() != null && !criteria.getInstancePropertyNames().isEmpty()) ||
+                (criteria.getInStock() != null && criteria.getInStock()) ||
+                (criteria.getPromotionIds() != null && !criteria.getPromotionIds().isEmpty());
     }
 
     /**
@@ -310,36 +314,61 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> {
             if (StringUtils.hasText(sortBy)) {
                 Order order;
-                Path<?> sortPath;
 
                 // Handle nested property sorting
                 switch (sortBy.toLowerCase()) {
                     case "categoryname":
-                        sortPath = root.get("category").get("name");
+                        Path<?> categoryPath = root.get("category").get("name");
+                        order = "desc".equalsIgnoreCase(sortDirection)
+                                ? criteriaBuilder.desc(categoryPath)
+                                : criteriaBuilder.asc(categoryPath);
+                        query.orderBy(order);
                         break;
                     case "createdbyname":
-                        sortPath = criteriaBuilder.concat(
-                            criteriaBuilder.concat(root.get("createdBy").get("firstName"), " "),
-                            root.get("createdBy").get("lastName")
+                        Expression<String> createdByNameExpr = criteriaBuilder.concat(
+                                criteriaBuilder.concat(root.get("createdBy").get("firstName"), " "),
+                                root.get("createdBy").get("lastName")
                         );
+                        order = "desc".equalsIgnoreCase(sortDirection)
+                                ? criteriaBuilder.desc(createdByNameExpr)
+                                : criteriaBuilder.asc(createdByNameExpr);
+                        query.orderBy(order);
+                        break;
+                    case "price":
+                        // For price sorting, we need to join with stocks and use MIN aggregation
+                        Join<Product, Stock> stockJoin = root.join("stocks", JoinType.LEFT);
+                        Expression<java.math.BigDecimal> minPriceExpr = criteriaBuilder.min(stockJoin.get("price"));
+                        order = "desc".equalsIgnoreCase(sortDirection)
+                                ? criteriaBuilder.desc(minPriceExpr)
+                                : criteriaBuilder.asc(minPriceExpr);
+                        query.groupBy(root.get("id")); // Group by product ID for aggregation
+                        query.orderBy(order);
+                        break;
+                    case "quantity":
+                        // For quantity sorting, sum all stock quantities
+                        Join<Product, Stock> stockJoinQty = root.join("stocks", JoinType.LEFT);
+                        Expression<Long> sumQuantityExpr = criteriaBuilder.sum(stockJoinQty.get("quantity"));
+                        order = "desc".equalsIgnoreCase(sortDirection)
+                                ? criteriaBuilder.desc(sumQuantityExpr)
+                                : criteriaBuilder.asc(sumQuantityExpr);
+                        query.groupBy(root.get("id"));
+                        query.orderBy(order);
                         break;
                     default:
                         // Handle direct properties
                         try {
-                            sortPath = root.get(sortBy);
+                            Path<?> directPath = root.get(sortBy);
+                            order = "desc".equalsIgnoreCase(sortDirection)
+                                    ? criteriaBuilder.desc(directPath)
+                                    : criteriaBuilder.asc(directPath);
+                            query.orderBy(order);
                         } catch (IllegalArgumentException e) {
                             // Default to name if property doesn't exist
-                            sortPath = root.get("name");
+                            Path<?> namePath = root.get("name");
+                            order = criteriaBuilder.asc(namePath);
+                            query.orderBy(order);
                         }
                 }
-
-                if ("desc".equalsIgnoreCase(sortDirection)) {
-                    order = criteriaBuilder.desc(sortPath);
-                } else {
-                    order = criteriaBuilder.asc(sortPath);
-                }
-
-                query.orderBy(order);
             }
 
             return criteriaBuilder.conjunction(); // Return empty predicate for sorting-only spec

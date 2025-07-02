@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Set;
+
 /**
  * Implementation of ProductSearchService
  * Provides flexible and extensible product search functionality
@@ -42,9 +44,9 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
         // For complex search, use specification
         Specification<Product> spec = buildSpecification(criteria);
-        Pageable sortedPageable = applySorting(criteria, pageable);
+//        Pageable sortedPageable = applySorting(criteria, pageable);
         
-        Page<Product> products = productRepository.findAll(spec, sortedPageable);
+        Page<Product> products = productRepository.findAll(spec, pageable);
         
         // Convert to DTO manually for complex searches
         return products.map(this::convertToAdminListDto);
@@ -113,19 +115,21 @@ public class ProductSearchServiceImpl implements ProductSearchService {
      * Apply sorting to pageable if specified in criteria
      */
     private Pageable applySorting(ProductSearchCriteria criteria, Pageable pageable) {
-        if (!StringUtils.hasText(criteria.getSortBy())) {
-            return pageable;
+        String sortBy = criteria.getSortBy().toLowerCase();
+        Set<String> directProductFields = Set.of("id", "name", "createdat", "updatedat");
+
+        if (directProductFields.contains(sortBy)) {
+            org.springframework.data.domain.Sort.Direction direction =
+                    "desc".equalsIgnoreCase(criteria.getSortDirection())
+                            ? org.springframework.data.domain.Sort.Direction.DESC
+                            : org.springframework.data.domain.Sort.Direction.ASC;
+
+            org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(direction, criteria.getSortBy());
+            return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
         }
 
-        // Create new pageable with sorting from criteria
-        org.springframework.data.domain.Sort.Direction direction = 
-            "desc".equalsIgnoreCase(criteria.getSortDirection()) 
-                ? org.springframework.data.domain.Sort.Direction.DESC 
-                : org.springframework.data.domain.Sort.Direction.ASC;
-
-        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(direction, criteria.getSortBy());
-        
-        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        // For complex sorting (price, categoryName, etc.), let Specification handle it
+        return pageable;
     }
 
     /**
@@ -162,15 +166,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
      * Convert Product entity to ProductAdminListDto
      */
     private ProductAdminListDto convertToAdminListDto(Product product) {
-        return new ProductAdminListDto(
-            product.getId(),
-            product.getName(),
-            product.getDescription(),
-            product.getCreatedAt(),
-            product.getCreatedBy().getFirstName() + " " + product.getCreatedBy().getLastName(),
-            product.getCategory().getId(),
-            product.getCategory().getName()
-        );
+        return ((ProductServiceImpl) productService).convertProductToProductAdminListDto(product);
     }
 
     /**

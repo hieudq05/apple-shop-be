@@ -1,10 +1,12 @@
 package com.web.appleshop.controller.admin;
 
+import com.web.appleshop.dto.request.ProductSearchCriteria;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.ProductAdminListDto;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.entity.User;
+import com.web.appleshop.service.ProductSearchService;
 import com.web.appleshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,7 @@ import java.util.Map;
 public class AdminProductController {
 
     private final ProductService productService;
+    private final ProductSearchService productSearchService;
 
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<String>> createProduct(
@@ -69,5 +72,22 @@ public class AdminProductController {
     public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Integer categoryId, @PathVariable Integer productId) {
         productService.deleteProduct(categoryId, productId);
         return ResponseEntity.ok(ApiResponse.success(null, "Delete product successfully"));
+    }
+
+    @GetMapping("search")
+    public ResponseEntity<ApiResponse<List<ProductAdminListDto>>> searchProduct(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestBody ProductSearchCriteria criteria
+    ) {
+        Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
+        Page<ProductAdminListDto> productsPage = productSearchService.searchProductsForAdmin(criteria, pageable);
+        PageableResponse pageableResponse = new PageableResponse(
+                productsPage.getNumber(),
+                productsPage.getSize(),
+                productsPage.getTotalPages(),
+                productsPage.getTotalElements()
+        );
+        return ResponseEntity.ok(ApiResponse.success(productsPage.getContent(), "Search products successfully", pageableResponse));
     }
 }
