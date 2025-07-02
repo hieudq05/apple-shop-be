@@ -54,26 +54,6 @@ public class User implements UserDetails {
     private String lastName;
 
     @Nationalized
-    @Column(name = "address", length = 500)
-    private String address;
-
-    @Nationalized
-    @Column(name = "ward", length = 100)
-    private String ward;
-
-    @Nationalized
-    @Column(name = "district", length = 100)
-    private String district;
-
-    @Nationalized
-    @Column(name = "province", length = 100)
-    private String province;
-
-    @Nationalized
-    @Column(name = "country", length = 100)
-    private String country;
-
-    @Nationalized
     @Column(name = "image")
     private String image;
 
