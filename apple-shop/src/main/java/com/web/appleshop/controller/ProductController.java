@@ -1,8 +1,10 @@
 package com.web.appleshop.controller;
 
+import com.web.appleshop.dto.request.ProductSearchCriteriaUser;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.ProductUserResponse;
+import com.web.appleshop.service.ProductSearchService;
 import com.web.appleshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductSearchService productSearchService;
 
     @GetMapping("{categoryId}")
     public ResponseEntity<ApiResponse<List<ProductUserResponse>>> getAllProducts(@PathVariable Integer categoryId, @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
@@ -36,5 +39,22 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductUserResponse>> getProduct(@PathVariable Integer categoryId, @PathVariable Integer productId) {
         ProductUserResponse productUserResponse = productService.getProductByProductIdForUser(categoryId, productId);
         return ResponseEntity.ok(ApiResponse.success(productUserResponse, "Get product successfully"));
+    }
+
+    @GetMapping("search")
+    public ResponseEntity<ApiResponse<List<ProductUserResponse>>> searchProducts(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestBody ProductSearchCriteriaUser criteria
+    ) {
+        Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
+        Page<ProductUserResponse> productsPage = productSearchService.searchProductsForUser(criteria, pageable);
+        PageableResponse pageableResponse = new PageableResponse(
+                productsPage.getNumber(),
+                productsPage.getSize(),
+                productsPage.getTotalPages(),
+                productsPage.getTotalElements()
+        );
+        return ResponseEntity.ok(ApiResponse.success(productsPage.getContent(), "Search products successfully", pageableResponse));
     }
 }

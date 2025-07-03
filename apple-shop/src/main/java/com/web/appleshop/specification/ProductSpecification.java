@@ -1,9 +1,12 @@
 package com.web.appleshop.specification;
 
 import com.web.appleshop.dto.request.ProductSearchCriteria;
+import com.web.appleshop.dto.request.ProductSearchCriteriaAdmin;
 import com.web.appleshop.entity.*;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.criteria.Order;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -20,15 +23,17 @@ import java.util.Set;
  */
 public class ProductSpecification {
 
+    private static final Logger log = LoggerFactory.getLogger(ProductSpecification.class);
+
     /**
      * Main method to create specification based on search criteria
      */
-    public static Specification<Product> createSpecification(ProductSearchCriteria criteria) {
+    public static <T extends ProductSearchCriteria> Specification<Product> createSpecification(T criteria) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             assert query != null;
-            addFetchJoins(root, query);
+            addFetchJoins(root, query, criteria);
 
             // Basic product information filters
             addNameFilter(criteria.getName(), root, criteriaBuilder, predicates);
@@ -48,46 +53,52 @@ public class ProductSpecification {
             // Price range filters (through stocks)
             addPriceRangeFilter(criteria.getMinPrice(), criteria.getMaxPrice(), root, criteriaBuilder, predicates);
 
-            // Stock quantity filters
-            addQuantityRangeFilter(criteria.getMinQuantity(), criteria.getMaxQuantity(), root, criteriaBuilder, predicates);
-
-            // Date range filters
-            addDateRangeFilters(criteria, root, criteriaBuilder, predicates);
-
-            // Creator filters
-            addCreatorFilters(criteria.getCreatedById(), criteria.getCreatedByEmail(), root, criteriaBuilder, predicates);
-
-            // Status filters
-            addStatusFilter(criteria.getIsDeleted(), root, criteriaBuilder, predicates);
-
             // Instance property filters
             addInstancePropertyFilters(criteria.getInstancePropertyIds(), criteria.getInstancePropertyNames(), root, criteriaBuilder, predicates);
 
             // Stock availability filter
             addStockAvailabilityFilter(criteria.getInStock(), root, criteriaBuilder, predicates);
 
-            // Promotion filters
-            addPromotionFilter(criteria.getPromotionIds(), root, criteriaBuilder, predicates);
+            // Review property filters
+            addReviewFilters(criteria.getHasReviews(), criteria.getMinRating(), criteria.getMaxRating(), root, criteriaBuilder, predicates);
 
-            // Ensure distinct results when joining multiple tables
-            if (hasJoins(criteria)) {
-                query.distinct(true);
+            if (criteria instanceof ProductSearchCriteriaAdmin adminCriteria) {
+                log.info("Admin criteria detected");
+
+                // Stock quantity filters
+                addQuantityRangeFilter(adminCriteria.getMinQuantity(), adminCriteria.getMaxQuantity(), root, criteriaBuilder, predicates);
+
+                // Date range filters
+                addDateRangeFilters(adminCriteria, root, criteriaBuilder, predicates);
+
+                // Creator filters
+                addCreatorFilters(adminCriteria.getCreatedById(), adminCriteria.getCreatedByEmail(), root, criteriaBuilder, predicates);
+
+                // Status filters
+                addStatusFilter(adminCriteria.getIsDeleted(), root, criteriaBuilder, predicates);
+
+                // Promotion filters
+                addPromotionFilter(adminCriteria.getPromotionIds(), root, criteriaBuilder, predicates);
             }
+
+            query.distinct(true);
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
 
-    private static void addFetchJoins(Root<Product> root, CriteriaQuery<?> query) {
+    private static <T extends ProductSearchCriteria> void addFetchJoins(Root<Product> root, CriteriaQuery<?> query, T criteria) {
         // Only add fetch joins for non-count queries
         if (Long.class != query.getResultType()) {
             try {
                 // Fetch category (most commonly accessed)
                 root.fetch("category", JoinType.LEFT);
 
-                // Fetch creator information with roles
-                Fetch<Product, User> createdByFetch = root.fetch("createdBy", JoinType.LEFT);
-                createdByFetch.fetch("roles", JoinType.LEFT);
+                if (criteria instanceof ProductSearchCriteriaAdmin adminCriteria) {
+                    // Fetch creator information with roles
+                    Fetch<Product, User> createdByFetch = root.fetch("createdBy", JoinType.LEFT);
+                    createdByFetch.fetch("roles", JoinType.LEFT);
+                }
 
                 // Fetch stocks with complete information
                 Fetch<Product, Stock> stocksFetch = root.fetch("stocks", JoinType.LEFT);
@@ -103,9 +114,6 @@ public class ProductSpecification {
                 root.fetch("features", JoinType.LEFT);
                 root.fetch("product_features", JoinType.LEFT);
 
-                // Fetch product photos
-                root.fetch("productPhotos", JoinType.LEFT);
-
                 // Note: Be careful with promotions and instanceProperties as they might create cartesian products
                 // Only fetch them if specifically needed
 
@@ -113,6 +121,30 @@ public class ProductSpecification {
                 // In case of any fetch join issues, continue without them
                 // This prevents the entire query from failing
             }
+        }
+    }
+
+    /**
+     * Add review/rating filters (public filters)
+     */
+    private static void addReviewFilters(Boolean hasReviews, Double minRating, Double maxRating,
+                                         Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+        if (hasReviews != null) {
+            if (hasReviews) {
+                // Products that have reviews
+                predicates.add(cb.isNotEmpty(root.get("reviews")));
+            } else {
+                // Products that don't have reviews
+                predicates.add(cb.isEmpty(root.get("reviews")));
+            }
+        }
+
+        if (minRating != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("rating"), minRating));
+        }
+
+        if (maxRating != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("rating"), maxRating));
         }
     }
 
@@ -244,7 +276,7 @@ public class ProductSpecification {
     /**
      * Add date range filters
      */
-    private static void addDateRangeFilters(ProductSearchCriteria criteria, Root<Product> root,
+    private static void addDateRangeFilters(ProductSearchCriteriaAdmin criteria, Root<Product> root,
                                             CriteriaBuilder cb, List<Predicate> predicates) {
         if (criteria.getCreatedAfter() != null) {
             predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), criteria.getCreatedAfter()));
@@ -325,22 +357,6 @@ public class ProductSpecification {
             Join<Product, Promotion> promotionJoin = root.join("promotions", JoinType.INNER);
             predicates.add(promotionJoin.get("id").in(promotionIds));
         }
-    }
-
-    /**
-     * Check if the criteria requires joins (for distinct query)
-     */
-    private static boolean hasJoins(ProductSearchCriteria criteria) {
-        return (criteria.getFeatureIds() != null && !criteria.getFeatureIds().isEmpty()) ||
-                (criteria.getFeatureNames() != null && !criteria.getFeatureNames().isEmpty()) ||
-                (criteria.getColorIds() != null && !criteria.getColorIds().isEmpty()) ||
-                (criteria.getColorNames() != null && !criteria.getColorNames().isEmpty()) ||
-                criteria.getMinPrice() != null || criteria.getMaxPrice() != null ||
-                criteria.getMinQuantity() != null || criteria.getMaxQuantity() != null ||
-                (criteria.getInstancePropertyIds() != null && !criteria.getInstancePropertyIds().isEmpty()) ||
-                (criteria.getInstancePropertyNames() != null && !criteria.getInstancePropertyNames().isEmpty()) ||
-                (criteria.getInStock() != null && criteria.getInStock()) ||
-                (criteria.getPromotionIds() != null && !criteria.getPromotionIds().isEmpty());
     }
 
     /**
