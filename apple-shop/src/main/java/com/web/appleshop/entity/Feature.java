@@ -49,7 +49,7 @@ public class Feature {
             CascadeType.MERGE,
             CascadeType.PERSIST,
             CascadeType.REFRESH
-    }, fetch = FetchType.EAGER)
+    }, fetch = FetchType.LAZY)
     @JoinTable(name = "product_features",
             joinColumns = @JoinColumn(name = "feature_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id"))

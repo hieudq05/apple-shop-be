@@ -46,7 +46,7 @@ public class Stock {
     @OneToMany(mappedBy = "stock")
     private Set<CartItem> cartItems = new LinkedHashSet<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "stock_instances",
             joinColumns = @JoinColumn(name = "stock_id"),
             inverseJoinColumns = @JoinColumn(name = "instance_id"))

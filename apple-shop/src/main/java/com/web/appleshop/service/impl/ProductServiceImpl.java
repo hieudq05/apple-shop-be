@@ -3,6 +3,7 @@ package com.web.appleshop.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
+import com.web.appleshop.dto.request.ProductSearchCriteria;
 import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.dto.response.ValidationErrorDetail;
@@ -13,6 +14,7 @@ import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.exception.ValidationException;
 import com.web.appleshop.repository.*;
 import com.web.appleshop.service.ProductService;
+import com.web.appleshop.specification.ProductSpecification;
 import com.web.appleshop.util.UploadUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -23,6 +25,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -410,6 +413,15 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return new PageImpl<>(productsList, pageable, productsPage.getTotalElements());
+    }
+
+    @Override
+    public Page<ProductAdminListDto> getAllProductsForAdminV2(Pageable pageable) {
+        Specification<Product> spec = ProductSpecification.createSpecification(
+                ProductSearchCriteria.builder().build()
+        );
+        Page<Product> products = productRepository.findAll(spec, pageable);
+        return products.map(this::convertProductToProductAdminListDto);
     }
 
     @Override

@@ -38,7 +38,7 @@ public class Category {
             CascadeType.MERGE,
             CascadeType.PERSIST,
             CascadeType.REFRESH
-    }, fetch = FetchType.EAGER)
+    }, fetch = FetchType.LAZY)
     @JoinTable(name = "promotion_category",
             joinColumns = @JoinColumn(name = "category_id"),
             inverseJoinColumns = @JoinColumn(name = "promotion_id"))

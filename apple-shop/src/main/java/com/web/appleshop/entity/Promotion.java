@@ -71,7 +71,7 @@ public class Promotion {
             CascadeType.MERGE,
             CascadeType.PERSIST,
             CascadeType.REFRESH
-    }, fetch = FetchType.EAGER)
+    }, fetch = FetchType.LAZY)
     @JoinTable(
             name = "promotion_product",
             joinColumns = @JoinColumn(name = "promotions_id"),

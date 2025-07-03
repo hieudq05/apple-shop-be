@@ -37,18 +37,15 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     public Page<ProductAdminListDto> searchProductsForAdmin(ProductSearchCriteria criteria, Pageable pageable) {
         log.debug("Searching products for admin with criteria: {}", criteria);
 
-        // For admin list view, we use the optimized V1 method if criteria is simple
         if (isSimpleCriteria(criteria)) {
-            return ((ProductServiceImpl) productService).getAllProductsForAdminV1(pageable);
+            return productService.getAllProductsForAdminV1(pageable);
         }
 
-        // For complex search, use specification
         Specification<Product> spec = buildSpecification(criteria);
 //        Pageable sortedPageable = applySorting(criteria, pageable);
         
         Page<Product> products = productRepository.findAll(spec, pageable);
         
-        // Convert to DTO manually for complex searches
         return products.map(this::convertToAdminListDto);
     }
 

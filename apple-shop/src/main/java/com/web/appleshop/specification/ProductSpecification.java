@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -25,6 +26,9 @@ public class ProductSpecification {
     public static Specification<Product> createSpecification(ProductSearchCriteria criteria) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            assert query != null;
+            addFetchJoins(root, query);
 
             // Basic product information filters
             addNameFilter(criteria.getName(), root, criteriaBuilder, predicates);
@@ -72,6 +76,44 @@ public class ProductSpecification {
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    private static void addFetchJoins(Root<Product> root, CriteriaQuery<?> query) {
+        // Only add fetch joins for non-count queries
+        if (Long.class != query.getResultType()) {
+            try {
+                // Fetch category (most commonly accessed)
+                root.fetch("category", JoinType.LEFT);
+
+                // Fetch creator information with roles
+                Fetch<Product, User> createdByFetch = root.fetch("createdBy", JoinType.LEFT);
+                createdByFetch.fetch("roles", JoinType.LEFT);
+
+                // Fetch stocks with complete information
+                Fetch<Product, Stock> stocksFetch = root.fetch("stocks", JoinType.LEFT);
+                stocksFetch.fetch("color", JoinType.LEFT);
+
+                // Fetch instance properties through stocks
+                stocksFetch.fetch("instanceProperties", JoinType.LEFT);
+
+                // Fetch product photos through stocks (assuming photos are linked to stocks)
+                stocksFetch.fetch("productPhotos", JoinType.LEFT);
+
+                // Fetch features
+                root.fetch("features", JoinType.LEFT);
+                root.fetch("product_features", JoinType.LEFT);
+
+                // Fetch product photos
+                root.fetch("productPhotos", JoinType.LEFT);
+
+                // Note: Be careful with promotions and instanceProperties as they might create cartesian products
+                // Only fetch them if specifically needed
+
+            } catch (Exception e) {
+                // In case of any fetch join issues, continue without them
+                // This prevents the entire query from failing
+            }
+        }
     }
 
     /**
@@ -241,12 +283,8 @@ public class ProductSpecification {
      * Add status filter
      */
     private static void addStatusFilter(Boolean isDeleted, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
-        if (isDeleted != null) {
-            predicates.add(cb.equal(root.get("isDeleted"), isDeleted));
-        } else {
-            // Default: exclude deleted products
-            predicates.add(cb.equal(root.get("isDeleted"), false));
-        }
+        // Default: exclude deleted products
+        predicates.add(cb.equal(root.get("isDeleted"), Objects.requireNonNullElse(isDeleted, false)));
     }
 
     /**

@@ -52,7 +52,7 @@ public class AdminProductController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProductAdminListDto>>> getAllProducts(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
-        Page<ProductAdminListDto> productAdminResponsePage = productService.getAllProductsForAdminV1(pageable);
+        Page<ProductAdminListDto> productAdminResponsePage = productService.getAllProductsForAdminV2(pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 productAdminResponsePage.getNumber(),
                 productAdminResponsePage.getSize(),
