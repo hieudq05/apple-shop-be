@@ -2,15 +2,19 @@ package com.web.appleshop.service.impl;
 
 import com.web.appleshop.dto.projection.UserAdminSummaryInfo;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.UserSearchCriteria;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.dto.response.admin.UserAdminInfoDto;
+import com.web.appleshop.dto.response.admin.UserAdminSummaryDto;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.UserService;
+import com.web.appleshop.specification.UserSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -78,6 +82,44 @@ public class UserServiceImpl implements UserService {
         return convertToUserAdminInfoDto(user);
     }
 
+    @Override
+    public Page<UserAdminSummaryDto> searchUsers(UserSearchCriteria criteria, Pageable pageable) {
+        Specification<User> spec = buildSpecification(criteria);
+
+        Page<User> users = userRepository.findAll(spec, pageable);
+
+        return users.map(this::convertToUserAdminSummaryDto);
+    }
+
+    public static boolean isSimpleCriteria(UserSearchCriteria criteria) {
+        return criteria.getId() == null &&
+                criteria.getEmail() == null &&
+                criteria.getPhone() == null &&
+                criteria.getName() == null &&
+                criteria.getBirthFrom() == null &&
+                criteria.getBirthTo() == null &&
+                criteria.getEnabled() == null &&
+                (criteria.getRoleName() == null || criteria.getRoleName().isEmpty()) &&
+                criteria.getCreatedAtFrom() == null &&
+                criteria.getCreatedAtTo() == null;
+
+    }
+
+    private Specification<User> buildSpecification(UserSearchCriteria criteria) {
+        Specification<User> spec = UserSpecification.createSpecification(criteria);
+
+        // Add sorting if specified in criteria (as an alternative to Pageable sorting)
+//        if (StringUtils.hasText(criteria.getSortBy())) {
+//            Specification<Product> sortSpec = ProductSpecification.createSortSpecification(
+//                    criteria.getSortBy(), criteria.getSortDirection()
+//            );
+//            assert spec != null;
+//            spec = spec.and(sortSpec);
+//        }
+
+        return spec;
+    }
+
     private UserAdminInfoDto convertToUserAdminInfoDto(User user) {
         // Convert roles to RoleDto set
         var roleDtos = user.getRoles().stream()
@@ -98,6 +140,19 @@ public class UserServiceImpl implements UserService {
                 .enabled(user.getEnabled())
                 .birth(user.getBirth())
                 .roles(roleDtos)
+                .build();
+    }
+
+    private UserAdminSummaryDto convertToUserAdminSummaryDto(User user) {
+        return UserAdminSummaryDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .image(user.getImage())
+                .enabled(user.getEnabled())
+                .birth(user.getBirth())
                 .build();
     }
 }

@@ -12,8 +12,8 @@ public abstract class ProductSearchCriteria {
     private String description;
 
     // Category filtering
-    private Integer categoryId;
-    private String categoryName;
+    private Set<Integer> categoryId;
+    private Set<String> categoryName;
 
     // Feature filtering
     private Set<Integer> featureIds;
