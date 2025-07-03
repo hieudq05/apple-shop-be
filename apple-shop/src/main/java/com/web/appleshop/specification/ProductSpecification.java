@@ -41,8 +41,7 @@ public class ProductSpecification {
             addKeywordSearchFilter(criteria.getSearchKeyword(), root, criteriaBuilder, predicates);
 
             // Category filters
-            addCategoryIdFilter(criteria.getCategoryId(), root, criteriaBuilder, predicates);
-            addCategoryNameFilter(criteria.getCategoryName(), root, criteriaBuilder, predicates);
+            addCategoryFilters(criteria.getCategoryId(), criteria.getCategoryName(), root, criteriaBuilder, predicates);
 
             // Feature filters
             addFeatureFilters(criteria.getFeatureIds(), criteria.getFeatureNames(), root, criteriaBuilder, predicates);
@@ -183,18 +182,17 @@ public class ProductSpecification {
     /**
      * Add category ID filter
      */
-    private static void addCategoryIdFilter(Integer categoryId, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
-        if (categoryId != null) {
-            predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+    private static void addCategoryFilters(Set<Integer> categoryId, Set<String> categoryNames, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+        Join<Product, Category> categoryJoin = root.join("category", JoinType.INNER);
+        if (categoryId != null && !categoryId.isEmpty()) {
+            predicates.add(root.get("category").get("id").in(categoryId));
         }
-    }
-
-    /**
-     * Add category name filter (case-insensitive partial match)
-     */
-    private static void addCategoryNameFilter(String categoryName, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
-        if (StringUtils.hasText(categoryName)) {
-            predicates.add(cb.like(cb.lower(root.get("category").get("name")), "%" + categoryName.toLowerCase() + "%"));
+        if (categoryNames != null && !categoryNames.isEmpty()) {
+            List<Predicate> categoryNamePredicates = new ArrayList<>();
+            for (String categoryName : categoryNames) {
+                categoryNamePredicates.add(cb.like(cb.lower(categoryJoin.get("name")), "%" + categoryName.toLowerCase() + "%"));
+            }
+            predicates.add(cb.or(categoryNamePredicates.toArray(new Predicate[0])));
         }
     }
 

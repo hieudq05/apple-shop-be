@@ -2,8 +2,10 @@ package com.web.appleshop.service;
 
 import com.web.appleshop.dto.projection.UserAdminSummaryInfo;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.UserSearchCriteria;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.dto.response.admin.UserAdminInfoDto;
+import com.web.appleshop.dto.response.admin.UserAdminSummaryDto;
 import com.web.appleshop.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,5 +25,7 @@ public interface UserService {
     Page<UserAdminSummaryInfo> getListUserSummary(Pageable pageable);
 
     UserAdminInfoDto getUserInfoForAdmin(Integer userId);
+
+    Page<UserAdminSummaryDto> searchUsers(UserSearchCriteria criteria, Pageable pageable);
 
 }
