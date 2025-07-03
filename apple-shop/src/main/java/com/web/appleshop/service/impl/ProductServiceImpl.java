@@ -3,6 +3,7 @@ package com.web.appleshop.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
+import com.web.appleshop.dto.request.ProductSearchCriteria;
 import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.dto.response.ValidationErrorDetail;
@@ -13,6 +14,7 @@ import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.exception.ValidationException;
 import com.web.appleshop.repository.*;
 import com.web.appleshop.service.ProductService;
+import com.web.appleshop.specification.ProductSpecification;
 import com.web.appleshop.util.UploadUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -23,6 +25,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -413,6 +416,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<ProductAdminListDto> getAllProductsForAdminV2(Pageable pageable) {
+        Specification<Product> spec = ProductSpecification.createSpecification(
+                ProductSearchCriteria.builder().build()
+        );
+        Page<Product> products = productRepository.findAll(spec, pageable);
+        return products.map(this::convertProductToProductAdminListDto);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
         Page<Product> products = productRepository.findAllByCategory_IdAndIsDeleted(categoryId, false, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
@@ -459,6 +471,48 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos);
+    }
+
+    public ProductAdminListDto convertProductToProductAdminListDto(Product product) {
+        return ProductAdminListDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .createdAt(product.getCreatedAt())
+                .createdBy(product.getCreatedBy().getFirstName() + " " + product.getCreatedBy().getLastName())
+                .categoryId(product.getCategory().getId())
+                .categoryName(product.getCategory().getName())
+                .features(product.getFeatures().stream().map(feature ->
+                        FeatureSummaryDto.builder()
+                                .id(feature.getId())
+                                .name(feature.getName())
+                                .image(feature.getImage())
+                                .build()
+                ).collect(Collectors.toSet()))
+                .stocks(product.getStocks().stream().map(stock ->
+                        StockSummaryDto.builder()
+                                .id(stock.getId())
+                                .quantity(stock.getQuantity())
+                                .price(stock.getPrice())
+                                .productPhotos(stock.getProductPhotos().stream().map(photo ->
+                                        StockSummaryDto.ProductPhotoDto.builder()
+                                                .id(photo.getId())
+                                                .imageUrl(photo.getImageUrl())
+                                                .alt(photo.getAlt())
+                                                .build()
+                                ).collect(Collectors.toSet()))
+                                .instanceProperties(stock.getInstanceProperties().stream().map(instanceProperty ->
+                                        StockSummaryDto.InstancePropertyDto.builder()
+                                                .id(instanceProperty.getId())
+                                                .name(instanceProperty.getName())
+                                                .build()
+                                ).collect(Collectors.toSet()))
+                                .colorId(stock.getColor().getId())
+                                .colorName(stock.getColor().getName())
+                                .colorHexCode(stock.getColor().getHexCode())
+                                .build()
+                ).collect(Collectors.toSet()))
+                .build();
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
