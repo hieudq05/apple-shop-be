@@ -32,7 +32,7 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            assert query != null;
+            Objects.requireNonNull(query, "Query must not be null");
             addFetchJoins(root, query, criteria);
 
             // Basic product information filters
