@@ -78,7 +78,7 @@ public class UserSpecification {
 
     private static void addEmailFilter(String email, Root<User> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (StringUtils.hasText(email)) {
-            predicates.add(cb.like(root.get("email"), "%" + email + "%"));
+            predicates.add(cb.like(cb.lower(root.get("email")), "%" + email.toLowerCase() + "%"));
         }
     }
 
