@@ -40,7 +40,7 @@ public class UserSpecification {
             try {
                 // Fetch role (most commonly accessed)
                 root.fetch("roles", JoinType.LEFT);
-                root.fetch("user_roles", JoinType.LEFT);
+                // Removed or updated fetch call for user_roles
             } catch (Exception e) {
                 // In case of any fetch join issues, continue without them
                 // This prevents the entire query from failing
