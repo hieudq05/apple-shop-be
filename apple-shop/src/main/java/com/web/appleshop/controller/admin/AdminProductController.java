@@ -1,6 +1,6 @@
 package com.web.appleshop.controller.admin;
 
-import com.web.appleshop.dto.request.ProductSearchCriteria;
+import com.web.appleshop.dto.request.ProductSearchCriteriaAdmin;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.ProductAdminListDto;
@@ -78,7 +78,7 @@ public class AdminProductController {
     public ResponseEntity<ApiResponse<List<ProductAdminListDto>>> searchProduct(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
-            @RequestBody ProductSearchCriteria criteria
+            @RequestBody ProductSearchCriteriaAdmin criteria
     ) {
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
         Page<ProductAdminListDto> productsPage = productSearchService.searchProductsForAdmin(criteria, pageable);
