@@ -171,13 +171,11 @@ public class ProductSpecification {
      */
     private static void addFeatureFilters(Set<Integer> featureIds, Set<String> featureNames,
                                           Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+        Join<Product, Feature> featureJoin = root.join("features", JoinType.INNER);
         if (featureIds != null && !featureIds.isEmpty()) {
-            Join<Product, Feature> featureJoin = root.join("features", JoinType.INNER);
             predicates.add(featureJoin.get("id").in(featureIds));
         }
-
         if (featureNames != null && !featureNames.isEmpty()) {
-            Join<Product, Feature> featureJoin = root.join("features", JoinType.INNER);
             List<Predicate> featureNamePredicates = new ArrayList<>();
             for (String featureName : featureNames) {
                 featureNamePredicates.add(cb.like(cb.lower(featureJoin.get("name")), "%" + featureName.toLowerCase() + "%"));
