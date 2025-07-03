@@ -110,8 +110,8 @@ public class UserSpecification {
     }
 
     private static void addRoleFilters(Set<String> roles, Root<User> root, CriteriaBuilder cb, List<Predicate> predicates) {
-        Join<User, Role> roleJoin = root.join("roles", JoinType.INNER);
         if (roles != null && !roles.isEmpty()) {
+            Join<User, Role> roleJoin = root.join("roles", JoinType.LEFT);
             List<Predicate> rolePredicates = new ArrayList<>();
             for (String role : roles) {
                 rolePredicates.add(cb.like(cb.lower(roleJoin.get("name")), "%" + role.toLowerCase() + "%"));
