@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.util.Set;
 
 @Data
-public abstract class ProductSearchCriteria {
+public abstract class BaseProductSearchCriteria {
     // Basic product information
     private String name;
     private String description;

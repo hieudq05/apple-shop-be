@@ -1,7 +1,7 @@
 package com.web.appleshop.specification;
 
-import com.web.appleshop.dto.request.ProductSearchCriteria;
-import com.web.appleshop.dto.request.ProductSearchCriteriaAdmin;
+import com.web.appleshop.dto.request.BaseProductSearchCriteria;
+import com.web.appleshop.dto.request.AdminProductSearchCriteria;
 import com.web.appleshop.entity.*;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.criteria.Order;
@@ -28,7 +28,7 @@ public class ProductSpecification {
     /**
      * Main method to create specification based on search criteria
      */
-    public static <T extends ProductSearchCriteria> Specification<Product> createSpecification(T criteria) {
+    public static <T extends BaseProductSearchCriteria> Specification<Product> createSpecification(T criteria) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -61,7 +61,7 @@ public class ProductSpecification {
             // Review property filters
             addReviewFilters(criteria.getHasReviews(), criteria.getMinRating(), criteria.getMaxRating(), root, criteriaBuilder, predicates);
 
-            if (criteria instanceof ProductSearchCriteriaAdmin adminCriteria) {
+            if (criteria instanceof AdminProductSearchCriteria adminCriteria) {
                 log.info("Admin criteria detected");
 
                 // Stock quantity filters
@@ -86,14 +86,14 @@ public class ProductSpecification {
         };
     }
 
-    private static <T extends ProductSearchCriteria> void addFetchJoins(Root<Product> root, CriteriaQuery<?> query, T criteria) {
+    private static <T extends BaseProductSearchCriteria> void addFetchJoins(Root<Product> root, CriteriaQuery<?> query, T criteria) {
         // Only add fetch joins for non-count queries
         if (Long.class != query.getResultType()) {
             try {
                 // Fetch category (most commonly accessed)
                 root.fetch("category", JoinType.LEFT);
 
-                if (criteria instanceof ProductSearchCriteriaAdmin adminCriteria) {
+                if (criteria instanceof AdminProductSearchCriteria adminCriteria) {
                     // Fetch creator information with roles
                     Fetch<Product, User> createdByFetch = root.fetch("createdBy", JoinType.LEFT);
                     createdByFetch.fetch("roles", JoinType.LEFT);
@@ -274,7 +274,7 @@ public class ProductSpecification {
     /**
      * Add date range filters
      */
-    private static void addDateRangeFilters(ProductSearchCriteriaAdmin criteria, Root<Product> root,
+    private static void addDateRangeFilters(AdminProductSearchCriteria criteria, Root<Product> root,
                                             CriteriaBuilder cb, List<Predicate> predicates) {
         if (criteria.getCreatedAfter() != null) {
             predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), criteria.getCreatedAfter()));

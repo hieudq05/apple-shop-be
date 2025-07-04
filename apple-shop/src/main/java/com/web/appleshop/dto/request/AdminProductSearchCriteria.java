@@ -11,7 +11,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
-public class ProductSearchCriteriaAdmin extends ProductSearchCriteria {
+public class AdminProductSearchCriteria extends BaseProductSearchCriteria {
     // Stock quantity filtering
     private Integer minQuantity;
     private Integer maxQuantity;

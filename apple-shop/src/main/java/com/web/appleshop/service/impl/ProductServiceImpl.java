@@ -3,7 +3,7 @@ package com.web.appleshop.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.request.CreateProductRequest;
-import com.web.appleshop.dto.request.ProductSearchCriteriaAdmin;
+import com.web.appleshop.dto.request.AdminProductSearchCriteria;
 import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.dto.response.ValidationErrorDetail;
@@ -418,7 +418,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductAdminListDto> getAllProductsForAdminV2(Pageable pageable) {
         Specification<Product> spec = ProductSpecification.createSpecification(
-                ProductSearchCriteriaAdmin.builder().build()
+                AdminProductSearchCriteria.builder().build()
         );
         Page<Product> products = productRepository.findAll(spec, pageable);
         return products.map(this::convertProductToProductAdminListDto);

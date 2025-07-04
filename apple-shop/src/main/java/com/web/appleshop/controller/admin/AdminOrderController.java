@@ -2,9 +2,11 @@ package com.web.appleshop.controller.admin;
 
 import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.request.AdminCreateOrderRequest;
+import com.web.appleshop.dto.request.AdminOrderSearchCriteria;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
+import com.web.appleshop.dto.response.admin.OrderSummaryV2Dto;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 import com.web.appleshop.service.OrderService;
@@ -30,6 +32,25 @@ public class AdminOrderController {
     public ResponseEntity<ApiResponse<OrderAdminResponse>> getOrder(@PathVariable Integer orderId) {
         OrderAdminResponse order = orderService.getOrderDetailByIdForAdmin(orderId);
         return ResponseEntity.ok(ApiResponse.success(order, "Get order successfully"));
+    }
+
+    @GetMapping("search")
+    public ResponseEntity<ApiResponse<List<OrderSummaryV2Dto>>> searchOrders(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestBody AdminOrderSearchCriteria criteria
+    ) {
+        Pageable pageable = Pageable
+                .ofSize(size != null ? size : 6)
+                .withPage(page != null ? page : 0);
+        Page<OrderSummaryV2Dto> orders = orderService.searchOrdersSummaryForAdmin(criteria, pageable);
+        PageableResponse pageableResponse = new PageableResponse(
+                orders.getNumber(),
+                orders.getSize(),
+                orders.getTotalPages(),
+                orders.getTotalElements()
+        );
+        return ResponseEntity.ok(ApiResponse.success(orders.getContent(), "Search orders successfully", pageableResponse));
     }
 
     @GetMapping
