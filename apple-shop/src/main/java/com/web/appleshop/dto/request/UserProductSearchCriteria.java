@@ -2,14 +2,12 @@ package com.web.appleshop.dto.request;
 
 import lombok.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
-public class ProductSearchCriteriaUser extends ProductSearchCriteria{
+public class UserProductSearchCriteria extends BaseProductSearchCriteria {
     @Override
     public boolean hasJoins() {
         return getCategoryId() != null || getCategoryName() != null ||

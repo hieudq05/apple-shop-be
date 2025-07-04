@@ -1,7 +1,7 @@
 package com.web.appleshop.service;
 
-import com.web.appleshop.dto.request.ProductSearchCriteriaAdmin;
-import com.web.appleshop.dto.request.ProductSearchCriteriaUser;
+import com.web.appleshop.dto.request.AdminProductSearchCriteria;
+import com.web.appleshop.dto.request.UserProductSearchCriteria;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.dto.response.admin.ProductAdminListDto;
 import com.web.appleshop.entity.Product;
@@ -16,25 +16,25 @@ public interface ProductSearchService {
     /**
      * Search products for admin users with full criteria support
      */
-    Page<ProductAdminListDto> searchProductsForAdmin(ProductSearchCriteriaAdmin criteria, Pageable pageable);
+    Page<ProductAdminListDto> searchProductsForAdmin(AdminProductSearchCriteria criteria, Pageable pageable);
     
     /**
      * Search products for regular users (filtered for public access)
      */
-    Page<ProductUserResponse> searchProductsForUser(ProductSearchCriteriaUser criteria, Pageable pageable);
+    Page<ProductUserResponse> searchProductsForUser(UserProductSearchCriteria criteria, Pageable pageable);
     
     /**
      * Search products and return entity objects (for internal use)
      */
-    Page<Product> searchProducts(ProductSearchCriteriaAdmin criteria, Pageable pageable);
+    Page<Product> searchProducts(AdminProductSearchCriteria criteria, Pageable pageable);
     
     /**
      * Count products matching the criteria
      */
-    long countProducts(ProductSearchCriteriaAdmin criteria);
+    long countProducts(AdminProductSearchCriteria criteria);
     
     /**
      * Check if products exist with the given criteria
      */
-    boolean existsProducts(ProductSearchCriteriaAdmin criteria);
+    boolean existsProducts(AdminProductSearchCriteria criteria);
 }

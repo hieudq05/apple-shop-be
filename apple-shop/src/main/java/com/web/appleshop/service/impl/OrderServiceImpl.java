@@ -3,9 +3,12 @@ package com.web.appleshop.service.impl;
 import com.web.appleshop.dto.PaymentDto;
 import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.request.AdminCreateOrderRequest;
+import com.web.appleshop.dto.request.AdminOrderSearchCriteria;
 import com.web.appleshop.dto.request.UserCreateOrderRequest;
+import com.web.appleshop.dto.request.UserOrderSearchCriteria;
 import com.web.appleshop.dto.response.OrderUserResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
+import com.web.appleshop.dto.response.admin.OrderSummaryV2Dto;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
@@ -16,6 +19,7 @@ import com.web.appleshop.repository.OrderRepository;
 import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.*;
+import com.web.appleshop.specification.OrderSpecification;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -47,6 +52,7 @@ public class OrderServiceImpl implements OrderService {
     private final StockService stockService;
     private final VnPayService vnPayService;
     private final UserRepository userRepository;
+    private final OrderSpecification orderSpecification = new OrderSpecification();
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -181,9 +187,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public Page<OrderUserResponse> getOrdersForUser(Pageable pageable) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Page<Order> orders = orderRepository.findOrdersByCreatedBy(user, pageable);
+        return orders.map(this::convertOrderToOrderUserResponse);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    public Page<OrderUserResponse> searchOrdersForUser(UserOrderSearchCriteria criteria, Pageable pageable) {
+        Specification<Order> spec = orderSpecification.buildSpecification(criteria);
+
+        Page<Order> orders = orderRepository.findAll(spec, pageable);
+
         return orders.map(this::convertOrderToOrderUserResponse);
     }
 
@@ -198,6 +215,14 @@ public class OrderServiceImpl implements OrderService {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     public Page<OrderSummaryProjection> getOrdersSummaryForAdmin(Pageable pageable) {
         return orderRepository.findAllBy(pageable);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public Page<OrderSummaryV2Dto> searchOrdersSummaryForAdmin(AdminOrderSearchCriteria criteria, Pageable pageable) {
+        Specification<Order> spec = orderSpecification.buildSpecification(criteria);
+        Page<Order> orders = orderRepository.findAll(spec, pageable);
+        return orders.map(this::convertOrderToOrderSummaryV2Dto);
     }
 
     @Override
@@ -364,6 +389,22 @@ public class OrderServiceImpl implements OrderService {
                 orderDetail.getColorName(),
                 orderDetail.getVersionName(),
                 orderDetail.getImageUrl()
+        );
+    }
+
+    private OrderSummaryV2Dto convertOrderToOrderSummaryV2Dto(Order order) {
+        return new OrderSummaryV2Dto(
+                order.getId(),
+                order.getCreatedAt(),
+                order.getPaymentType(),
+                order.getApproveAt(),
+                order.getStatus(),
+                new OrderSummaryV2Dto.UserSummary(
+                        order.getCreatedBy().getId(),
+                        order.getCreatedBy().getFirstName(),
+                        order.getCreatedBy().getLastName(),
+                        order.getCreatedBy().getImage()
+                )
         );
     }
 }

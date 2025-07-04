@@ -1,8 +1,8 @@
 package com.web.appleshop.service.impl;
 
-import com.web.appleshop.dto.request.ProductSearchCriteria;
-import com.web.appleshop.dto.request.ProductSearchCriteriaAdmin;
-import com.web.appleshop.dto.request.ProductSearchCriteriaUser;
+import com.web.appleshop.dto.request.BaseProductSearchCriteria;
+import com.web.appleshop.dto.request.AdminProductSearchCriteria;
+import com.web.appleshop.dto.request.UserProductSearchCriteria;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.dto.response.admin.ProductAdminListDto;
 import com.web.appleshop.entity.Product;
@@ -39,7 +39,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
-    public Page<ProductAdminListDto> searchProductsForAdmin(ProductSearchCriteriaAdmin criteria, Pageable pageable) {
+    public Page<ProductAdminListDto> searchProductsForAdmin(AdminProductSearchCriteria criteria, Pageable pageable) {
         log.debug("Searching products for admin with criteria: {}", criteria);
 
         if (isSimpleCriteria(criteria)) {
@@ -56,7 +56,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
-    public Page<ProductUserResponse> searchProductsForUser(ProductSearchCriteriaUser criteria, Pageable pageable) {
+    public Page<ProductUserResponse> searchProductsForUser(UserProductSearchCriteria criteria, Pageable pageable) {
         log.debug("Searching products for user with criteria: {}", criteria);
 
         Specification<Product> spec = buildSpecification(criteria);
@@ -68,7 +68,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     }
 
     @Override
-    public Page<Product> searchProducts(ProductSearchCriteriaAdmin criteria, Pageable pageable) {
+    public Page<Product> searchProducts(AdminProductSearchCriteria criteria, Pageable pageable) {
         log.debug("Searching products (entities) with criteria: {}", criteria);
 
         Specification<Product> spec = buildSpecification(criteria);
@@ -78,7 +78,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     }
 
     @Override
-    public long countProducts(ProductSearchCriteriaAdmin criteria) {
+    public long countProducts(AdminProductSearchCriteria criteria) {
         log.debug("Counting products with criteria: {}", criteria);
 
         Specification<Product> spec = buildSpecification(criteria);
@@ -86,7 +86,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     }
 
     @Override
-    public boolean existsProducts(ProductSearchCriteriaAdmin criteria) {
+    public boolean existsProducts(AdminProductSearchCriteria criteria) {
         log.debug("Checking if products exist with criteria: {}", criteria);
 
         return countProducts(criteria) > 0;
@@ -95,14 +95,14 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     /**
      * Build the admin specification from criteria
      */
-    private <T extends ProductSearchCriteria> Specification<Product> buildSpecification(T criteria) {
+    private <T extends BaseProductSearchCriteria> Specification<Product> buildSpecification(T criteria) {
         Specification<Product> spec = null;
 
         log.info("Criteria type: {}", criteria.getClass().getSimpleName());
 
-        if (criteria instanceof ProductSearchCriteriaAdmin criteriaAdmin) {
+        if (criteria instanceof AdminProductSearchCriteria criteriaAdmin) {
             spec = ProductSpecification.createSpecification(criteriaAdmin);
-        } else if (criteria instanceof ProductSearchCriteriaUser criteriaUser) {
+        } else if (criteria instanceof UserProductSearchCriteria criteriaUser) {
             spec = ProductSpecification.createSpecification(criteriaUser);
         }
 
@@ -121,7 +121,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     /**
      * Build the user specification from criteria
      */
-    private Specification<Product> buildSpecificationUser(ProductSearchCriteriaUser criteria) {
+    private Specification<Product> buildSpecificationUser(UserProductSearchCriteria criteria) {
         Specification<Product> spec = ProductSpecification.createSpecification(criteria);
 
         // Add sorting if specified in criteria (as an alternative to Pageable sorting)
@@ -137,7 +137,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     /**
      * Apply sorting to pageable if specified in criteria
      */
-    private Pageable applySorting(ProductSearchCriteriaAdmin criteria, Pageable pageable) {
+    private Pageable applySorting(AdminProductSearchCriteria criteria, Pageable pageable) {
         String sortBy = criteria.getSortBy().toLowerCase();
         Set<String> directProductFields = Set.of("id", "name", "createdat", "updatedat");
 
@@ -158,7 +158,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     /**
      * Check if the criteria is simple enough to use optimized queries
      */
-    private boolean isSimpleCriteria(ProductSearchCriteriaAdmin criteria) {
+    private boolean isSimpleCriteria(AdminProductSearchCriteria criteria) {
         return criteria.getName() == null &&
                 criteria.getDescription() == null &&
                 criteria.getSearchKeyword() == null &&

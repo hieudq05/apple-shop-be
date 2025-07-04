@@ -1,6 +1,6 @@
 package com.web.appleshop.controller;
 
-import com.web.appleshop.dto.request.ProductSearchCriteriaUser;
+import com.web.appleshop.dto.request.UserProductSearchCriteria;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.ProductUserResponse;
@@ -45,7 +45,7 @@ public class ProductController {
     public ResponseEntity<ApiResponse<List<ProductUserResponse>>> searchProducts(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
-            @RequestBody ProductSearchCriteriaUser criteria
+            @RequestBody UserProductSearchCriteria criteria
     ) {
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
         Page<ProductUserResponse> productsPage = productSearchService.searchProductsForUser(criteria, pageable);
