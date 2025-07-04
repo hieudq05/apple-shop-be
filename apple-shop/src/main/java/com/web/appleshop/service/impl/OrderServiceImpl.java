@@ -52,7 +52,7 @@ public class OrderServiceImpl implements OrderService {
     private final StockService stockService;
     private final VnPayService vnPayService;
     private final UserRepository userRepository;
-    private final OrderSpecification orderSpecification = new OrderSpecification();
+    private final OrderSpecification orderSpecification;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
