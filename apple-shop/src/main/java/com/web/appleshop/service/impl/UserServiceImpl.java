@@ -3,6 +3,7 @@ package com.web.appleshop.service.impl;
 import com.web.appleshop.dto.projection.UserAdminSummaryInfo;
 import com.web.appleshop.dto.projection.UserInfo;
 import com.web.appleshop.dto.request.UserSearchCriteria;
+import com.web.appleshop.dto.request.UserUpdateDto;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.dto.response.admin.UserAdminInfoDto;
 import com.web.appleshop.dto.response.admin.UserAdminSummaryDto;
@@ -11,7 +12,10 @@ import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.UserService;
 import com.web.appleshop.specification.UserSpecification;
+import com.web.appleshop.util.UploadUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,12 +24,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
+    private final UploadUtils uploadUtils;
 
     @Override
     public UserDetails findByEmail(String email) {
@@ -89,6 +96,21 @@ public class UserServiceImpl implements UserService {
         Page<User> users = userRepository.findAll(spec, pageable);
 
         return users.map(this::convertToUserAdminSummaryDto);
+    }
+
+    @Override
+    public User updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        user.setFirstName(userUpdateDto.getFirstName());
+        user.setLastName(userUpdateDto.getLastName());
+        user.setPhone(userUpdateDto.getPhone());
+        user.setBirth(userUpdateDto.getBirth());
+        if (!imageFile.isEmpty()) {
+            user.setImage(uploadUtils.uploadFile(imageFile));
+        } else {
+            user.setImage(userUpdateDto.getImage());
+        }
+        return userRepository.save(user);
     }
 
     public static boolean isSimpleCriteria(UserSearchCriteria criteria) {

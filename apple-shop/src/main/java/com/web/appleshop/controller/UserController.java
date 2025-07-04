@@ -1,22 +1,51 @@
 package com.web.appleshop.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.UserUpdateDto;
 import com.web.appleshop.dto.response.ApiResponse;
+import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.service.UserService;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Valid;
+import jakarta.validation.ValidatorFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("users")
 @RequiredArgsConstructor
 class UserController {
     private final UserService userService;
+    private final ObjectMapper objectMapper;
+    private final ValidatorFactory validatorFactory;
 
     @GetMapping("me")
     public ResponseEntity<ApiResponse<UserInfo>> getUserInfo() {
         return ResponseEntity.ok(ApiResponse.success(userService.getUserInfo(), "Get user info successfully"));
+    }
+
+    @PatchMapping(path = "me", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<String>> updateUserInfo(
+            @RequestParam String user,
+            @RequestPart(required = false) MultipartFile imageFile
+    ) {
+        UserUpdateDto updateDto;
+        try {
+            updateDto = objectMapper.readValue(user, UserUpdateDto.class);
+            Set<ConstraintViolation<UserUpdateDto>> violations = validatorFactory.getValidator().validate(updateDto);
+            if (!violations.isEmpty()) {
+                throw new BadRequestException("Thông tin cập nhật không hợp lệ. Vui lòng kiểm tra lại và thử lại.");
+            }
+        } catch (JsonProcessingException e) {
+            throw new BadRequestException("Thông tin cập nhật không hợp lệ. Vui lòng kiểm tra lại và thử lại.");
+        }
+        userService.updateUser(updateDto, imageFile);
+        return ResponseEntity.ok(ApiResponse.success(null, "Update user info successfully"));
     }
 }
