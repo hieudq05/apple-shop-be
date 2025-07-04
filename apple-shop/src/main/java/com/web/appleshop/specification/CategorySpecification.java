@@ -14,13 +14,15 @@ import java.util.List;
 
 @Component
 public class CategorySpecification {
-    public static Specification<Category> createSpecification(CategorySearchCriteria criteria) {
+    public Specification<Category> createSpecification(CategorySearchCriteria criteria) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // Add fetch joins để tránh N+1 query
             assert query != null;
             addFetchJoins(root, query);
+
+            query.distinct(true);
 
             // Add filters
             addFilters(criteria, root, criteriaBuilder, predicates);
