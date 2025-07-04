@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategorySpecification categorySpecification;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
@@ -28,7 +29,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Page<CategoryInfoDto> searchCategoryForAdmin(CategorySearchCriteria criteria, Pageable pageable) {
-        Specification<Category> spec = CategorySpecification.createSpecification(criteria);
+        Specification<Category> spec = categorySpecification.createSpecification(criteria);
         Page<Category> categories = categoryRepository.findAll(spec, pageable);
         return categories.map(this::convertCategoryToCategoryInfoDto);
     }
