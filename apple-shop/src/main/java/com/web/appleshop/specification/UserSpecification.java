@@ -5,6 +5,7 @@ import com.web.appleshop.entity.Role;
 import com.web.appleshop.entity.User;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@Component
 public class UserSpecification {
     public static Specification<User> createSpecification(UserSearchCriteria criteria) {
         return (root, query, cb) -> {

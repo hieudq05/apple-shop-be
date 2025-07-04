@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import java.util.Set;
  * This class provides a flexible and extensible way to build database queries
  * based on various search criteria.
  */
+@Component
 public class ProductSpecification {
 
     private static final Logger log = LoggerFactory.getLogger(ProductSpecification.class);
