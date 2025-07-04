@@ -6,7 +6,6 @@ import com.web.appleshop.dto.request.AdminOrderSearchCriteria;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
-import com.web.appleshop.dto.response.admin.OrderSummaryDto;
 import com.web.appleshop.dto.response.admin.OrderSummaryV2Dto;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
