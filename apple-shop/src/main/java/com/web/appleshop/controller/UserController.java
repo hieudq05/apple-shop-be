@@ -32,19 +32,9 @@ class UserController {
 
     @PatchMapping(path = "me", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<String>> updateUserInfo(
-            @RequestParam String user,
+            @RequestPart @Valid UserUpdateDto updateDto,
             @RequestPart(required = false) MultipartFile imageFile
     ) {
-        UserUpdateDto updateDto;
-        try {
-            updateDto = objectMapper.readValue(user, UserUpdateDto.class);
-            Set<ConstraintViolation<UserUpdateDto>> violations = validatorFactory.getValidator().validate(updateDto);
-            if (!violations.isEmpty()) {
-                throw new BadRequestException("Thông tin cập nhật không hợp lệ. Vui lòng kiểm tra lại và thử lại.");
-            }
-        } catch (JsonProcessingException e) {
-            throw new BadRequestException("Thông tin cập nhật không hợp lệ. Vui lòng kiểm tra lại và thử lại.");
-        }
         userService.updateUser(updateDto, imageFile);
         return ResponseEntity.ok(ApiResponse.success(null, "Update user info successfully"));
     }
