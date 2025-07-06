@@ -99,6 +99,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public User updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         user.setFirstName(userUpdateDto.getFirstName());
