@@ -22,8 +22,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 class UserController {
     private final UserService userService;
-    private final ObjectMapper objectMapper;
-    private final ValidatorFactory validatorFactory;
 
     @GetMapping("me")
     public ResponseEntity<ApiResponse<UserInfo>> getUserInfo() {
@@ -32,10 +30,10 @@ class UserController {
 
     @PatchMapping(path = "me", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<String>> updateUserInfo(
-            @RequestPart @Valid UserUpdateDto updateDto,
+            @RequestPart @Valid UserUpdateDto user,
             @RequestPart(required = false) MultipartFile imageFile
     ) {
-        userService.updateUser(updateDto, imageFile);
+        userService.updateUser(user, imageFile);
         return ResponseEntity.ok(ApiResponse.success(null, "Update user info successfully"));
     }
 }
