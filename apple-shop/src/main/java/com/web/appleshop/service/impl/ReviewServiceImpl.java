@@ -81,14 +81,14 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy bản ghi nào có id: " + reviewId));
 
-        if(review.getIsApproved()) {
-            review.setIsApproved(request.getApproved());
-            review.setApprovedBy(null);
-            review.setApprovedAt(null);
-        } else {
-            review.setIsApproved(request.getApproved());
+        if(request.getApproved()) {
+            review.setIsApproved(true);
             review.setApprovedBy(admin);
             review.setApprovedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        } else {
+            review.setIsApproved(false);
+            review.setApprovedBy(null);
+            review.setApprovedAt(null);
         }
 
         return reviewRepository.save(review);
