@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
         user.setLastName(userUpdateDto.getLastName());
         user.setPhone(userUpdateDto.getPhone());
         user.setBirth(userUpdateDto.getBirth());
-        if (!imageFile.isEmpty()) {
+        if (imageFile != null && !imageFile.isEmpty()) {
             user.setImage(uploadUtils.uploadFile(imageFile));
         } else {
             user.setImage(userUpdateDto.getImage());
