@@ -26,6 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
@@ -45,11 +48,6 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.getUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
         return user;
-    }
-
-    @Override
-    public void save(User user) {
-        userRepository.save(user);
     }
 
     @Override
@@ -106,26 +104,13 @@ public class UserServiceImpl implements UserService {
         user.setLastName(userUpdateDto.getLastName());
         user.setPhone(userUpdateDto.getPhone());
         user.setBirth(userUpdateDto.getBirth());
+        user.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         if (imageFile != null && !imageFile.isEmpty()) {
             user.setImage(uploadUtils.uploadFile(imageFile));
         } else {
             user.setImage(userUpdateDto.getImage());
         }
         return userRepository.save(user);
-    }
-
-    public static boolean isSimpleCriteria(UserSearchCriteria criteria) {
-        return criteria.getId() == null &&
-                criteria.getEmail() == null &&
-                criteria.getPhone() == null &&
-                criteria.getName() == null &&
-                criteria.getBirthFrom() == null &&
-                criteria.getBirthTo() == null &&
-                criteria.getEnabled() == null &&
-                (criteria.getRoleName() == null || criteria.getRoleName().isEmpty()) &&
-                criteria.getCreatedAtFrom() == null &&
-                criteria.getCreatedAtTo() == null;
-
     }
 
     private Specification<User> buildSpecification(UserSearchCriteria criteria) {

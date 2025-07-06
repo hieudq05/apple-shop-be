@@ -10,6 +10,7 @@ import com.web.appleshop.dto.response.AuthenticationResponse;
 import com.web.appleshop.dto.response.OtpResponse;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class AuthController {
     private final Environment environment;
     private final RoleService roleService;
     private final PasswordResetService passwordResetService;
+    private final UserRepository userRepository;
 
     @PostMapping("login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -69,7 +71,7 @@ public class AuthController {
         userEntity.setRoles(roleService.findRoleByName("ROLE_USER"));
         userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
 
-        userService.save(userEntity);
+        userRepository.save(userEntity);
         otpService.generateOtp(request.getEmail());
 
         OtpResponse response = new OtpResponse(request.getEmail(), Integer.parseInt(Objects.requireNonNull(environment.getProperty("otp.expired.in"))));
@@ -82,7 +84,7 @@ public class AuthController {
         otpService.verifyOtp(request.getEmail(), request.getOtp());
         User userEntity = userService.findUserByLoginIdentifier(request.getEmail());
         userEntity.setEnabled(true);
-        userService.save(userEntity);
+        userRepository.save(userEntity);
 
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("roles", userEntity.getAuthorities());

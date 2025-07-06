@@ -18,8 +18,6 @@ public interface UserService {
 
     User findUserByLoginIdentifier(String email);
 
-    void save(User user);
-
     ProductAdminResponse.ProductOwnerAdminResponse convertUserToProductOwnerAdminResponse(User user);
 
     UserInfo getUserInfo();
