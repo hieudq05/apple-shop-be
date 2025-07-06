@@ -90,4 +90,7 @@ public class Order {
     @Column(name = "shipping_tracking_code")
     private String shippingTrackingCode;
 
+    @OneToMany(mappedBy = "order")
+    private Set<Review> reviews = new LinkedHashSet<>();
+
 }

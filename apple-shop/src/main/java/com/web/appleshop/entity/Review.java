@@ -1,6 +1,7 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -25,10 +26,6 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
-
     @Nationalized
     @Column(name = "content", nullable = false, length = 1000)
     private String content;
@@ -45,19 +42,28 @@ public class Review {
     private Boolean isApproved;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approved_by", nullable = true)
+    @JoinColumn(name = "approved_by")
     private User approvedBy;
 
-    @ColumnDefault("getdate()")
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
     @Nationalized
-    @Column(name = "reply_content", nullable = false, length = 1000)
+    @Column(name = "reply_content", length = 1000)
     private String replyContent;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "replied_by", nullable = false)
+    @JoinColumn(name = "replied_by")
     private User repliedBy;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "stock_id", nullable = false)
+    private Stock stock;
 
 }
