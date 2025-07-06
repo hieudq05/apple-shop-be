@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/blogs/**").permitAll()
                         .requestMatchers("/payments/vnpay-callback").permitAll()
                         .requestMatchers("/webhooks/**").permitAll()
+                        .requestMatchers("/reviews/product/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
