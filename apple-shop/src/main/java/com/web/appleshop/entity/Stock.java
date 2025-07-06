@@ -56,4 +56,8 @@ public class Stock {
     @OneToMany(mappedBy = "stock")
     private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
 
+
+    @OneToMany(mappedBy = "stock")
+    private Set<Review> reviews = new LinkedHashSet<>();
+
 }
