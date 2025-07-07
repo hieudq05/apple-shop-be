@@ -53,6 +53,8 @@ public class CreatePromotionRequest {
 
     private Set<Integer> stockIds;
 
+    private Set<Integer> productIds;
+
     @AssertTrue(message = "End date must be after start date")
     public boolean isValidDateRange() {
         return endDate == null || startDate == null || endDate.isAfter(startDate);
@@ -64,6 +66,6 @@ public class CreatePromotionRequest {
             return true;
         }
         return (categoryIds != null && !categoryIds.isEmpty()) ||
-                (stockIds != null && !stockIds.isEmpty());
+                (stockIds != null && !stockIds.isEmpty()) || (productIds != null && !productIds.isEmpty());
     }
 }

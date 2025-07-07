@@ -1,5 +1,6 @@
 package com.web.appleshop.dto.response.admin;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.web.appleshop.dto.response.UserReviewDto;
 import com.web.appleshop.enums.PromotionType;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class AdminPromotionDto {
     private Integer id;
     private String name;
@@ -30,6 +32,7 @@ public class AdminPromotionDto {
     private Boolean applyOn;
     private List<CategorySummary> categories;
     private List<StockSummary> stocks;
+    private List<ProductSummary> products;
     private LocalDateTime createdAt;
     private UserReviewDto.UserDto createdBy;
 
@@ -50,5 +53,11 @@ public class AdminPromotionDto {
             private Integer id;
             private String name;
         }
+    }
+
+    @Data
+    public static class ProductSummary {
+        private Integer id;
+        private String name;
     }
 }

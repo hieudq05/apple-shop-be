@@ -100,4 +100,10 @@ public class Promotion {
     @OneToMany(mappedBy = "promotion")
     private Set<Order> orders = new LinkedHashSet<>();
 
+    @ManyToMany
+    @JoinTable(name = "promotion_product",
+            joinColumns = @JoinColumn(name = "promotion_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id"))
+    private Set<Product> products = new LinkedHashSet<>();
+
 }

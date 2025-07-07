@@ -6,13 +6,11 @@ import com.web.appleshop.dto.request.UpdatePromotionRequest;
 import com.web.appleshop.dto.response.UserPromotionDto;
 import com.web.appleshop.dto.response.UserReviewDto;
 import com.web.appleshop.dto.response.admin.AdminPromotionDto;
-import com.web.appleshop.entity.Category;
-import com.web.appleshop.entity.Promotion;
-import com.web.appleshop.entity.Stock;
-import com.web.appleshop.entity.User;
+import com.web.appleshop.entity.*;
 import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.CategoryRepository;
+import com.web.appleshop.repository.ProductRepository;
 import com.web.appleshop.repository.PromotionRepository;
 import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.service.PromotionService;
@@ -44,6 +42,7 @@ public class PromotionServiceImpl implements PromotionService {
     private final CategoryRepository categoryRepository;
     private final PromotionSpecification promotionSpecification;
     private final StockRepository stockRepository;
+    private final ProductRepository productRepository;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
@@ -95,6 +94,14 @@ public class PromotionServiceImpl implements PromotionService {
                     throw new BadRequestException("Some stocks not found");
                 }
                 promotion.setStocks(stocks);
+            }
+
+            if (request.getProductIds() != null && !request.getProductIds().isEmpty()) {
+                Set<Product> products = new HashSet<>(productRepository.findAllById(request.getProductIds()));
+                if (products.size() != request.getProductIds().size()) {
+                    throw new BadRequestException("Some products not found");
+                }
+                promotion.setProducts(products);
             }
         }
 
@@ -204,10 +211,11 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<UserPromotionDto> searchPromotionsForUser(Integer productIds, Integer categoryId, Pageable pageable) {
+    public Page<UserPromotionDto> getPromotionByStockForUser(Integer stockId, Integer productId, Integer categoryId, Pageable pageable) {
         PromotionSearchRequest criteria = new PromotionSearchRequest();
-        criteria.setProductIds(new ArrayList<>(productIds));
+        criteria.setProductIds(new ArrayList<>(productId));
         criteria.setCategoryIds(new ArrayList<>(categoryId));
+        criteria.setStockIds(new ArrayList<>(stockId));
         criteria.setIsActive(true);
         Specification<Promotion> spec = promotionSpecification.searchPromotions(criteria);
         Page<Promotion> promotions = promotionRepository.findAll(spec, pageable);
@@ -293,6 +301,19 @@ public class PromotionServiceImpl implements PromotionService {
                         return summary;
                     })
                     .collect(Collectors.toList()));
+        }
+
+        // Map product
+        if (promotion.getProducts() != null) {
+            response.setProducts(promotion.getProducts().stream()
+                    .map(product -> {
+                        AdminPromotionDto.ProductSummary summary = new AdminPromotionDto.ProductSummary();
+                        summary.setId(product.getId());
+                        summary.setName(product.getName());
+                        return summary;
+                    })
+                    .collect(Collectors.toList())
+            );
         }
 
         return response;
