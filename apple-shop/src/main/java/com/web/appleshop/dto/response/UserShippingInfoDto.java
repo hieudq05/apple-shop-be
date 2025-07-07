@@ -22,5 +22,6 @@ public class UserShippingInfoDto implements Serializable {
     String address;
     String ward;
     String district;
+    String province;
     Boolean isDefault;
 }
