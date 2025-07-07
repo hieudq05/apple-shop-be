@@ -1,5 +1,6 @@
 package com.web.appleshop.entity;
 
+import com.web.appleshop.enums.PromotionType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,8 +32,8 @@ public class Promotion {
     @Column(name = "code", nullable = false, length = 50)
     private String code;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "promotion_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "promotion_type", nullable = false)
     private PromotionType promotionType;
 
     @Column(name = "\"value\"", nullable = false, precision = 18, scale = 2)

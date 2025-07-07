@@ -125,10 +125,7 @@ public class CartServiceImpl implements CartService {
                             promotion.getId(),
                             promotion.getName(),
                             promotion.getCode(),
-                            new CartItemResponse.ProductDto.PromotionDto.PromotionTypeDto(
-                                    promotion.getPromotionType().getId(),
-                                    promotion.getPromotionType().getName()
-                            ),
+                            promotion.getPromotionType(),
                             promotion.getValue(),
                             promotion.getIsActive(),
                             promotion.getStartDate(),
