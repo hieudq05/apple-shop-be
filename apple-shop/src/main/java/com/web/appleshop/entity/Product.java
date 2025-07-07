@@ -60,9 +60,6 @@ public class Product {
     @ManyToMany(mappedBy = "products")
     private Set<Feature> features = new LinkedHashSet<>();
 
-    @ManyToMany(mappedBy = "products")
-    private Set<Promotion> promotions = new LinkedHashSet<>();
-
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SavedProduct> savedProducts = new LinkedHashSet<>();
 
@@ -81,15 +78,5 @@ public class Product {
     public void removeFeature(Feature feature) {
         this.features.remove(feature);
         feature.getProducts().remove(this);
-    }
-
-    public void addPromotion(Promotion promotion) {
-        this.promotions.add(promotion);
-        promotion.getProducts().add(this);
-    }
-
-    public void removePromotion(Promotion promotion) {
-        this.promotions.remove(promotion);
-        promotion.getProducts().remove(this);
     }
 }

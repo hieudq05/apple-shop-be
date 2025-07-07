@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -92,5 +93,34 @@ public class Order {
 
     @OneToMany(mappedBy = "order")
     private Set<Review> reviews = new LinkedHashSet<>();
+
+    @Column(name = "promotion_code", length = 50)
+    private String promotionCode;
+
+    @Column(name = "promotion_discount_amount", precision = 18, scale = 2)
+    @ColumnDefault("0")
+    private BigDecimal promotionDiscountAmount = BigDecimal.ZERO;
+
+    @Column(name = "shipping_discount_amount", precision = 18, scale = 2)
+    @ColumnDefault("0")
+    private BigDecimal shippingDiscountAmount = BigDecimal.ZERO;
+
+    @Column(name = "total_discount_amount", precision = 18, scale = 2)
+    @ColumnDefault("0")
+    private BigDecimal totalDiscountAmount = BigDecimal.ZERO;
+
+    @Column(name = "subtotal", precision = 18, scale = 2)
+    private BigDecimal subtotal;
+
+    @Column(name = "shipping_fee", precision = 18, scale = 2)
+    @ColumnDefault("0")
+    private BigDecimal shippingFee = BigDecimal.ZERO;
+
+    @Column(name = "final_total", precision = 18, scale = 2)
+    private BigDecimal finalTotal;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "promotion_id")
+    private Promotion promotion;
 
 }

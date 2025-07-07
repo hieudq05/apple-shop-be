@@ -119,7 +119,7 @@ public class CartServiceImpl implements CartService {
         cartItemResponse.setQuantity(cartItem.getQuantity());
 
         Set<CartItemResponse.ProductDto.PromotionDto> promotions = new LinkedHashSet<>();
-        for (Promotion promotion: cartItem.getProduct().getPromotions()) {
+        for (Promotion promotion: cartItem.getStock().getPromotions()) {
             promotions.add(
                     new CartItemResponse.ProductDto.PromotionDto(
                             promotion.getId(),

@@ -122,6 +122,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user")
     private Set<RefreshToken> refreshTokens = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "createdBy")
+    private Set<Promotion> promotions = new LinkedHashSet<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

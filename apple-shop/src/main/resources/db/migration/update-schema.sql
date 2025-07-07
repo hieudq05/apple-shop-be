@@ -482,11 +482,11 @@ ALTER TABLE product_features
     ADD CONSTRAINT fk_profea_on_productPrAiak FOREIGN KEY (product_id) REFERENCES products (id)
 GO
 
-ALTER TABLE promotion_product
+ALTER TABLE promotion_stock
     ADD CONSTRAINT fk_propro_on_product FOREIGN KEY (product_id) REFERENCES products (id)
 GO
 
-ALTER TABLE promotion_product
+ALTER TABLE promotion_stock
     ADD CONSTRAINT fk_propro_on_promotion FOREIGN KEY (promotions_id) REFERENCES promotions (id)
 GO
 

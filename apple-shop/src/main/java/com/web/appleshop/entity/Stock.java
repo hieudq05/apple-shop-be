@@ -60,4 +60,7 @@ public class Stock {
     @OneToMany(mappedBy = "stock")
     private Set<Review> reviews = new LinkedHashSet<>();
 
+    @ManyToMany(mappedBy = "stocks")
+    private Set<Promotion> promotions = new LinkedHashSet<>();
+
 }
