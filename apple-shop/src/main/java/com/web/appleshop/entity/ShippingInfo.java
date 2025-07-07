@@ -8,6 +8,8 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
@@ -28,15 +30,15 @@ public class ShippingInfo {
     private String firstName;
 
     @Nationalized
-    @Column(name = "last_name", length = 55)
+    @Column(name = "last_name", length = 55, nullable = false)
     private String lastName;
 
     @Nationalized
-    @Column(name = "email")
+    @Column(name = "email", nullable = false)
     private String email;
 
     @Nationalized
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone", length = 20, nullable = false)
     private String phone;
 
     @Nationalized
@@ -44,19 +46,27 @@ public class ShippingInfo {
     private String address;
 
     @Nationalized
-    @Column(name = "ward", length = 100)
+    @Column(name = "ward", length = 100, nullable = false)
     private String ward;
 
     @Nationalized
-    @Column(name = "district", length = 100)
+    @Column(name = "district", length = 100, nullable = false)
     private String district;
 
     @Nationalized
-    @Column(name = "province", length = 100)
+    @Column(name = "province", length = 100, nullable = false)
     private String province;
 
     @ColumnDefault("0")
     @Column(name = "is_default")
     private Boolean isDefault;
+
+    @ColumnDefault("getdate()")
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @ColumnDefault("getdate()")
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
 }
