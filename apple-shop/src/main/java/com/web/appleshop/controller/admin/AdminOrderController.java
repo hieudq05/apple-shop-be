@@ -86,7 +86,7 @@ public class AdminOrderController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<String>> createOrder(@Valid @RequestBody AdminCreateOrderRequest[] orderRequests) {
-        orderService.createOrder(orderRequests, PaymentType.VNPAY);
+        orderService.createOrder(orderRequests);
         return ResponseEntity.ok(ApiResponse.success(null, "Create order successfully"));
     }
 

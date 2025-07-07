@@ -10,7 +10,6 @@ import com.web.appleshop.service.OrderService;
 import com.web.appleshop.service.OrderStatusService;
 import com.web.appleshop.service.PayPalService;
 import com.web.appleshop.service.VnPayService;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -31,7 +30,6 @@ public class PaymentController {
     private final VnPayService vnPayService;
     private final OrderStatusService orderStatusService;
     private final PayPalService payPalService;
-    private final ServletContext servletContext;
     @Value("${public.base.url}")
     private String publicBaseUrl;
 

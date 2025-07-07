@@ -24,7 +24,7 @@ import java.util.Set;
 public interface OrderService {
     Order createOrder(UserCreateOrderRequest orderRequest, PaymentType paymentType);
 
-    List<Order> createOrder(AdminCreateOrderRequest[] orderRequests, PaymentType paymentType);
+    List<Order> createOrder(AdminCreateOrderRequest[] orderRequests);
 
     BigDecimal calculateTotalPrice(Set<OrderDetail> orderDetails);
 

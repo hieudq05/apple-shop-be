@@ -114,7 +114,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @Transactional
-    public List<Order> createOrder(AdminCreateOrderRequest[] orderRequests, PaymentType paymentType) {
+    public List<Order> createOrder(AdminCreateOrderRequest[] orderRequests) {
         log.info("Bắt đầu tạo {} đơn hàng", orderRequests.length);
 
         List<Order> orders = new ArrayList<>();
@@ -133,7 +133,7 @@ public class OrderServiceImpl implements OrderService {
             order.setCreatedBy(user);
             order.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             order.setStatus(orderRequest.getStatus());
-            order.setPaymentType(paymentType);
+            order.setPaymentType(orderRequest.getPaymentType());
             order.setFirstName(orderRequest.getCustomInfo().getFirstName());
             order.setLastName(orderRequest.getCustomInfo().getLastName());
             order.setEmail(orderRequest.getCustomInfo().getEmail());
