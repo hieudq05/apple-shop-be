@@ -20,8 +20,6 @@ public class CreateOrderWithStockPromotionRequest {
     @NotEmpty(message = "Order items cannot be empty")
     private List<OrderItem> orderItems;
 
-    private List<String> orderLevelPromotionCodes; // Promotion áp dụng cho cả order
-
     private String notes;
 
     @Data
