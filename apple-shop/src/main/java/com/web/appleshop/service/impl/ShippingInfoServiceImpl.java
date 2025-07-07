@@ -42,6 +42,8 @@ public class ShippingInfoServiceImpl implements ShippingInfoService {
         ShippingInfo shippingInfo = new ShippingInfo();
         BeanUtils.copyProperties(request, shippingInfo);
         shippingInfo.setUser(user);
+        shippingInfo.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        shippingInfo.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         return shippingInfoRepository.save(shippingInfo);
     }
 
@@ -119,6 +121,8 @@ public class ShippingInfoServiceImpl implements ShippingInfoService {
     private UserShippingInfoDto mapToUserShippingInfoDto(ShippingInfo shippingInfo) {
         UserShippingInfoDto dto = new UserShippingInfoDto();
         BeanUtils.copyProperties(shippingInfo, dto);
+        dto.setUpdatedAt(shippingInfo.getUpdatedAt());
+        dto.setCreatedAt(shippingInfo.getCreatedAt());
         return dto;
     }
 }

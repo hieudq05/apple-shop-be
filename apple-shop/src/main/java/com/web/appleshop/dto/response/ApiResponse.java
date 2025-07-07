@@ -12,7 +12,7 @@ import java.util.List;
 public class ApiResponse<T> {
 
     private boolean success;
-    private String message;
+    private String msg;
     private T data;
     private Object meta;
     private ErrorResponse error;
@@ -24,7 +24,7 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> success(T data, String message) {
         ApiResponse<T> response = new ApiResponse<>();
         response.data = data;
-        response.message = message;
+        response.msg = message;
         response.success = true;
         return response;
     }
@@ -32,7 +32,7 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> success(T data, String message, Object meta) {
         ApiResponse<T> response = new ApiResponse<>();
         response.data = data;
-        response.message = message;
+        response.msg = message;
         response.success = true;
         response.meta = meta;
         return response;

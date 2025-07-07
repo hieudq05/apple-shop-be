@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * DTO for {@link com.web.appleshop.entity.ShippingInfo}
@@ -24,4 +25,6 @@ public class UserShippingInfoDto implements Serializable {
     String district;
     String province;
     Boolean isDefault;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }
