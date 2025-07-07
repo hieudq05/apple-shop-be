@@ -33,7 +33,7 @@ public class UserShippingInfoRequest {
     String address;
 
     @NotBlank(message = "Tỉnh là bắt buộc.")
-    @Length(max = 100, message = "Xã phải có độ dài tối đa là 100 kí tự.")
+    @Length(max = 100, message = "Tỉnh phải có độ dài tối đa là 100 kí tự.")
     String province;
 
     @NotBlank(message = "Phường là bắt buộc.")
