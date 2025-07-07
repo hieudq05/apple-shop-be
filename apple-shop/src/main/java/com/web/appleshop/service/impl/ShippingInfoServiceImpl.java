@@ -54,7 +54,8 @@ public class ShippingInfoServiceImpl implements ShippingInfoService {
         );
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        if (shippingInfoRepository.findShippingInfoByUserAndWardAndDistrictAndProvinceAndAddress(user, request.getWard(), request.getDistrict(), request.getProvince(), request.getAddress()) != null) {
+        ShippingInfo duplicateShippingInfo = shippingInfoRepository.findShippingInfoByUserAndWardAndDistrictAndProvinceAndAddress(user, request.getWard(), request.getDistrict(), request.getProvince(), request.getAddress());
+        if (duplicateShippingInfo != null && !duplicateShippingInfo.getId().equals(shippingInfoId)) {
             throw new IllegalArgumentException("Đã tồn tại thông tin giao hàng này. Vui lòng chọn thông tin khác hoặc xóa thông tin hiện tại trước khi thêm mới.");
         } else if (!shippingInfo.getUser().getId().equals(user.getId())) {
             throw new IllegalArgumentException("Không tồn tại thông tin giao hàng của bạn.");
