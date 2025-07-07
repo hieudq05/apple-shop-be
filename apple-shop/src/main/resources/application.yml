@@ -72,3 +72,13 @@ ghn:
     token: ${GHN_TOKEN}
     client_id: ${GHN_CLIENT_ID}
     shop_id: ${GHN_SHOP_ID}
+
+paypal:
+  client:
+    id: ${PAYPAL_CLIENT_ID}
+    secret: ${PAYPAL_CLIENT_SECRET}
+  mode: ${PAYPAL_MODE}
+
+public:
+  base:
+    url: https://f4a4-2405-4803-d34c-3740-b92d-61dd-683a-74fc.ngrok-free.app/api/v1

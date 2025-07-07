@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/blogs/**").permitAll()
                         .requestMatchers("/payments/vnpay-callback").permitAll()
+                        .requestMatchers("/payments/paypal/success").permitAll()
+                        .requestMatchers("/payments/paypal/cancel").permitAll()
                         .requestMatchers("/webhooks/**").permitAll()
                         .requestMatchers("/reviews/product/**").permitAll()
                         .anyRequest().authenticated()
