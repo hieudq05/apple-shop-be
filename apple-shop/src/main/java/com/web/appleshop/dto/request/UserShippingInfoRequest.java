@@ -41,7 +41,7 @@ public class UserShippingInfoRequest {
     String ward;
 
     @NotBlank(message = "Huyện là bắt buộc")
-    @Length(max = 100, message = "Tỉnh phải có độ dài tối đa là 100 kí tự.")
+    @Length(max = 100, message = "Huyện phải có độ dài tối đa là 100 kí tự.")
     String district;
 
     @NotNull(message = "Tuỳ chọn mặc định là bắt buộc.")
