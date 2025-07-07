@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -211,11 +212,11 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<UserPromotionDto> getPromotionByStockForUser(Integer stockId, Integer productId, Integer categoryId, Pageable pageable) {
+    public Page<UserPromotionDto> getPromotionByStockForUser(Integer stockId, Pageable pageable) {
         PromotionSearchRequest criteria = new PromotionSearchRequest();
-        criteria.setProductIds(new ArrayList<>(productId));
-        criteria.setCategoryIds(new ArrayList<>(categoryId));
-        criteria.setStockIds(new ArrayList<>(stockId));
+        List<Integer> stockIds = new ArrayList<>();
+        stockIds.add(stockId);
+        criteria.setStockIds(stockIds);
         criteria.setIsActive(true);
         Specification<Promotion> spec = promotionSpecification.searchPromotions(criteria);
         Page<Promotion> promotions = promotionRepository.findAll(spec, pageable);

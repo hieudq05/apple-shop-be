@@ -18,16 +18,14 @@ import java.util.List;
 public class PromotionController {
     private final PromotionService promotionService;
 
-    @GetMapping("stock/{categoryId}/{productId}/{stockId}")
+    @GetMapping("stock/{stockId}")
     public ResponseEntity<ApiResponse<List<UserPromotionDto>>> getPromotionsByProductId(
-            @PathVariable Integer categoryId,
             @PathVariable Integer stockId,
-            @PathVariable Integer productId,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size
     ) {
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
-        Page<UserPromotionDto> promotions = promotionService.getPromotionByStockForUser(stockId, productId, categoryId, pageable);
+        Page<UserPromotionDto> promotions = promotionService.getPromotionByStockForUser(stockId, pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 promotions.getNumber(),
                 promotions.getSize(),
