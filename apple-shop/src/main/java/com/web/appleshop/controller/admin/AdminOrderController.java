@@ -90,4 +90,10 @@ public class AdminOrderController {
         return ResponseEntity.ok(ApiResponse.success(null, "Create order successfully"));
     }
 
+    @PostMapping("v1")
+    public ResponseEntity<ApiResponse<String>> createOrderV1(@Valid @RequestBody AdminCreateOrderRequest orderRequests) {
+        orderService.createOrderWithPromotionForAdmin(orderRequests);
+        return ResponseEntity.ok(ApiResponse.success(null, "Create order successfully"));
+    }
+
 }

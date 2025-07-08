@@ -2,6 +2,7 @@ package com.web.appleshop.controller;
 
 import com.web.appleshop.dto.PaymentDto;
 import com.web.appleshop.dto.request.UserCreateOrderRequest;
+import com.web.appleshop.dto.request.UserCreateOrderWithPromotionRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.entity.Order;
 import com.web.appleshop.enums.OrderStatus;
@@ -11,6 +12,7 @@ import com.web.appleshop.service.OrderStatusService;
 import com.web.appleshop.service.PayPalService;
 import com.web.appleshop.service.VnPayService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("payments")
@@ -44,6 +47,27 @@ public class PaymentController {
         String paymentUrl = vnPayService.createPaymentUrl(
                 request,
                 orderService.calculateTotalPrice(order.getOrderDetails()).longValue(),
+                "Thanh toan don hang #" + order.getId()
+        );
+
+        PaymentDto.VnPayResponse response = new PaymentDto.VnPayResponse(
+                "00",
+                "Tạo đường dẫn thanh toán thành công",
+                paymentUrl
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
+    }
+
+    @PostMapping("vnpay/create-payment-v1")
+    public ResponseEntity<?> createVNPAYOrderWithPromotion(
+            HttpServletRequest request,
+            @Valid @RequestBody UserCreateOrderWithPromotionRequest orderRequest) {
+        Order order = orderService.createOrderWithPromotion(orderRequest, PaymentType.VNPAY);
+
+        String paymentUrl = vnPayService.createPaymentUrl(
+                request,
+                order.getFinalTotal().longValue(),
                 "Thanh toan don hang #" + order.getId()
         );
 
@@ -127,6 +151,26 @@ public class PaymentController {
         );
 
         return ResponseEntity.ok(ApiResponse.success(response, "PayPal payment created successfully"));
+    }
+
+    @PostMapping("paypal/create-payment-v1")
+    public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPAYPALOrderWithPromotion(
+            HttpServletRequest request,
+            @Valid @RequestBody UserCreateOrderWithPromotionRequest orderRequest) {
+        Order order = orderService.createOrderWithPromotion(orderRequest, PaymentType.VNPAY);
+
+        PaymentDto.PayPalResponse payPalResponse = payPalService.createPayment(
+                order.getFinalTotal().doubleValue(),
+                "USD",
+                "paypal",
+                "sale",
+                "Payment for order #" + order.getId(),
+                publicBaseUrl + "/payments/paypal/cancel",
+                publicBaseUrl + "/payments/paypal/success",
+                order.getId()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(payPalResponse, "Create payment successfully"));
     }
 
     @PostMapping("paypal/payment-url")

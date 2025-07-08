@@ -14,5 +14,7 @@ public interface BlogSummaryInfo {
 
     String getStatus();
 
+    Boolean getIsPublished();
+
     OrderSummaryProjection.UserSummary getAuthor();
 }

@@ -19,6 +19,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -161,5 +162,17 @@ public class AuthController {
                 response,
                 "Login by Google successful"
         ));
+    }
+
+    @PostMapping("logout")
+    public ResponseEntity<ApiResponse<String>> logout(@RequestParam String refreshToken) {
+        String token = refreshToken.substring(7);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (jwtService.extractUsername(token).equals(user.getEmail())) {
+            jwtService.deleteRefreshToken(token);
+        } else {
+            throw new BadRequestException("Token này không phải của người dùng đang đăng nhập. Vui lòng xác minh rồi thử lại.");
+        }
+        return ResponseEntity.ok(ApiResponse.success(null, "Logout successful"));
     }
 }

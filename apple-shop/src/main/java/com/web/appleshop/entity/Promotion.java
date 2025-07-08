@@ -70,6 +70,10 @@ public class Promotion {
     @JoinColumn(name = "created_by")
     private User createdBy;
 
-    @OneToMany(mappedBy = "promotion")
-    private Set<Order> orders = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "productPromotion")
+    private Set<Order> orders_product_promotion = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "shippingPromotion")
+    private Set<Order> orders_shipping_promotion = new LinkedHashSet<>();
+
 }

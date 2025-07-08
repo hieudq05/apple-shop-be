@@ -9,13 +9,12 @@ import com.web.appleshop.dto.response.admin.UserAdminInfoDto;
 import com.web.appleshop.dto.response.admin.UserAdminSummaryDto;
 import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.NotFoundException;
+import com.web.appleshop.repository.RoleRepository;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.UserService;
 import com.web.appleshop.specification.UserSpecification;
 import com.web.appleshop.util.UploadUtils;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,14 +27,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private final UserRepository userRepository;
     private final UploadUtils uploadUtils;
+    private final RoleRepository roleRepository;
 
     @Override
     public UserDetails findByEmail(String email) {
@@ -72,14 +72,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public Page<UserAdminSummaryInfo> getListUserSummary(Pageable pageable) {
         return userRepository.findUsersBy(pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public UserAdminInfoDto getUserInfoForAdmin(Integer userId) {
         User user = userRepository.findUserWithRolesById(userId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng nào có id: " + userId));
@@ -88,6 +88,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public Page<UserAdminSummaryDto> searchUsers(UserSearchCriteria criteria, Pageable pageable) {
         Specification<User> spec = buildSpecification(criteria);
 
@@ -110,6 +112,30 @@ public class UserServiceImpl implements UserService {
         } else {
             user.setImage(userUpdateDto.getImage());
         }
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public User setRoleforUser(Integer userId, Set<String> roles) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException("Không tìm thấy người dùng nào có id: " + userId)
+        );
+        user.setRoles(
+                roleRepository.findRolesByNameIn(roles)
+        );
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    public User toggleUserEnabled(Integer userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new NotFoundException("Không tìm thấy người dùng nào có id: " + userId)
+        );
+        user.setEnabled(!user.getEnabled());
         return userRepository.save(user);
     }
 

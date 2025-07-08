@@ -46,4 +46,8 @@ public interface OrderService {
     PaymentDto.VnPayResponse createVNPAYPaymentUrl(Integer orderId, HttpServletRequest request);
 
     PaymentDto.VnPayResponse createVNPAYPaymentUrlForUser(Integer orderId, HttpServletRequest request);
+
+    Order createOrderWithPromotion(UserCreateOrderWithPromotionRequest orderRequest, PaymentType paymentType);
+
+    Order createOrderWithPromotionForAdmin(AdminCreateOrderRequest orderRequest);
 }

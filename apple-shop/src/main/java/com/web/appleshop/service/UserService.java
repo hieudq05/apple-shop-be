@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Set;
+
 public interface UserService {
     UserDetails findByEmail(String email);
 
@@ -29,4 +31,8 @@ public interface UserService {
     Page<UserAdminSummaryDto> searchUsers(UserSearchCriteria criteria, Pageable pageable);
 
     User updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile);
+
+    User setRoleforUser(Integer userId, Set<String> roles);
+
+    User toggleUserEnabled(Integer userId);
 }

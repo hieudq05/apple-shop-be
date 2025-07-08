@@ -8,12 +8,15 @@ import com.web.appleshop.dto.response.UserReviewDto;
 import com.web.appleshop.dto.response.admin.AdminPromotionDto;
 import com.web.appleshop.entity.Promotion;
 import com.web.appleshop.entity.User;
+import com.web.appleshop.enums.PromotionType;
 import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.PromotionRepository;
 import com.web.appleshop.service.PromotionService;
 import com.web.appleshop.specification.PromotionSpecification;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -32,6 +36,7 @@ import java.time.ZoneId;
 @RequiredArgsConstructor
 public class PromotionServiceImpl implements PromotionService {
 
+    private static final Logger log = LoggerFactory.getLogger(PromotionServiceImpl.class);
     private final PromotionRepository promotionRepository;
     private final PromotionSpecification promotionSpecification;
 
@@ -49,6 +54,10 @@ public class PromotionServiceImpl implements PromotionService {
         // 2. Validate date range
         if (request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("End date must be after start date");
+        }
+
+        if (request.getEndDate().isBefore(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))) {
+            throw new BadRequestException("End date must be after current date");
         }
 
         // 3. Create promotion entity
@@ -126,6 +135,58 @@ public class PromotionServiceImpl implements PromotionService {
 
         promotion.setIsActive(!promotion.getIsActive());
         promotionRepository.save(promotion);
+    }
+
+    @Override
+    public Promotion findValidPromotionByCode(String code) {
+        Promotion promotion = promotionRepository.findByCodeAndIsActive(code, true).orElseThrow(
+                () -> new BadRequestException("Mã giảm giá " + code + " không tồn tại hoặc đã hết hạn.")
+        );
+
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        if (now.isBefore(promotion.getStartDate()) || now.isAfter(promotion.getEndDate())) {
+            throw new BadRequestException("Mã giảm giá " + code + " đã hết hạn.");
+        }
+        if (promotion.getUsageLimit() != null && promotion.getUsageCount() >= promotion.getUsageLimit()) {
+            throw new BadRequestException("Mã giảm giá " + code + " đã được sử dụng quá số lượng.");
+        }
+
+        return promotion;
+    }
+
+    @Override
+    public BigDecimal calculateDiscountAmount(Promotion promotion, BigDecimal amount) {
+        BigDecimal discountAmount = BigDecimal.ZERO;
+
+        if (promotion.getPromotionType() == PromotionType.PERCENTAGE) {
+            discountAmount = amount.multiply(promotion.getValue().divide(new BigDecimal("100")));
+            if (promotion.getMaxDiscountAmount() != null &&
+                    discountAmount.compareTo(promotion.getMaxDiscountAmount()) > 0) {
+                discountAmount = promotion.getMaxDiscountAmount();
+            }
+        } else if (promotion.getPromotionType() == PromotionType.FIXED_AMOUNT) {
+            discountAmount = promotion.getValue();
+            if (discountAmount.compareTo(amount) > 0) {
+                discountAmount = amount;
+            }
+        } else if (promotion.getPromotionType() == PromotionType.SHIPPING_DISCOUNT) {
+            BigDecimal maxDiscountAmount = promotion.getMaxDiscountAmount() != null ? promotion.getMaxDiscountAmount() : amount;
+            discountAmount = amount.multiply(promotion.getValue().divide(new BigDecimal("100")));
+        }
+
+        return discountAmount;
+    }
+
+    @Override
+    public void incrementUsageCount(Promotion promotion) {
+        promotion.setUsageCount(promotion.getUsageCount() + 1);
+        promotionRepository.save(promotion);
+    }
+
+    @Override
+    public boolean isPromotionValid(Promotion promotion, BigDecimal orderValue) {
+        return promotion.getMinOrderValue() == null ||
+                orderValue.compareTo(promotion.getMinOrderValue()) >= 0;
     }
 
     @Override

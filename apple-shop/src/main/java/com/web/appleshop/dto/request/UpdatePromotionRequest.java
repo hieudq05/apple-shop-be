@@ -18,6 +18,11 @@ public class UpdatePromotionRequest {
     @Size(max = 255, message = "Promotion name must not exceed 255 characters")
     private String name;
 
+    @NotBlank(message = "Promotion code is required")
+    @Size(max = 50, message = "Promotion code must not exceed 50 characters")
+    @Pattern(regexp = "^[A-Z0-9_]+$", message = "Promotion code must contain only uppercase letters, numbers, and underscores")
+    private String code;
+
     @NotNull(message = "Promotion type is required")
     private PromotionType promotionType;
 
@@ -41,24 +46,8 @@ public class UpdatePromotionRequest {
     @NotNull(message = "End date is required")
     private LocalDateTime endDate;
 
-    @NotNull(message = "Apply on specification is required")
-    private Boolean applyOn;
-
-    private Set<Integer> categoryIds;
-
-    private Set<Integer> stockIds;
-
     @AssertTrue(message = "End date must be after start date")
     public boolean isValidDateRange() {
         return endDate == null || startDate == null || endDate.isAfter(startDate);
-    }
-
-    @AssertTrue(message = "When applyOn is true, at least one category or product must be selected")
-    public boolean isValidApplyOnSelection() {
-        if (applyOn == null || !applyOn) {
-            return true;
-        }
-        return (categoryIds != null && !categoryIds.isEmpty()) ||
-                (stockIds != null && !stockIds.isEmpty());
     }
 }

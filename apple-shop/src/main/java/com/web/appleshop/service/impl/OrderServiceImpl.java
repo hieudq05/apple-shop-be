@@ -50,6 +50,7 @@ public class OrderServiceImpl implements OrderService {
     private final VnPayService vnPayService;
     private final UserRepository userRepository;
     private final OrderSpecification orderSpecification;
+    private final PromotionService promotionService;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -321,6 +322,245 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Không tìm thấy đơn hàng mã: " + orderId);
         }
         return getVnPayResponse(request, order);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @Transactional
+    public Order createOrderWithPromotion(UserCreateOrderWithPromotionRequest orderRequest, PaymentType paymentType) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<CartItem> cartItems = cartItemRepository.findCartItemsByUserId(user.getId());
+        if (cartItems.isEmpty()) {
+            throw new BadRequestException("Không có sản phẩm trong giỏ hàng.");
+        }
+
+        Order order = new Order();
+        BeanUtils.copyProperties(orderRequest, order);
+        order.setCreatedBy(user);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        order.setPaymentType(paymentType);
+        order.setShippingFee(BigDecimal.valueOf(40000));
+        order.setCountry("Việt Nam");
+
+        // Calculate subtotal first
+        BigDecimal subtotal = BigDecimal.ZERO;
+        Set<OrderDetail> orderDetails = new LinkedHashSet<>();
+
+        for (CartItem cartItem : cartItems) {
+            if (cartItem.getStock().getQuantity() < cartItem.getQuantity()) {
+                throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
+            }
+            if (cartItem.getQuantity() == 0) {
+                throw new IllegalArgumentException("Số lượng sản phẩm không hợp lệ.");
+            }
+            if (cartItem.getQuantity() > 10) {
+                throw new IllegalArgumentException("Bạn chỉ có thể mua 1 sản phẩm với số lượng tối đa 10. Hãy liên hệ với chúng tôi để có thể mua nhiều hơn.");
+            }
+
+            OrderDetail orderDetail = createOrderDetailFromCartItem(cartItem, order);
+            orderDetails.add(orderDetail);
+
+            // Update stock
+            cartItem.getStock().setQuantity(cartItem.getStock().getQuantity() - cartItem.getQuantity());
+            stockRepository.save(cartItem.getStock());
+
+            // Calculate subtotal
+            subtotal = subtotal.add(cartItem.getStock().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+
+            cartItemRepository.delete(cartItem);
+        }
+
+        order.setOrderDetails(orderDetails);
+        order.setSubtotal(subtotal);
+
+        // Apply promotions
+        applyPromotions(order, orderRequest.getProductPromotionCode(), orderRequest.getShippingPromotionCode());
+
+        // Calculate final total
+        calculateFinalTotal(order);
+
+        return orderRepository.save(order);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional
+    public Order createOrderWithPromotionForAdmin(AdminCreateOrderRequest orderRequest) {
+        log.info("Bắt đầu tạo đơn hàng có mã giảm giá cho admin");
+
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Order order = new Order();
+        order.setCreatedBy(user);
+        order.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        order.setStatus(orderRequest.getStatus());
+        order.setPaymentType(orderRequest.getPaymentType());
+        order.setFirstName(orderRequest.getCustomInfo().getFirstName());
+        order.setLastName(orderRequest.getCustomInfo().getLastName());
+        order.setEmail(orderRequest.getCustomInfo().getEmail());
+        order.setPhone(orderRequest.getCustomInfo().getPhone());
+        order.setAddress(orderRequest.getCustomInfo().getAddress());
+        order.setWard(orderRequest.getCustomInfo().getWard());
+        order.setDistrict(orderRequest.getCustomInfo().getDistrict());
+        order.setProvince(orderRequest.getCustomInfo().getProvince());
+        order.setCountry("Việt Nam");
+        order.setShippingFee(orderRequest.getShippingFee());
+
+        // Tạo order details và tính subtotal
+        Set<OrderDetail> orderDetails = new LinkedHashSet<>();
+        BigDecimal subtotal = BigDecimal.ZERO;
+
+        for (AdminCreateOrderRequest.OrderDetailRequest orderDetailRequest : orderRequest.getOrderDetails()) {
+            Stock stock = stockRepository.findById(orderDetailRequest.getStockId())
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm với ID: " + orderDetailRequest.getStockId()));
+
+            if (stock.getQuantity() < orderDetailRequest.getQuantity()) {
+                throw new BadRequestException("Không đủ hàng cho sản phẩm ID: " + orderDetailRequest.getStockId());
+            }
+
+            // Giảm số lượng trong kho
+            stock.setQuantity(stock.getQuantity() - orderDetailRequest.getQuantity());
+            stockRepository.save(stock);
+
+            // Tạo order detail
+            OrderDetail orderDetail = createOrderDetailFromStock(stock, orderDetailRequest.getQuantity(), order);
+            orderDetails.add(orderDetail);
+
+            // Tính subtotal
+            subtotal = subtotal.add(stock.getPrice().multiply(BigDecimal.valueOf(orderDetailRequest.getQuantity())));
+        }
+
+        order.setOrderDetails(orderDetails);
+        order.setSubtotal(subtotal);
+
+        // Áp dụng mã giảm giá
+        applyPromotionsForAdmin(order, orderRequest.getProductPromotionCode(), orderRequest.getShippingPromotionCode());
+
+        // Tính final total
+        calculateFinalTotal(order);
+
+        return orderRepository.save(order);
+    }
+
+    private OrderDetail createOrderDetailFromStock(Stock stock, Integer quantity, Order order) {
+        OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setOrder(order);
+        orderDetail.setStock(stock);
+        orderDetail.setProduct(stock.getProduct());
+        orderDetail.setProductName(stock.getProduct().getName());
+        orderDetail.setQuantity(quantity);
+        orderDetail.setPrice(stock.getPrice());
+        orderDetail.setColorName(stock.getColor().getName());
+        orderDetail.setVersionName(stock.getInstanceProperties().stream()
+                .map(InstanceProperty::getName)
+                .collect(Collectors.joining(", ")));
+        orderDetail.setImageUrl(stock.getProductPhotos().stream()
+                .findFirst()
+                .map(ProductPhoto::getImageUrl)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh sản phẩm.")));
+        return orderDetail;
+    }
+
+    private void applyPromotionsForAdmin(Order order, String productPromotionCode, String shippingPromotionCode) {
+        // Khởi tạo giá trị mặc định
+        order.setProductDiscountAmount(BigDecimal.ZERO);
+        order.setShippingDiscountAmount(BigDecimal.ZERO);
+
+        // Áp dụng mã giảm giá sản phẩm
+        if (productPromotionCode != null && !productPromotionCode.trim().isEmpty()) {
+            Promotion productPromotion = promotionService.findValidPromotionByCode(
+                    productPromotionCode);
+
+            if (promotionService.isPromotionValid(productPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(productPromotion, order.getSubtotal());
+                order.setProductPromotion(productPromotion);
+                order.setProductDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(productPromotion);
+                log.info("Áp dụng mã giảm giá sản phẩm: {} - Giảm: {}", productPromotionCode, discountAmount);
+            } else {
+                log.warn("Mã giảm giá sản phẩm không hợp lệ: {}", productPromotionCode);
+                throw new BadRequestException("Mã giảm giá sản phẩm không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        }
+
+        // Áp dụng mã giảm giá vận chuyển
+        if (shippingPromotionCode != null && !shippingPromotionCode.trim().isEmpty()) {
+            Promotion shippingPromotion = promotionService.findValidPromotionByCode(
+                    shippingPromotionCode);
+
+            if (promotionService.isPromotionValid(shippingPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(shippingPromotion, order.getShippingFee());
+                order.setShippingPromotion(shippingPromotion);
+                order.setShippingDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(shippingPromotion);
+                log.info("Áp dụng mã giảm giá vận chuyển: {} - Giảm: {}", shippingPromotionCode, discountAmount);
+            } else {
+                log.warn("Mã giảm giá vận chuyển không hợp lệ: {}", shippingPromotionCode);
+                throw new BadRequestException("Mã giảm giá vận chuyển không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        }
+    }
+
+    private OrderDetail createOrderDetailFromCartItem(CartItem cartItem, Order order) {
+        OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setOrder(order);
+        orderDetail.setProduct(cartItem.getProduct());
+        orderDetail.setProductName(cartItem.getProductName());
+        orderDetail.setQuantity(cartItem.getQuantity());
+        orderDetail.setPrice(cartItem.getStock().getPrice());
+        orderDetail.setColorName(cartItem.getStock().getColor().getName());
+        orderDetail.setVersionName(cartItem.getStock().getInstanceProperties().stream()
+                .map(InstanceProperty::getName)
+                .collect(Collectors.joining(", ")));
+        orderDetail.setImageUrl(cartItem.getStock().getProductPhotos().stream()
+                .findFirst()
+                .map(ProductPhoto::getImageUrl)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh sản phẩm.")));
+        orderDetail.setStock(cartItem.getStock());
+        return orderDetail;
+    }
+
+    private void applyPromotions(Order order, String productPromotionCode, String shippingPromotionCode) {
+        // Apply product promotion
+        if (productPromotionCode != null && !productPromotionCode.trim().isEmpty()) {
+            Promotion productPromotion = promotionService.findValidPromotionByCode(
+                    productPromotionCode);
+
+            if (promotionService.isPromotionValid(productPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(productPromotion, order.getSubtotal());
+                order.setProductPromotion(productPromotion);
+                order.setProductDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(productPromotion);
+            } else {
+                throw new BadRequestException("Mã giảm giá sản phẩm không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        }
+
+        // Apply shipping promotion
+        if (shippingPromotionCode != null && !shippingPromotionCode.trim().isEmpty()) {
+            Promotion shippingPromotion = promotionService.findValidPromotionByCode(
+                    shippingPromotionCode);
+
+            if (promotionService.isPromotionValid(shippingPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(shippingPromotion, order.getShippingFee());
+                order.setShippingPromotion(shippingPromotion);
+                order.setShippingDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(shippingPromotion);
+            } else {
+                throw new BadRequestException("Mã giảm giá vận chuyển không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        }
+    }
+
+    private void calculateFinalTotal(Order order) {
+        BigDecimal finalTotal = order.getSubtotal()
+                .subtract(order.getProductDiscountAmount())
+                .add(order.getShippingFee())
+                .subtract(order.getShippingDiscountAmount());
+
+        order.setFinalTotal(finalTotal);
+        order.setShippingDiscountAmount(order.getProductDiscountAmount().add(order.getShippingDiscountAmount()));
     }
 
     private PaymentDto.VnPayResponse getVnPayResponse(HttpServletRequest request, Order order) {

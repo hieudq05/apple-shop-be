@@ -1,7 +1,7 @@
 package com.web.appleshop.enums;
 
 public enum PromotionType {
-    PERCENT,
-    FIXED,
-    FREESHIP
+    PERCENTAGE,
+    FIXED_AMOUNT,
+    SHIPPING_DISCOUNT
 }

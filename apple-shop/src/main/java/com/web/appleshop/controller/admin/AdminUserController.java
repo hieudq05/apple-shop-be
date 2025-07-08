@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("admin/users")
@@ -60,5 +61,17 @@ class AdminUserController {
                 users.getTotalElements()
         );
         return ResponseEntity.ok(ApiResponse.success(users.getContent(), "Search users successfully", pageableResponse));
+    }
+
+    @PutMapping("{userId}/toggle-enabled")
+    public ResponseEntity<ApiResponse<Void>> toggleUserEnabled(@PathVariable Integer userId) {
+        userService.toggleUserEnabled(userId);
+        return ResponseEntity.ok(ApiResponse.success(null, "User enabled/disabled successfully"));
+    }
+
+    @PutMapping("{userId}/role")
+    public ResponseEntity<ApiResponse<Void>> updateUserRole(@PathVariable Integer userId, @RequestBody Set<String> role) {
+        userService.setRoleforUser(userId, role);
+        return ResponseEntity.ok(ApiResponse.success(null, "User role updated successfully"));
     }
 }

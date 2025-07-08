@@ -2,9 +2,13 @@ package com.web.appleshop.dto.request;
 
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -25,6 +29,15 @@ public class AdminCreateOrderRequest {
 
     @NotEmpty(message = "Không được bỏ trống chi tiết đơn hàng.")
     OrderDetailRequest[] orderDetails;
+
+    @Size(max = 50, message = "Mã giảm giá sản phẩm không được vượt quá 50 ký tự")
+    private String productPromotionCode;
+
+    @Size(max = 50, message = "Mã giảm giá vận chuyển không được vượt quá 50 ký tự")
+    private String shippingPromotionCode;
+
+    @DecimalMin(value = "0", message = "Phí vận chuyển phải >= 0")
+    private BigDecimal shippingFee = BigDecimal.ZERO;
 
     @Value
     public static class OrderDetailRequest {

@@ -71,12 +71,6 @@ public class User implements UserDetails {
     @Column(name = "birth", nullable = false)
     private LocalDate birth;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new LinkedHashSet<>();
-
     @OneToMany(mappedBy = "author")
     private Set<Blog> blogs = new LinkedHashSet<>();
 
@@ -124,6 +118,12 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "createdBy")
     private Set<Promotion> promotions = new LinkedHashSet<>();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new LinkedHashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -94,29 +94,30 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private Set<Review> reviews = new LinkedHashSet<>();
 
-    @Column(name = "promotion_code", length = 50)
-    private String promotionCode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_promotion_id")
+    private Promotion productPromotion;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shipping_promotion_id")
+    private Promotion shippingPromotion;
+
+    @ColumnDefault("0")
     @Column(name = "shipping_discount_amount", precision = 18, scale = 2)
-    @ColumnDefault("0")
-    private BigDecimal shippingDiscountAmount = BigDecimal.ZERO;
+    private BigDecimal shippingDiscountAmount;
 
-    @Column(name = "total_discount_amount", precision = 18, scale = 2)
     @ColumnDefault("0")
-    private BigDecimal totalDiscountAmount = BigDecimal.ZERO;
+    @Column(name = "product_discount_amount", precision = 18, scale = 2)
+    private BigDecimal productDiscountAmount;
 
     @Column(name = "subtotal", precision = 18, scale = 2)
     private BigDecimal subtotal;
 
-    @Column(name = "shipping_fee", precision = 18, scale = 2)
     @ColumnDefault("0")
-    private BigDecimal shippingFee = BigDecimal.ZERO;
+    @Column(name = "shipping_fee", precision = 18, scale = 2)
+    private BigDecimal shippingFee;
 
     @Column(name = "final_total", precision = 18, scale = 2)
     private BigDecimal finalTotal;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "promotion_id")
-    private Promotion promotion;
 
 }

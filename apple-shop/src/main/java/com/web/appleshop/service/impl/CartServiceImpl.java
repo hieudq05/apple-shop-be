@@ -56,7 +56,7 @@ public class CartServiceImpl implements CartService {
                         .quantity(0)
                         .build()
         );
-        validateQuantity(stock, cartItem, cartItemRequest.getQuantity() + cartItem.getQuantity());
+        validateQuantity(stock, cartItemRequest.getQuantity() + cartItem.getQuantity());
 
         cartItem.setQuantity(cartItemRequest.getQuantity() + cartItem.getQuantity());
         return cartItemRepository.save(cartItem);
@@ -73,7 +73,7 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.delete(cartItem);
             return null;
         }
-        validateQuantity(cartItem.getStock(), cartItem, quantity);
+        validateQuantity(cartItem.getStock(), quantity);
         cartItem.setQuantity(quantity);
         return cartItemRepository.save(cartItem);
     }
@@ -143,12 +143,12 @@ public class CartServiceImpl implements CartService {
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
-    private void validateQuantity(Stock stock, CartItem cartItem, Integer requestQuantity) {
-        if (stock.getQuantity() < requestQuantity) {
-            throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
-        }
+    private void validateQuantity(Stock stock, Integer requestQuantity) {
         if (requestQuantity > 10) {
             throw new IllegalArgumentException("Bạn chỉ có thể thêm tối đa 10 sản phẩm trong giỏ hàng. Liên hệ với chúng tôi để đặt hàng với số lượng lớn hơn.");
+        }
+        if (stock.getQuantity() < requestQuantity) {
+            throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
         }
     }
 }

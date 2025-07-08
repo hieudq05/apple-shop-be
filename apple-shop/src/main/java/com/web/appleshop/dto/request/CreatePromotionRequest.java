@@ -6,7 +6,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Data
 public class CreatePromotionRequest {
@@ -40,10 +39,10 @@ public class CreatePromotionRequest {
     private Boolean isActive;
 
     @NotNull(message = "Start date is required")
-    @Future(message = "Start date must be in the future")
     private LocalDateTime startDate;
 
     @NotNull(message = "End date is required")
+    @FutureOrPresent(message = "End date must be in the future")
     private LocalDateTime endDate;
 
     @AssertTrue(message = "End date must be after start date")

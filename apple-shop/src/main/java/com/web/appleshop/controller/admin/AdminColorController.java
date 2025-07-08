@@ -1,17 +1,16 @@
 package com.web.appleshop.controller.admin;
 
+import com.web.appleshop.dto.request.AdminColorRequest;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.service.ColorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,6 +34,30 @@ class AdminColorController {
         );
         return ResponseEntity.ok(
                 ApiResponse.success(colors.getContent(), "Get all colors successfully", pageableResponse)
+        );
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<String>> createColor(@Valid @RequestBody AdminColorRequest request) {
+        colorService.createColor(request);
+        return ResponseEntity.ok(
+                ApiResponse.success(null, "Create color successfully")
+        );
+    }
+
+    @PutMapping("{colorId}")
+    public ResponseEntity<ApiResponse<String>> updateColor(@PathVariable Integer colorId, @RequestBody AdminColorRequest request) {
+        colorService.updateColor(colorId, request);
+        return ResponseEntity.ok(
+                ApiResponse.success(null, "Update color successfully")
+        );
+    }
+
+    @DeleteMapping("{colorId}")
+    public ResponseEntity<ApiResponse<String>> deleteColor(@PathVariable Integer colorId) {
+        colorService.deleteColor(colorId);
+        return ResponseEntity.ok(
+                ApiResponse.success(null, "Delete color successfully")
         );
     }
 }
