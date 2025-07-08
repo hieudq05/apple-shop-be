@@ -33,8 +33,4 @@ public class Category {
 
     @OneToMany(mappedBy = "category", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     private Set<Product> products = new LinkedHashSet<>();
-
-    @ManyToMany(mappedBy = "categories")
-    private Set<Promotion> promotions = new LinkedHashSet<>();
-
 }

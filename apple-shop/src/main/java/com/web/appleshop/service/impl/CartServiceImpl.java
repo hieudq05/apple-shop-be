@@ -118,27 +118,10 @@ public class CartServiceImpl implements CartService {
         cartItemResponse.setId(cartItem.getId());
         cartItemResponse.setQuantity(cartItem.getQuantity());
 
-        Set<CartItemResponse.ProductDto.PromotionDto> promotions = new LinkedHashSet<>();
-        for (Promotion promotion: cartItem.getStock().getPromotions()) {
-            promotions.add(
-                    new CartItemResponse.ProductDto.PromotionDto(
-                            promotion.getId(),
-                            promotion.getName(),
-                            promotion.getCode(),
-                            promotion.getPromotionType(),
-                            promotion.getValue(),
-                            promotion.getIsActive(),
-                            promotion.getStartDate(),
-                            promotion.getEndDate()
-                    )
-            );
-        }
-
         CartItemResponse.ProductDto productDto = new CartItemResponse.ProductDto(
                 cartItem.getProduct().getId(),
                 cartItem.getProduct().getName(),
-                cartItem.getProduct().getDescription(),
-                promotions
+                cartItem.getProduct().getDescription()
         );
 
         CartItemResponse.StockDto stockDto = new CartItemResponse.StockDto(

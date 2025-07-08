@@ -6,13 +6,11 @@ import com.web.appleshop.dto.request.UpdatePromotionRequest;
 import com.web.appleshop.dto.response.UserPromotionDto;
 import com.web.appleshop.dto.response.UserReviewDto;
 import com.web.appleshop.dto.response.admin.AdminPromotionDto;
-import com.web.appleshop.entity.*;
+import com.web.appleshop.entity.Promotion;
+import com.web.appleshop.entity.User;
 import com.web.appleshop.exception.BadRequestException;
 import com.web.appleshop.exception.NotFoundException;
-import com.web.appleshop.repository.CategoryRepository;
-import com.web.appleshop.repository.ProductRepository;
 import com.web.appleshop.repository.PromotionRepository;
-import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.service.PromotionService;
 import com.web.appleshop.specification.PromotionSpecification;
 import lombok.RequiredArgsConstructor;
@@ -29,21 +27,13 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PromotionServiceImpl implements PromotionService {
 
     private final PromotionRepository promotionRepository;
-    private final CategoryRepository categoryRepository;
     private final PromotionSpecification promotionSpecification;
-    private final StockRepository stockRepository;
-    private final ProductRepository productRepository;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
@@ -74,37 +64,8 @@ public class PromotionServiceImpl implements PromotionService {
         promotion.setIsActive(request.getIsActive());
         promotion.setStartDate(request.getStartDate());
         promotion.setEndDate(request.getEndDate());
-        promotion.setApplyOn(request.getApplyOn());
         promotion.setCreatedBy(user);
         promotion.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
-
-        // 4. Set categories and stocks if applyOn is true
-        if (request.getApplyOn()) {
-            if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-                Set<Category> categories = new HashSet<>(categoryRepository.findAllById(request.getCategoryIds()));
-                if (categories.size() != request.getCategoryIds().size()) {
-                    throw new BadRequestException("Some categories not found");
-                }
-                categories.stream().map(Category::getId).forEach(System.out::println);
-                promotion.setCategories(categories);
-            }
-
-            if (request.getStockIds() != null && !request.getStockIds().isEmpty()) {
-                Set<Stock> stocks = new HashSet<>(stockRepository.findAllById(request.getStockIds()));
-                if (stocks.size() != request.getStockIds().size()) {
-                    throw new BadRequestException("Some stocks not found");
-                }
-                promotion.setStocks(stocks);
-            }
-
-            if (request.getProductIds() != null && !request.getProductIds().isEmpty()) {
-                Set<Product> products = new HashSet<>(productRepository.findAllById(request.getProductIds()));
-                if (products.size() != request.getProductIds().size()) {
-                    throw new BadRequestException("Some products not found");
-                }
-                promotion.setProducts(products);
-            }
-        }
 
         // 5. Save promotion
         Promotion savedPromotion = promotionRepository.save(promotion);
@@ -134,30 +95,6 @@ public class PromotionServiceImpl implements PromotionService {
         promotion.setUsageLimit(request.getUsageLimit());
         promotion.setStartDate(request.getStartDate());
         promotion.setEndDate(request.getEndDate());
-        promotion.setApplyOn(request.getApplyOn());
-
-        // 4. Clear existing associations
-        promotion.getCategories().clear();
-        promotion.getStocks().clear();
-
-        // 5. Set new associations if applyOn is true
-        if (request.getApplyOn()) {
-            if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-                Set<Category> categories = new HashSet<>(categoryRepository.findAllById(request.getCategoryIds()));
-                if (categories.size() != request.getCategoryIds().size()) {
-                    throw new BadRequestException("Some categories not found");
-                }
-                promotion.setCategories(categories);
-            }
-
-            if (request.getStockIds() != null && !request.getStockIds().isEmpty()) {
-                Set<Stock> stocks = new HashSet<>(stockRepository.findAllById(request.getStockIds()));
-                if (stocks.size() != request.getStockIds().size()) {
-                    throw new BadRequestException("Some stocks not found");
-                }
-                promotion.setStocks(stocks);
-            }
-        }
 
         // 6. Save updated promotion
         Promotion updatedPromotion = promotionRepository.save(promotion);
@@ -210,19 +147,6 @@ public class PromotionServiceImpl implements PromotionService {
         return promotions.map(this::mapToResponse);
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Page<UserPromotionDto> getPromotionByStockForUser(Integer stockId, Pageable pageable) {
-        PromotionSearchRequest criteria = new PromotionSearchRequest();
-        List<Integer> stockIds = new ArrayList<>();
-        stockIds.add(stockId);
-        criteria.setStockIds(stockIds);
-        criteria.setIsActive(true);
-        Specification<Promotion> spec = promotionSpecification.searchPromotions(criteria);
-        Page<Promotion> promotions = promotionRepository.findAll(spec, pageable);
-        return promotions.map(this::mapToUserResponse);
-    }
-
     private Sort createSort(String sortBy, String sortDirection) {
         if (!StringUtils.hasText(sortBy)) {
             sortBy = "id";
@@ -263,7 +187,6 @@ public class PromotionServiceImpl implements PromotionService {
         response.setIsActive(promotion.getIsActive());
         response.setStartDate(promotion.getStartDate());
         response.setEndDate(promotion.getEndDate());
-        response.setApplyOn(promotion.getApplyOn());
         response.setCreatedAt(promotion.getCreatedAt());
         response.setCreatedBy(new UserReviewDto.UserDto(
                 promotion.getCreatedBy().getId(),
@@ -271,51 +194,6 @@ public class PromotionServiceImpl implements PromotionService {
                 promotion.getCreatedBy().getLastName(),
                 promotion.getCreatedBy().getImage()
         ));
-
-        // Map categories
-        if (promotion.getCategories() != null) {
-            response.setCategories(promotion.getCategories().stream()
-                    .map(category -> {
-                        AdminPromotionDto.CategorySummary summary = new AdminPromotionDto.CategorySummary();
-                        summary.setId(category.getId());
-                        summary.setName(category.getName());
-                        return summary;
-                    })
-                    .collect(Collectors.toList()));
-        }
-
-        // Map stocks
-        if (promotion.getStocks() != null) {
-            response.setStocks(promotion.getStocks().stream()
-                    .map(stock -> {
-                        AdminPromotionDto.StockSummary summary = new AdminPromotionDto.StockSummary();
-                        summary.setId(stock.getId());
-                        summary.setColorName(stock.getColor().getName());
-                        summary.setInstances(stock.getInstanceProperties().stream().map(
-                                instance -> {
-                                    AdminPromotionDto.StockSummary.InstanceSummary instanceSummary = new AdminPromotionDto.StockSummary.InstanceSummary();
-                                    instanceSummary.setId(instance.getId());
-                                    instanceSummary.setName(instance.getName());
-                                    return instanceSummary;
-                                }
-                        ).collect(Collectors.toSet()));
-                        return summary;
-                    })
-                    .collect(Collectors.toList()));
-        }
-
-        // Map product
-        if (promotion.getProducts() != null) {
-            response.setProducts(promotion.getProducts().stream()
-                    .map(product -> {
-                        AdminPromotionDto.ProductSummary summary = new AdminPromotionDto.ProductSummary();
-                        summary.setId(product.getId());
-                        summary.setName(product.getName());
-                        return summary;
-                    })
-                    .collect(Collectors.toList())
-            );
-        }
 
         return response;
     }

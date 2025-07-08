@@ -46,26 +46,8 @@ public class CreatePromotionRequest {
     @NotNull(message = "End date is required")
     private LocalDateTime endDate;
 
-    @NotNull(message = "Apply on specification is required")
-    private Boolean applyOn; // true = specific products/categories, false = all
-
-    private Set<Integer> categoryIds;
-
-    private Set<Integer> stockIds;
-
-    private Set<Integer> productIds;
-
     @AssertTrue(message = "End date must be after start date")
     public boolean isValidDateRange() {
         return endDate == null || startDate == null || endDate.isAfter(startDate);
-    }
-
-    @AssertTrue(message = "When applyOn is true, at least one category or product must be selected")
-    public boolean isValidApplyOnSelection() {
-        if (applyOn == null || !applyOn) {
-            return true;
-        }
-        return (categoryIds != null && !categoryIds.isEmpty()) ||
-                (stockIds != null && !stockIds.isEmpty()) || (productIds != null && !productIds.isEmpty());
     }
 }

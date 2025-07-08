@@ -70,9 +70,6 @@ public class Product {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
-    @ManyToMany(mappedBy = "products")
-    private Set<Promotion> promotions = new LinkedHashSet<>();
-
     public void addFeature(Feature feature) {
         this.features.add(feature);
         feature.getProducts().add(this);

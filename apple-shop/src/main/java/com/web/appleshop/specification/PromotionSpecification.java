@@ -1,12 +1,7 @@
 package com.web.appleshop.specification;
 
 import com.web.appleshop.dto.request.PromotionSearchRequest;
-import com.web.appleshop.entity.Category;
-import com.web.appleshop.entity.Product;
 import com.web.appleshop.entity.Promotion;
-import com.web.appleshop.entity.Stock;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -123,57 +118,11 @@ public class PromotionSpecification {
                         root.get("usageCount"), request.getUsageCountTo()));
             }
 
-            // Tìm kiếm theo danh mục
-            if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-                Join<Promotion, Category> categoryJoin = root.join("categories", JoinType.INNER);
-                predicates.add(categoryJoin.get("id").in(request.getCategoryIds()));
-            }
-
-            // Tìm kiếm theo sản phẩm
-            if (request.getProductIds() != null && !request.getProductIds().isEmpty()) {
-                Join<Promotion, Product> productJoin = root.join("products", JoinType.INNER);
-                predicates.add(productJoin.get("id").in(request.getProductIds()));
-            }
-
-            // Tìm kiếm theo stock
-            if (request.getStockIds() != null && !request.getStockIds().isEmpty()) {
-                predicates.add(createStockArrayPromotionPredicate(root, criteriaBuilder, request.getStockIds()));
-            }
-
             // Distinct để tránh duplicate khi có nhiều joins
             assert query != null;
             query.distinct(true);
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    private Predicate createStockArrayPromotionPredicate(
-            jakarta.persistence.criteria.Root<Promotion> root,
-            jakarta.persistence.criteria.CriteriaBuilder criteriaBuilder,
-            List<Integer> stockIds) {
-
-        List<Predicate> stockPredicates = new ArrayList<>();
-
-        // 1. Promotions áp dụng trực tiếp cho stocks
-        Join<Promotion, Stock> stockJoin = root.join("stocks", JoinType.LEFT);
-        Predicate directStockPredicate = stockJoin.get("id").in(stockIds);
-        stockPredicates.add(directStockPredicate);
-
-        // 2. Promotions áp dụng cho products chứa stocks
-        Join<Promotion, Product> productJoin = root.join("products", JoinType.LEFT);
-        Join<Product, Stock> productStockJoin = productJoin.join("stocks", JoinType.LEFT);
-        Predicate productStockPredicate = productStockJoin.get("id").in(stockIds);
-        stockPredicates.add(productStockPredicate);
-
-        // 3. Promotions áp dụng cho categories chứa products của stocks
-        Join<Promotion, Category> categoryJoin = root.join("categories", JoinType.LEFT);
-        Join<Category, Product> categoryProductJoin = categoryJoin.join("products", JoinType.LEFT);
-        Join<Product, Stock> categoryProductStockJoin = categoryProductJoin.join("stocks", JoinType.LEFT);
-        Predicate categoryStockPredicate = categoryProductStockJoin.get("id").in(stockIds);
-        stockPredicates.add(categoryStockPredicate);
-
-        // Combine all predicates with OR (một trong các điều kiện trên)
-        return criteriaBuilder.or(stockPredicates.toArray(new Predicate[0]));
     }
 }

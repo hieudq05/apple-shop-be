@@ -62,33 +62,6 @@ public class Promotion {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 
-    @Column(name = "apply_on", nullable = false)
-    private Boolean applyOn = false;
-
-    @ManyToMany(cascade = {
-            CascadeType.MERGE,
-            CascadeType.PERSIST,
-            CascadeType.REFRESH
-    }, fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "promotion_category",
-            joinColumns = @JoinColumn(name = "promotion_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
-    private Set<Category> categories = new LinkedHashSet<>();
-
-    @ManyToMany(cascade = {
-            CascadeType.MERGE,
-            CascadeType.PERSIST,
-            CascadeType.REFRESH
-    }, fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "promotion_stock",
-            joinColumns = @JoinColumn(name = "promotions_id"),
-            inverseJoinColumns = @JoinColumn(name = "stock_id")
-    )
-    private Set<Stock> stocks = new LinkedHashSet<>();
-
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -99,11 +72,4 @@ public class Promotion {
 
     @OneToMany(mappedBy = "promotion")
     private Set<Order> orders = new LinkedHashSet<>();
-
-    @ManyToMany
-    @JoinTable(name = "promotion_product",
-            joinColumns = @JoinColumn(name = "promotion_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id"))
-    private Set<Product> products = new LinkedHashSet<>();
-
 }

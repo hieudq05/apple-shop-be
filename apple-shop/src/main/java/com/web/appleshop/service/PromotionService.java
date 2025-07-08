@@ -19,6 +19,4 @@ public interface PromotionService {
     void deletePromotion(Integer id);
 
     void togglePromotionStatus(Integer id);
-
-    Page<UserPromotionDto> getPromotionByStockForUser(Integer stockId, Pageable pageable);
 }

@@ -50,12 +50,6 @@ public class PromotionSearchRequest {
 
     private Integer usageCountTo; // Số lần đã sử dụng đến
 
-    private List<Integer> categoryIds; // Tìm theo danh mục
-
-    private List<Integer> productIds; // Tìm theo sản phẩm
-
-    private List<Integer> stockIds; // Tìm theo kho sản phẩm
-
     private String sortBy; // Sắp xếp theo trường nào
 
     private String sortDirection; // ASC, DESC

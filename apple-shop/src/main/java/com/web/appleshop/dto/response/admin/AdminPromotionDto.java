@@ -30,34 +30,6 @@ public class AdminPromotionDto {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private Boolean applyOn;
-    private List<CategorySummary> categories;
-    private List<StockSummary> stocks;
-    private List<ProductSummary> products;
     private LocalDateTime createdAt;
     private UserReviewDto.UserDto createdBy;
-
-    @Data
-    public static class CategorySummary {
-        private Integer id;
-        private String name;
-    }
-
-    @Data
-    public static class StockSummary {
-        private Integer id;
-        private String colorName;
-        private Set<InstanceSummary> instances;
-
-        @Data
-        public static class InstanceSummary {
-            private Integer id;
-            private String name;
-        }
-    }
-
-    @Data
-    public static class ProductSummary {
-        private Integer id;
-        private String name;
-    }
 }

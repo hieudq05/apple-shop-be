@@ -97,10 +97,6 @@ public class Order {
     @Column(name = "promotion_code", length = 50)
     private String promotionCode;
 
-    @Column(name = "promotion_discount_amount", precision = 18, scale = 2)
-    @ColumnDefault("0")
-    private BigDecimal promotionDiscountAmount = BigDecimal.ZERO;
-
     @Column(name = "shipping_discount_amount", precision = 18, scale = 2)
     @ColumnDefault("0")
     private BigDecimal shippingDiscountAmount = BigDecimal.ZERO;
