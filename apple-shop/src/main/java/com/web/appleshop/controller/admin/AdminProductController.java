@@ -41,8 +41,8 @@ public class AdminProductController {
             @PathVariable Integer categoryId,
             @PathVariable Integer productId,
             @RequestPart("product") String productJson,
-            @RequestPart("productPhotoDeletions") Integer[] productPhotoDeletions,
-            @RequestParam Map<String, MultipartFile> files
+            @RequestPart(value = "productPhotoDeletions", required = false) Integer[] productPhotoDeletions,
+            @RequestParam(required = false) Map<String, MultipartFile> files
     ) {
         User updatedBy = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         productService.updateProduct(categoryId, productId, productJson, files, productPhotoDeletions, updatedBy);

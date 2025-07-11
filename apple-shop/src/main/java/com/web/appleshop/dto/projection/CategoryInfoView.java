@@ -8,5 +8,7 @@ public interface CategoryInfoView {
 
     String getName();
 
+    String getDescription();
+
     String getImage();
 }

@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/otp/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/blogs/**").permitAll()
+                        .requestMatchers("/categories/**").permitAll()
                         .requestMatchers("/payments/vnpay-callback").permitAll()
                         .requestMatchers("/payments/paypal/success").permitAll()
                         .requestMatchers("/payments/paypal/cancel").permitAll()
