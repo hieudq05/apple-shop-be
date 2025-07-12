@@ -1,7 +1,5 @@
 # Apple Shop Backend
 
-**Dự án tốt nghiệp** - Backend cho hệ thống bán hàng Apple trực tuyến
-
 ## 📖 Tổng quan
 
 Apple Shop Backend là một API RESTful được xây dựng bằng Java và Spring Boot, phục vụ cho việc quản lý cửa hàng bán sản phẩm Apple trực tuyến. Đây là dự án giáo dục nhằm thực hành các kỹ thuật phát triển backend hiện đại.
@@ -218,7 +216,7 @@ Context path của ứng dụng `/api/v1/`
 
 <div align="center">
 
-**🍎 Apple Shop Backend** - Dự án tốt nghiệp Spring Boot
+**🍎 Apple Shop Backend** - Spring Boot
 
 Made with ❤️ for learning
 
