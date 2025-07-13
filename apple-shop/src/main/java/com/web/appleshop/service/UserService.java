@@ -2,6 +2,7 @@ package com.web.appleshop.service;
 
 import com.web.appleshop.dto.projection.UserAdminSummaryInfo;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.ChangePasswordDto;
 import com.web.appleshop.dto.request.UserSearchCriteria;
 import com.web.appleshop.dto.request.UserUpdateDto;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
@@ -35,4 +36,6 @@ public interface UserService {
     User setRoleforUser(Integer userId, Set<String> roles);
 
     User toggleUserEnabled(Integer userId);
+
+    void changePassword(ChangePasswordDto changePasswordDto);
 }

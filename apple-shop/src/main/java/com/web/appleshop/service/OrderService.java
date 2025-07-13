@@ -4,6 +4,7 @@ import com.web.appleshop.dto.PaymentDto;
 import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.request.*;
 import com.web.appleshop.dto.response.OrderUserResponse;
+import com.web.appleshop.dto.response.UserOrderDetailResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.dto.response.admin.OrderSummaryV2Dto;
 import com.web.appleshop.entity.Order;
@@ -26,6 +27,8 @@ public interface OrderService {
     BigDecimal calculateTotalPrice(Set<OrderDetail> orderDetails);
 
     Page<OrderUserResponse> getOrdersForUser(Pageable pageable);
+
+    UserOrderDetailResponse getOrderDetailByIdForUser(Integer id);
 
     Page<OrderUserResponse> searchOrdersForUser(UserOrderSearchCriteria criteria, Pageable pageable);
 

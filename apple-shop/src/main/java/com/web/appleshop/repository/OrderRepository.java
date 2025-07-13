@@ -24,4 +24,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer>, JpaSpeci
             select (count(o) > 0) from Order o inner join o.orderDetails orderDetails
             where o.id = ?1 and orderDetails.stock.id = ?2 and o.status = ?3""")
     boolean existsByUserIdAndStockIdAndStatus(Integer id, Integer id1, OrderStatus status);
+
+    Optional<Order> findOrderByIdAndCreatedBy(Integer id, User createdBy);
 }

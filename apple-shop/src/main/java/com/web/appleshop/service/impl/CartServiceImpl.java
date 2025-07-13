@@ -121,7 +121,8 @@ public class CartServiceImpl implements CartService {
         CartItemResponse.ProductDto productDto = new CartItemResponse.ProductDto(
                 cartItem.getProduct().getId(),
                 cartItem.getProduct().getName(),
-                cartItem.getProduct().getDescription()
+                cartItem.getProduct().getDescription(),
+                cartItem.getProduct().getCategory().getId()
         );
 
         CartItemResponse.StockDto stockDto = new CartItemResponse.StockDto(

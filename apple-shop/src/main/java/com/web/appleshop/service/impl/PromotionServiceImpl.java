@@ -208,6 +208,14 @@ public class PromotionServiceImpl implements PromotionService {
         return promotions.map(this::mapToResponse);
     }
 
+    @Override
+    public Page<UserPromotionDto> getPromotionsForUser(Pageable pageable) {
+        Sort sort = createSort("id", "DESC");
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        Page<Promotion> promotions = promotionRepository.findPromotionsByIsActive(true, pageable);
+        return promotions.map(this::mapToUserResponse);
+    }
+
     private Sort createSort(String sortBy, String sortDirection) {
         if (!StringUtils.hasText(sortBy)) {
             sortBy = "id";

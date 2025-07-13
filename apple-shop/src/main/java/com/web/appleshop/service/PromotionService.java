@@ -3,6 +3,7 @@ package com.web.appleshop.service;
 import com.web.appleshop.dto.request.CreatePromotionRequest;
 import com.web.appleshop.dto.request.PromotionSearchRequest;
 import com.web.appleshop.dto.request.UpdatePromotionRequest;
+import com.web.appleshop.dto.response.UserPromotionDto;
 import com.web.appleshop.dto.response.admin.AdminPromotionDto;
 import com.web.appleshop.entity.Promotion;
 import com.web.appleshop.enums.PromotionType;
@@ -16,6 +17,8 @@ public interface PromotionService {
 
     Page<AdminPromotionDto> searchPromotions(PromotionSearchRequest request,
                                              Pageable pageable);
+
+    Page<UserPromotionDto> getPromotionsForUser(Pageable pageable);
 
     AdminPromotionDto updatePromotion(Integer id, UpdatePromotionRequest request);
 

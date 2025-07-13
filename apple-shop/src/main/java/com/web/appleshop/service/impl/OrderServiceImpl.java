@@ -4,6 +4,7 @@ import com.web.appleshop.dto.PaymentDto;
 import com.web.appleshop.dto.projection.OrderSummaryProjection;
 import com.web.appleshop.dto.request.*;
 import com.web.appleshop.dto.response.OrderUserResponse;
+import com.web.appleshop.dto.response.UserOrderDetailResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.dto.response.admin.OrderSummaryV2Dto;
 import com.web.appleshop.entity.*;
@@ -17,8 +18,8 @@ import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.*;
 import com.web.appleshop.specification.OrderSpecification;
+import com.web.appleshop.exception.IllegalArgumentException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +30,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -193,6 +196,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public UserOrderDetailResponse getOrderDetailByIdForUser(Integer id) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Order order = orderRepository.findOrderByIdAndCreatedBy(id, user).orElseThrow(
+                () -> new BadRequestException("Order not found with id: " + id)
+        );
+        return mapToUserOrderDetailResponse(order);
+    }
+
+    @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public Page<OrderUserResponse> searchOrdersForUser(UserOrderSearchCriteria criteria, Pageable pageable) {
         Specification<Order> spec = orderSpecification.buildSpecification(criteria);
@@ -300,6 +312,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public Order getOrderById(Integer orderId) {
         return orderRepository.findOrderById(orderId).orElseThrow(
                 () -> new NotFoundException("Không tồn tại đơn hàng có mã #" + orderId)
@@ -443,6 +457,33 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.save(order);
     }
 
+    private UserOrderDetailResponse mapToUserOrderDetailResponse(Order order) {
+        UserOrderDetailResponse userOrderDetailResponse = new UserOrderDetailResponse();
+        BeanUtils.copyProperties(order, userOrderDetailResponse);
+        userOrderDetailResponse.setOrderDetails(order.getOrderDetails().stream()
+                .map(this::convertOrderDetailToOrderDetailDto)
+                .collect(Collectors.toSet()));
+        if (order.getProductPromotion() != null) {
+            userOrderDetailResponse.setProductProductPromotion(
+                    new UserOrderDetailResponse.PromotionProductDto(
+                            order.getProductPromotion().getId(),
+                            order.getProductPromotion().getName(),
+                            order.getProductPromotion().getCode()
+                    )
+            );
+        }
+        if (order.getShippingPromotion() != null) {
+            userOrderDetailResponse.setShippingShippingPromotion(
+                    new UserOrderDetailResponse.PromotionShippingDto(
+                            order.getShippingPromotion().getId(),
+                            order.getShippingPromotion().getName(),
+                            order.getShippingPromotion().getCode()
+                    )
+            );
+        }
+        return userOrderDetailResponse;
+    }
+
     private OrderDetail createOrderDetailFromStock(Stock stock, Integer quantity, Order order) {
         OrderDetail orderDetail = new OrderDetail();
         orderDetail.setOrder(order);
@@ -535,6 +576,9 @@ public class OrderServiceImpl implements OrderService {
             } else {
                 throw new BadRequestException("Mã giảm giá sản phẩm không hợp lệ hoặc đơn hàng không đủ điều kiện.");
             }
+        } else {
+            order.setProductPromotion(null);
+            order.setProductDiscountAmount(BigDecimal.ZERO);
         }
 
         // Apply shipping promotion
@@ -550,6 +594,9 @@ public class OrderServiceImpl implements OrderService {
             } else {
                 throw new BadRequestException("Mã giảm giá vận chuyển không hợp lệ hoặc đơn hàng không đủ điều kiện.");
             }
+        } else {
+            order.setShippingPromotion(null);
+            order.setShippingDiscountAmount(BigDecimal.ZERO);
         }
     }
 

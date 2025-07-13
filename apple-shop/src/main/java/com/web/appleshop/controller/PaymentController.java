@@ -157,7 +157,7 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPAYPALOrderWithPromotion(
             HttpServletRequest request,
             @Valid @RequestBody UserCreateOrderWithPromotionRequest orderRequest) {
-        Order order = orderService.createOrderWithPromotion(orderRequest, PaymentType.VNPAY);
+        Order order = orderService.createOrderWithPromotion(orderRequest, PaymentType.PAYPAL);
 
         PaymentDto.PayPalResponse payPalResponse = payPalService.createPayment(
                 order.getFinalTotal().doubleValue(),

@@ -32,6 +32,7 @@ public class CartItemResponse implements Serializable {
         Integer id;
         String name;
         String description;
+        Integer categoryId;
     }
 
     /**

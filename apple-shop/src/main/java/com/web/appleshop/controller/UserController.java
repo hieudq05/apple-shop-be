@@ -3,6 +3,7 @@ package com.web.appleshop.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.ChangePasswordDto;
 import com.web.appleshop.dto.request.UserUpdateDto;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.exception.BadRequestException;
@@ -35,5 +36,11 @@ class UserController {
     ) {
         userService.updateUser(user, imageFile);
         return ResponseEntity.ok(ApiResponse.success(null, "Update user info successfully"));
+    }
+
+    @PostMapping("change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) {
+        userService.changePassword(changePasswordDto);
+        return ResponseEntity.ok(ApiResponse.success(null, "Change password successfully"));
     }
 }

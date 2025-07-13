@@ -2,6 +2,7 @@ package com.web.appleshop.service.impl;
 
 import com.web.appleshop.dto.projection.UserAdminSummaryInfo;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.ChangePasswordDto;
 import com.web.appleshop.dto.request.UserSearchCriteria;
 import com.web.appleshop.dto.request.UserUpdateDto;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
@@ -21,9 +22,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.web.appleshop.exception.IllegalArgumentException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -36,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UploadUtils uploadUtils;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails findByEmail(String email) {
@@ -112,7 +116,13 @@ public class UserServiceImpl implements UserService {
         } else {
             user.setImage(userUpdateDto.getImage());
         }
-        return userRepository.save(user);
+
+        try {
+            user = userRepository.save(user);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new org.springframework.dao.DataIntegrityViolationException("Số điện thoại đã tồn tại");
+        }
+        return user;
     }
 
     @Override
@@ -137,6 +147,26 @@ public class UserServiceImpl implements UserService {
         );
         user.setEnabled(!user.getEnabled());
         return userRepository.save(user);
+    }
+
+    @Override
+    public void changePassword(ChangePasswordDto changePasswordDto) {
+        if (!changePasswordDto.getConfirmPassword().equals(changePasswordDto.getNewPassword())) {
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp với mật khẩu mới");
+        }
+
+        if (changePasswordDto.getNewPassword().equals(changePasswordDto.getOldPassword())) {
+            throw new IllegalArgumentException("Mật khẩu mới không được trùng với mật khẩu cũ");
+        }
+
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!passwordEncoder.matches(changePasswordDto.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu cũ không đúng");
+        }
+
+        user.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+
+        userRepository.save(user);
     }
 
     private Specification<User> buildSpecification(UserSearchCriteria criteria) {

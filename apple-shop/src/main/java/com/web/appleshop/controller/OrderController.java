@@ -4,6 +4,7 @@ import com.web.appleshop.dto.request.UserOrderSearchCriteria;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.OrderUserResponse;
 import com.web.appleshop.dto.response.PageableResponse;
+import com.web.appleshop.dto.response.UserOrderDetailResponse;
 import com.web.appleshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,7 +33,13 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orders.getContent(), "Get orders successfully", pageableResponse));
     }
 
-    @GetMapping("me/search")
+    @GetMapping("{orderId}")
+    public ResponseEntity<ApiResponse<UserOrderDetailResponse>> getOrderDetailForUser(@PathVariable Integer orderId) {
+        UserOrderDetailResponse order = orderService.getOrderDetailByIdForUser(orderId);
+        return ResponseEntity.ok(ApiResponse.success(order, "Get order successfully"));
+    }
+
+    @PostMapping("search")
     public ResponseEntity<ApiResponse<List<OrderUserResponse>>> searchOrdersForUser(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
