@@ -80,6 +80,9 @@ public class ProductSpecification {
 
                 // Promotion filters
                 addPromotionFilter(adminCriteria.getPromotionIds(), root, criteriaBuilder, predicates);
+
+                // Is deleted filters
+                addIsDeletedFilter(adminCriteria.getIsDeleted(), root, criteriaBuilder, predicates);
             }
 
             query.distinct(true);
@@ -155,6 +158,15 @@ public class ProductSpecification {
     private static void addNameFilter(String name, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
         if (StringUtils.hasText(name)) {
             predicates.add(cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
+    }
+
+    /**
+     * Add is deleted filter
+     */
+    private static void addIsDeletedFilter(Boolean isDeleted, Root<Product> root, CriteriaBuilder cb, List<Predicate> predicates) {
+        if (isDeleted != null) {
+            predicates.add(cb.equal(root.get("isDeleted"), isDeleted));
         }
     }
 

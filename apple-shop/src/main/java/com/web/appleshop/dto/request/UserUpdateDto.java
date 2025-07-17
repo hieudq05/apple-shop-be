@@ -1,7 +1,7 @@
 package com.web.appleshop.dto.request;
 
 import jakarta.validation.constraints.*;
-import lombok.Value;
+import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
 import java.io.Serializable;
@@ -10,7 +10,10 @@ import java.time.LocalDate;
 /**
  * DTO for {@link com.web.appleshop.entity.User}
  */
-@Value
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserUpdateDto implements Serializable {
     @Pattern(regexp = "^(0|\\+84)(\\s|\\.)?((3[2-9])|(5[689])|(7[06-9])|(8[1-689])|(9[0-46-9]))(\\d)(\\s|\\.)?(\\d{3})(\\s|\\.)?(\\d{3})$", message = "Số điện thoại không đúng định dạng")
     String phone;

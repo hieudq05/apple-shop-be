@@ -114,11 +114,13 @@ public class CategoryServiceImpl implements CategoryService {
                 category.getImage(),
                 category.getProducts().stream().limit(4).sorted(
                         (p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt())
+                ).filter(
+                        product -> product.getIsDeleted() == false
                 ).map(product ->
-                new CategoryWProductResponse.ProductInfo(
-                        product.getId(),
-                        product.getName()
-                )).toList().toArray(new CategoryWProductResponse.ProductInfo[0])
+                        new CategoryWProductResponse.ProductInfo(
+                                product.getId(),
+                                product.getName()
+                        )).toList().toArray(new CategoryWProductResponse.ProductInfo[0])
         );
     }
 }

@@ -2,8 +2,8 @@ package com.web.appleshop.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.web.appleshop.dto.request.CreateProductRequest;
 import com.web.appleshop.dto.request.AdminProductSearchCriteria;
+import com.web.appleshop.dto.request.CreateProductRequest;
 import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.dto.response.ValidationErrorDetail;
@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +51,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductPhotoRepository productPhotoRepository;
     private final InstancePropertyRepository instancePropertyRepository;
     private final UploadUtils uploadUtils;
+    private final OrderDetailRepository orderDetailRepository;
 
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
@@ -418,7 +420,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductAdminListDto> getAllProductsForAdminV2(Pageable pageable) {
         Specification<Product> spec = ProductSpecification.createSpecification(
-                AdminProductSearchCriteria.builder().build()
+                AdminProductSearchCriteria.builder().isDeleted(false).build()
         );
         Page<Product> products = productRepository.findAll(spec, pageable);
         return products.map(this::convertProductToProductAdminListDto);
@@ -453,12 +455,35 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
-    public void deleteProduct(Integer categoryId, Integer productId) {
+    public void toggleDeleteProduct(Integer categoryId, Integer productId) {
         Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
                 () -> new NotFoundException("Sản phẩm với id: " + productId + " và danh mục với id: " + categoryId + " không tồn tại.")
         );
-        product.setIsDeleted(true);
+        product.setIsDeleted(!product.getIsDeleted());
         productRepository.save(product);
+    }
+
+    @Override
+    public Page<Map<String, Object>> getTopProductSelling(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderDetailRepository.getTopSellingProducts(pageable, fromDate, toDate);
+    }
+
+    @Override
+    public Page<Map<String, Object>> getSaleByCategory(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate) {
+        return productRepository.getSalesByCategory(
+                pageable,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
+    }
+
+    @Override
+    public Page<Map<String, Object>> getSaleByColor(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate) {
+        return productRepository.getSalesByColor(
+                pageable,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
     }
 
     public ProductUserResponse convertProductToProductUserResponse(Product product) {
@@ -470,7 +495,7 @@ public class ProductServiceImpl implements ProductService {
             stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDto));
         }
 
-        return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos);
+        return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos, product.getCategory().getId());
     }
 
     public ProductAdminListDto convertProductToProductAdminListDto(Product product) {

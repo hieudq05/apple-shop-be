@@ -41,7 +41,7 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(productUserResponse, "Get product successfully"));
     }
 
-    @GetMapping("search")
+    @PostMapping("search")
     public ResponseEntity<ApiResponse<List<ProductUserResponse>>> searchProducts(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,

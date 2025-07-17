@@ -9,6 +9,7 @@ import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.dto.response.admin.UserAdminInfoDto;
 import com.web.appleshop.dto.response.admin.UserAdminSummaryDto;
 import com.web.appleshop.entity.User;
+import com.web.appleshop.exception.IllegalArgumentException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.RoleRepository;
 import com.web.appleshop.repository.UserRepository;
@@ -26,10 +27,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.web.appleshop.exception.IllegalArgumentException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -104,7 +105,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile) {
+    public UserUpdateDto updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         user.setFirstName(userUpdateDto.getFirstName());
         user.setLastName(userUpdateDto.getLastName());
@@ -122,7 +123,7 @@ public class UserServiceImpl implements UserService {
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             throw new org.springframework.dao.DataIntegrityViolationException("Số điện thoại đã tồn tại");
         }
-        return user;
+        return mapToUserUpdateDto(user);
     }
 
     @Override
@@ -169,6 +170,34 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Override
+    public Long getNumberOfNewUsers(LocalDateTime fromDate, LocalDateTime toDate) {
+        return userRepository.getNewUsersCount(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
+    }
+
+    @Override
+    public Page<Map<String, Object>> getTopUserByPrice(Integer limit, LocalDateTime fromDate, LocalDateTime toDate) {
+        Pageable pageable = Pageable.ofSize(limit == null ? 6 : limit);
+        return userRepository.getTopCustomersByPrice(
+                pageable,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
+    }
+
+    @Override
+    public Page<Map<String, Object>> getTopUserByOrderCount(Integer limit, LocalDateTime fromDate, LocalDateTime toDate) {
+        Pageable pageable = Pageable.ofSize(limit == null ? 6 : limit);
+        return userRepository.getTopCustomersByOrderCount(
+                pageable,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
+    }
+
     private Specification<User> buildSpecification(UserSearchCriteria criteria) {
         Specification<User> spec = UserSpecification.createSpecification(criteria);
 
@@ -182,6 +211,16 @@ public class UserServiceImpl implements UserService {
 //        }
 
         return spec;
+    }
+
+    private UserUpdateDto mapToUserUpdateDto(User user) {
+        return UserUpdateDto.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phone(user.getPhone())
+                .birth(user.getBirth())
+                .image(user.getImage())
+                .build();
     }
 
     private UserAdminInfoDto convertToUserAdminInfoDto(User user) {

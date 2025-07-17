@@ -7,6 +7,7 @@ import com.web.appleshop.dto.response.OrderUserResponse;
 import com.web.appleshop.dto.response.UserOrderDetailResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.dto.response.admin.OrderSummaryV2Dto;
+import com.web.appleshop.dto.response.statistics.OrderTotalRevenue;
 import com.web.appleshop.entity.Order;
 import com.web.appleshop.entity.OrderDetail;
 import com.web.appleshop.enums.OrderStatus;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -53,4 +55,17 @@ public interface OrderService {
     Order createOrderWithPromotion(UserCreateOrderWithPromotionRequest orderRequest, PaymentType paymentType);
 
     Order createOrderWithPromotionForAdmin(AdminCreateOrderRequest orderRequest);
+
+    /**
+     * Statistics
+     */
+    BigDecimal getOrderTotalRevenue(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate);
+
+    BigDecimal getAllOrderTotalRevenue(LocalDateTime fromDate, LocalDateTime toDate);
+
+    Long getNumberOfOrders(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate);
+
+    Long getAllNumberOfOrders(LocalDateTime fromDate, LocalDateTime toDate);
+
+    Long getNumberOfProductsSold(LocalDateTime fromDate, LocalDateTime toDate);
 }

@@ -1,10 +1,7 @@
 package com.web.appleshop.controller;
 
 import com.web.appleshop.dto.GoogleInfo;
-import com.web.appleshop.dto.request.GgTokenRequest;
-import com.web.appleshop.dto.request.LoginRequest;
-import com.web.appleshop.dto.request.OtpValidationRequest;
-import com.web.appleshop.dto.request.RegisterRequest;
+import com.web.appleshop.dto.request.*;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.AuthenticationResponse;
 import com.web.appleshop.dto.response.OtpResponse;
@@ -165,8 +162,9 @@ public class AuthController {
     }
 
     @PostMapping("logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestParam String refreshToken) {
-        String token = refreshToken.substring(7);
+    public ResponseEntity<ApiResponse<String>> logout(@RequestBody LogoutRequest refreshToken) {
+        String token = refreshToken.getRefreshToken().substring(7);
+        System.out.println(token);
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (jwtService.extractUsername(token).equals(user.getEmail())) {
             jwtService.deleteRefreshToken(token);

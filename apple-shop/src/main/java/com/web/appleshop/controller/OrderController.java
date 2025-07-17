@@ -8,7 +8,9 @@ import com.web.appleshop.dto.response.UserOrderDetailResponse;
 import com.web.appleshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +24,12 @@ public class OrderController {
 
     @GetMapping("me")
     public ResponseEntity<ApiResponse<List<OrderUserResponse>>> getOrdersForUser(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
-        Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(
+                page != null ? page : 0,
+                size != null ? size : 6,
+                sort
+        );
         Page<OrderUserResponse> orders = orderService.getOrdersForUser(pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 orders.getNumber(),

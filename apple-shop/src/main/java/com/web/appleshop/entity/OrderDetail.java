@@ -54,10 +54,10 @@ public class OrderDetail {
     @Column(name = "color_name", nullable = false, length = 50)
     private String colorName;
 
-    @Size(max = 50)
+    @Size(max = 550)
     @NotNull
     @Nationalized
-    @Column(name = "version_name", nullable = false, length = 50)
+    @Column(name = "version_name", nullable = false, length = 550)
     private String versionName;
 
     @NotNull

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public interface ProductService {
@@ -27,5 +28,11 @@ public interface ProductService {
 
     ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId);
 
-    void deleteProduct(Integer categoryId, Integer productId);
+    void toggleDeleteProduct(Integer categoryId, Integer productId);
+
+    Page<Map<String, Object>> getTopProductSelling(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate);
+
+    Page<Map<String, Object>> getSaleByCategory(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate);
+
+    Page<Map<String, Object>> getSaleByColor(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate);
 }

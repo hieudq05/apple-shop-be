@@ -30,12 +30,11 @@ class UserController {
     }
 
     @PatchMapping(path = "me", consumes = "multipart/form-data")
-    public ResponseEntity<ApiResponse<String>> updateUserInfo(
+    public ResponseEntity<ApiResponse<UserUpdateDto>> updateUserInfo(
             @RequestPart @Valid UserUpdateDto user,
             @RequestPart(required = false) MultipartFile imageFile
     ) {
-        userService.updateUser(user, imageFile);
-        return ResponseEntity.ok(ApiResponse.success(null, "Update user info successfully"));
+        return ResponseEntity.ok(ApiResponse.success(userService.updateUser(user, imageFile), "Update user info successfully"));
     }
 
     @PostMapping("change-password")

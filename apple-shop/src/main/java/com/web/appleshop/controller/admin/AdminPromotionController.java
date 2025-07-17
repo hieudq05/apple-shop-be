@@ -48,7 +48,7 @@ public class AdminPromotionController {
         );
     }
 
-    @GetMapping("search")
+    @PostMapping("search")
     public ResponseEntity<ApiResponse<List<AdminPromotionDto>>> searchPromotions(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,

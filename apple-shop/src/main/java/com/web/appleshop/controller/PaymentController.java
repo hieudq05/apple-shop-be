@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @RestController
 @RequestMapping("payments")
@@ -77,6 +76,24 @@ public class PaymentController {
                 paymentUrl
         );
 
+        return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
+    }
+
+    @PostMapping("vnpay/create-payment-v1/order/{orderId}")
+    public ResponseEntity<?> createVNPAYOrderWithPromotion(HttpServletRequest request, @PathVariable Integer orderId) {
+        Order order = orderService.getOrderById(orderId);
+
+        String paymentUrl = vnPayService.createPaymentUrl(
+                request,
+                order.getFinalTotal().longValue(),
+                "Thanh toan don hang #" + order.getId()
+        );
+
+        PaymentDto.VnPayResponse response = new PaymentDto.VnPayResponse(
+                "00",
+                "Tạo đường dẫn thanh toán thành công",
+                paymentUrl
+        );
         return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
     }
 
@@ -171,6 +188,27 @@ public class PaymentController {
         );
 
         return ResponseEntity.ok(ApiResponse.success(payPalResponse, "Create payment successfully"));
+    }
+
+    @PostMapping("paypal/create-payment-v1/order/{orderId}")
+    public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPAYPALOrderWithPromotion(HttpServletRequest request, @PathVariable Integer orderId) {
+        Order order = orderService.getOrderById(orderId);
+
+        PaymentDto.PayPalResponse payPalResponse = payPalService.createPayment(
+                order.getFinalTotal().doubleValue(),
+                "USD",
+                "paypal",
+                "sale",
+                "Payment for order #" + order.getId(),
+                publicBaseUrl + "/payments/paypal/cancel",
+                publicBaseUrl + "/payments/paypal/success",
+                order.getId()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(
+                payPalResponse,
+                "Create payment successfully"
+        ));
     }
 
     @PostMapping("paypal/payment-url")

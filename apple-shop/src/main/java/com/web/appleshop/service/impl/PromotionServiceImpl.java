@@ -171,7 +171,7 @@ public class PromotionServiceImpl implements PromotionService {
             }
         } else if (promotion.getPromotionType() == PromotionType.SHIPPING_DISCOUNT) {
             BigDecimal maxDiscountAmount = promotion.getMaxDiscountAmount() != null ? promotion.getMaxDiscountAmount() : amount;
-            discountAmount = amount.multiply(promotion.getValue().divide(new BigDecimal("100")));
+            discountAmount = maxDiscountAmount.multiply(promotion.getValue().divide(new BigDecimal("100")));
         }
 
         return discountAmount;

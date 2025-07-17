@@ -11,6 +11,7 @@ import com.web.appleshop.entity.*;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.exception.IllegalArgumentException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.OrderRepository;
@@ -18,7 +19,6 @@ import com.web.appleshop.repository.StockRepository;
 import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.*;
 import com.web.appleshop.specification.OrderSpecification;
-import com.web.appleshop.exception.IllegalArgumentException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,7 +33,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -198,9 +197,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public UserOrderDetailResponse getOrderDetailByIdForUser(Integer id) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Order order = orderRepository.findOrderByIdAndCreatedBy(id, user).orElseThrow(
-                () -> new BadRequestException("Order not found with id: " + id)
-        );
+        Order order = orderRepository.
+                findOrderByIdAndCreatedBy(id, user).orElseThrow(
+                        () -> new BadRequestException("Order not found with id: " + id)
+                );
         return mapToUserOrderDetailResponse(order);
     }
 
@@ -247,6 +247,11 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus oldStatus = order.getStatus();
 
         order.setStatus(status);
+        if (status == OrderStatus.PROCESSING) {
+            User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            order.setApproveAt(LocalDateTime.now());
+            order.setApproveBy(user);
+        }
         String mailSubject = "Cập nhật trạng thái đơn hàng #" + (orderId);
         mailService.sendUpdateOrderStatusMail(order.getEmail(), mailSubject, status, orderId, oldStatus);
 
@@ -313,7 +318,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public Order getOrderById(Integer orderId) {
         return orderRepository.findOrderById(orderId).orElseThrow(
                 () -> new NotFoundException("Không tồn tại đơn hàng có mã #" + orderId)
@@ -457,6 +461,58 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.save(order);
     }
 
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public BigDecimal getOrderTotalRevenue(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.getTotalRevenue(
+                status == null ? OrderStatus.DELIVERED : status,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public BigDecimal getAllOrderTotalRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.getTotalRevenue(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public Long getNumberOfOrders(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.countOrdersByCreatedAtBetweenAndStatus(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate,
+                status == null ? OrderStatus.DELIVERED : status
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public Long getAllNumberOfOrders(LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.countOrdersByCreatedAtBetween(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public Long getNumberOfProductsSold(LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.countProductsSold(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
     private UserOrderDetailResponse mapToUserOrderDetailResponse(Order order) {
         UserOrderDetailResponse userOrderDetailResponse = new UserOrderDetailResponse();
         BeanUtils.copyProperties(order, userOrderDetailResponse);
@@ -588,6 +644,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (promotionService.isPromotionValid(shippingPromotion, order.getSubtotal())) {
                 BigDecimal discountAmount = promotionService.calculateDiscountAmount(shippingPromotion, order.getShippingFee());
+                log.info("Applying shipping promotion: {} - Giảm: {}", shippingPromotionCode, discountAmount);
                 order.setShippingPromotion(shippingPromotion);
                 order.setShippingDiscountAmount(discountAmount);
                 promotionService.incrementUsageCount(shippingPromotion);
@@ -606,8 +663,7 @@ public class OrderServiceImpl implements OrderService {
                 .add(order.getShippingFee())
                 .subtract(order.getShippingDiscountAmount());
 
-        order.setFinalTotal(finalTotal);
-        order.setShippingDiscountAmount(order.getProductDiscountAmount().add(order.getShippingDiscountAmount()));
+        order.setFinalTotal(finalTotal.add(finalTotal.multiply(BigDecimal.valueOf(0.1))));
     }
 
     private PaymentDto.VnPayResponse getVnPayResponse(HttpServletRequest request, Order order) {
@@ -657,6 +713,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getCreatedAt(),
                 order.getPaymentType(),
                 order.getStatus(),
+                order.getFinalTotal(),
                 order.getOrderDetails().stream().map(this::convertOrderDetailToOrderDetailDto).collect(Collectors.toSet()),
                 order.getShippingTrackingCode()
         );
@@ -665,7 +722,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderUserResponse.OrderDetailDto convertOrderDetailToOrderDetailDto(OrderDetail orderDetail) {
         return new OrderUserResponse.OrderDetailDto(
                 orderDetail.getId(),
-                new OrderUserResponse.OrderDetailDto.ProductDto(orderDetail.getProduct().getId()),
+                new OrderUserResponse.OrderDetailDto.ProductDto(orderDetail.getProduct() == null ? null : orderDetail.getProduct().getId()),
                 orderDetail.getProductName(),
                 orderDetail.getQuantity(),
                 orderDetail.getPrice(),

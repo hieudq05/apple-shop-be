@@ -14,6 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface UserService {
@@ -31,11 +34,20 @@ public interface UserService {
 
     Page<UserAdminSummaryDto> searchUsers(UserSearchCriteria criteria, Pageable pageable);
 
-    User updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile);
+    UserUpdateDto updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile);
 
     User setRoleforUser(Integer userId, Set<String> roles);
 
     User toggleUserEnabled(Integer userId);
 
     void changePassword(ChangePasswordDto changePasswordDto);
+
+    /**
+     * Statistic
+     */
+    Long getNumberOfNewUsers(LocalDateTime fromDate, LocalDateTime toDate);
+
+    Page<Map<String, Object>> getTopUserByPrice(Integer limit, LocalDateTime fromDate, LocalDateTime toDate);
+
+    Page<Map<String, Object>> getTopUserByOrderCount(Integer limit, LocalDateTime fromDate, LocalDateTime toDate);
 }
