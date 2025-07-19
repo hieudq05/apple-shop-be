@@ -1,7 +1,6 @@
 package com.web.appleshop.service.impl;
 
 import com.web.appleshop.dto.request.AdminColorRequest;
-import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.UserReviewDto;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
 import com.web.appleshop.entity.Color;
@@ -47,25 +46,25 @@ public class ColorServiceImpl implements ColorService {
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @Transactional
-    public Color createColor(AdminColorRequest request) {
+    public ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse createColor(AdminColorRequest request) {
         Color color = new Color();
         color.setName(request.getName());
         color.setHexCode(request.getHexCode());
-        return colorRepository.save(color);
+        return convertColorToColorAdmin(colorRepository.save(color));
     }
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @Transactional
-    public Color updateColor(Integer colorId, AdminColorRequest request) {
+    public ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse updateColor(Integer colorId, AdminColorRequest request) {
         Color color = colorRepository.findById(colorId).orElseThrow(
                 () -> new IllegalArgumentException("Không tìm thấy màu.")
         );
         color.setName(request.getName());
         color.setHexCode(request.getHexCode());
-        return colorRepository.save(
+        return convertColorToColorAdmin(colorRepository.save(
                 color
-        );
+        ));
     }
 
     public UserReviewDto.StockDto.ColorDto mapToColorDto(Color color) {

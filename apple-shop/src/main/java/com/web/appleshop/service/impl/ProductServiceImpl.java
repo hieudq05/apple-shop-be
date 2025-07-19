@@ -34,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -106,21 +107,34 @@ public class ProductServiceImpl implements ProductService {
 
         product = productRepository.save(product);
 
+        Set<CreateProductRequest.CreateProductStockRequest.CreateProductColorRequest> colorRequests = new LinkedHashSet<>();
         Set<Stock> stocks = new LinkedHashSet<>();
         for (CreateProductRequest.CreateProductStockRequest stockRequest : request.getStocks()) {
             Color color;
-            if (stockRequest.getColor().getId() != null) {
+            if (stockRequest.getColor().getId() != null && colorRequests.stream().anyMatch(colorRequest -> colorRequest.getName().equals(stockRequest.getColor().getName()))) {
                 color = colorRepository.findById(stockRequest.getColor().getId()).orElseThrow(() -> new NotFoundException("Color not found with id: " + stockRequest.getColor().getId()));
             } else {
                 color = Color.builder().name(stockRequest.getColor().getName()).hexCode(stockRequest.getColor().getHexCode()).build();
+                color = colorRepository.save(color);
+                colorRequests.add(stockRequest.getColor());
             }
-            color = colorRepository.save(color);
 
             Stock stock = new Stock();
             BeanUtils.copyProperties(stockRequest, stock);
             stock.setProduct(product);
 
-            Set<InstanceProperty> instanceProperties = stockRequest.getInstanceProperties().stream().map(instanceRequest -> {
+            // filter instance duplicate
+            Collection<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> filtered = stockRequest.getInstanceProperties().stream()
+                    .collect(Collectors.toMap(
+                            CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest::getName,
+                            Function.identity(), // value: chính object đó
+                            (existing, replacement) -> existing
+                    ))
+                    .values();
+
+            Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> instanceRequests = new HashSet<>(filtered);
+
+            Set<InstanceProperty> instanceProperties = instanceRequests.stream().map(instanceRequest -> {
                 InstanceProperty instanceProperty;
                 if (instanceRequest.getId() != null) {
                     instanceProperty = instancePropertyRepository.findById(instanceRequest.getId())

@@ -27,4 +27,13 @@ class AdminPaymentController {
                 ApiResponse.success(response, "Create payment successfully")
         );
     }
+
+    @PostMapping("paypal/payment-url")
+    public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> getPaypalPaymentUrl(
+            HttpServletRequest request,
+            @RequestParam Integer orderId
+    ) {
+        PaymentDto.PayPalResponse response = orderService.createPaypalPaymentUrl(orderId, request);
+        return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
+    }
 }

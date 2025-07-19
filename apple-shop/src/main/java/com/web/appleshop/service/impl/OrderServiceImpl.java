@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -53,6 +54,9 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final OrderSpecification orderSpecification;
     private final PromotionService promotionService;
+    private final PayPalService payPalService;
+    @Value("${public.base.url}")
+    private String publicBaseUrl;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -343,6 +347,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public PaymentDto.PayPalResponse createPaypalPaymentUrl(Integer orderId, HttpServletRequest request) {
+        Order order = getOrderById(orderId);
+        return getPaypalPaymentUrl(order, request);
+    }
+
+    @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     @Transactional
     public Order createOrderWithPromotion(UserCreateOrderWithPromotionRequest orderRequest, PaymentType paymentType) {
@@ -407,7 +417,10 @@ public class OrderServiceImpl implements OrderService {
     public Order createOrderWithPromotionForAdmin(AdminCreateOrderRequest orderRequest) {
         log.info("Bắt đầu tạo đơn hàng có mã giảm giá cho admin");
 
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = orderRequest.getCreatedByUserId() != null ?
+                userRepository.findById(orderRequest.getCreatedByUserId()).orElseThrow(
+                        () -> new NotFoundException("Không tìm thấy người dùng.")
+                ) : (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Order order = new Order();
         order.setCreatedBy(user);
@@ -681,6 +694,23 @@ public class OrderServiceImpl implements OrderService {
                 "00",
                 "Tạo đường dẫn thanh toán thành công",
                 paymentUrl
+        );
+    }
+
+    private PaymentDto.PayPalResponse getPaypalPaymentUrl(Order order, HttpServletRequest request) {
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BadRequestException("Đơn hàng không được thanh toán vì đã được thanh toán hoặc đã được hủy.");
+        }
+
+        return payPalService.createPayment(
+                order.getFinalTotal().doubleValue(),
+                "USD",
+                "paypal",
+                "sale",
+                "Payment for order #" + order.getId(),
+                publicBaseUrl + "/payments/paypal/cancel",
+                publicBaseUrl + "/payments/paypal/success",
+                order.getId()
         );
     }
 

@@ -62,7 +62,11 @@ public class AdminOrderController {
             @RequestParam(required = false) Integer size
     ) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(
+                page  != null ? page : 0,
+                size != null ? size : 6,
+                sort
+        );
         Page<OrderSummaryProjection> orderSummaryPage = orderService.getOrdersSummaryForAdmin(pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 orderSummaryPage.getNumber(),

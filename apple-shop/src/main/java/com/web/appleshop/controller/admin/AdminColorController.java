@@ -38,18 +38,16 @@ class AdminColorController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> createColor(@Valid @RequestBody AdminColorRequest request) {
-        colorService.createColor(request);
+    public ResponseEntity<ApiResponse<ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse>> createColor(@Valid @RequestBody AdminColorRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(null, "Create color successfully")
+                ApiResponse.success(colorService.createColor(request), "Create color successfully")
         );
     }
 
     @PutMapping("{colorId}")
-    public ResponseEntity<ApiResponse<String>> updateColor(@PathVariable Integer colorId, @RequestBody AdminColorRequest request) {
-        colorService.updateColor(colorId, request);
+    public ResponseEntity<ApiResponse<ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse>> updateColor(@PathVariable Integer colorId, @RequestBody AdminColorRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(null, "Update color successfully")
+                ApiResponse.success(colorService.updateColor(colorId, request), "Update color successfully")
         );
     }
 

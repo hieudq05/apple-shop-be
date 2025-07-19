@@ -212,7 +212,6 @@ public class PaymentController {
     }
 
     @PostMapping("paypal/payment-url")
-    @Transactional
     public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPayPalPaymentUrl(
             @RequestParam Integer orderId
     ) {

@@ -16,7 +16,7 @@ public interface ColorService {
 
     void deleteColor(Integer colorId);
 
-    Color createColor(AdminColorRequest request);
+    ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse createColor(AdminColorRequest request);
 
-    Color updateColor(Integer colorId, AdminColorRequest request);
+    ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse updateColor(Integer colorId, AdminColorRequest request);
 }

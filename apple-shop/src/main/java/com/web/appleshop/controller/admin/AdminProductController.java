@@ -78,7 +78,7 @@ public class AdminProductController {
         return ResponseEntity.ok(ApiResponse.success(null, "Delete product successfully"));
     }
 
-    @GetMapping("search")
+    @PostMapping("search")
     public ResponseEntity<ApiResponse<List<ProductAdminListDto>>> searchProduct(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,

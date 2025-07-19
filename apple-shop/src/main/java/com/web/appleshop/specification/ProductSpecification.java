@@ -136,10 +136,14 @@ public class ProductSpecification {
         if (hasReviews != null) {
             if (hasReviews) {
                 // Products that have reviews
-                predicates.add(cb.isNotEmpty(root.get("reviews")));
+                Fetch<Product, Stock> stockFetch = root.fetch("stocks", JoinType.LEFT);
+                stockFetch.fetch("reviews", JoinType.LEFT);
+                predicates.add(cb.equal(root.get("reviews"), true));
             } else {
                 // Products that don't have reviews
-                predicates.add(cb.isEmpty(root.get("reviews")));
+                Fetch<Product, Stock> stockFetch = root.fetch("stocks", JoinType.LEFT);
+                stockFetch.fetch("reviews", JoinType.LEFT);
+                predicates.add(cb.equal(root.get("reviews"), false));
             }
         }
 

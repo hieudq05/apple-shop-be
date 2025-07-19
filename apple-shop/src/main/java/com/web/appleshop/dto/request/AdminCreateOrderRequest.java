@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AdminCreateOrderRequest {
-    @NotNull(message = "Không được bỏ trống mã người dùng.")
     Integer createdByUserId;
 
     @NotNull(message = "Không được bỏ trống phương thức thanh toán.")
