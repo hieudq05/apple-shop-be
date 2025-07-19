@@ -17,7 +17,7 @@ import java.util.UUID;
 @Component
 public class UploadUtils {
     public static final String UPLOAD_DIR = "./uploads/";
-    public static final String[] ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif"};
+    public static final String[] ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"};
     public static final long MAX_FILE_SIZE = 1024 * 1024 * 20; // 20MB
     public static final long MAX_TOTAL_SIZE = 1024 * 1024 * 100; // 100MB
 
@@ -46,7 +46,7 @@ public class UploadUtils {
         }
 
         if (!isAllowedExtension(file.getOriginalFilename())) {
-            throw new IllegalArgumentException("Phần mở rộng của file ảnh không được hỗ trợ.");
+            throw new IllegalArgumentException("Phần mở rộng của file ảnh không được hỗ trợ." + file.getName() + file.getOriginalFilename());
         }
 
         if (!isAllowedSize(file.getSize())) {

@@ -46,7 +46,7 @@ public class Blog {
     private LocalDateTime updatedAt;
 
     @Nationalized
-    @Column(name = "Status", length = 50)
+    @Column(name = "status", length = 50)
     private String status;
 
     @ColumnDefault("0")

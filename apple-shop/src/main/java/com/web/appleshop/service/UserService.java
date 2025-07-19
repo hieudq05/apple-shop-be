@@ -2,6 +2,7 @@ package com.web.appleshop.service;
 
 import com.web.appleshop.dto.projection.UserAdminSummaryInfo;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.ChangePasswordDto;
 import com.web.appleshop.dto.request.UserSearchCriteria;
 import com.web.appleshop.dto.request.UserUpdateDto;
 import com.web.appleshop.dto.response.admin.ProductAdminResponse;
@@ -12,6 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface UserService {
     UserDetails findByEmail(String email);
@@ -28,5 +34,20 @@ public interface UserService {
 
     Page<UserAdminSummaryDto> searchUsers(UserSearchCriteria criteria, Pageable pageable);
 
-    User updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile);
+    UserUpdateDto updateUser(UserUpdateDto userUpdateDto, MultipartFile imageFile);
+
+    User setRoleforUser(Integer userId, Set<String> roles);
+
+    User toggleUserEnabled(Integer userId);
+
+    void changePassword(ChangePasswordDto changePasswordDto);
+
+    /**
+     * Statistic
+     */
+    Long getNumberOfNewUsers(LocalDateTime fromDate, LocalDateTime toDate);
+
+    Page<Map<String, Object>> getTopUserByPrice(Integer limit, LocalDateTime fromDate, LocalDateTime toDate);
+
+    Page<Map<String, Object>> getTopUserByOrderCount(Integer limit, LocalDateTime fromDate, LocalDateTime toDate);
 }

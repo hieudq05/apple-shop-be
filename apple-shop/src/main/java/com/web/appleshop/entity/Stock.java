@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.mapping.Join;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
@@ -59,5 +58,4 @@ public class Stock {
 
     @OneToMany(mappedBy = "stock")
     private Set<Review> reviews = new LinkedHashSet<>();
-
 }

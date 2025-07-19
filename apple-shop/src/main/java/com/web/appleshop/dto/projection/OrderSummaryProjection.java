@@ -3,6 +3,7 @@ package com.web.appleshop.dto.projection;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -20,6 +21,8 @@ public interface OrderSummaryProjection {
     OrderStatus getStatus();
 
     UserSummary getCreatedBy();
+
+    BigDecimal getFinalTotal();
 
     interface UserSummary {
         Integer getId();

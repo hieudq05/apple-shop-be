@@ -11,5 +11,6 @@ import lombok.experimental.FieldDefaults;
 public class CategoryInfoDto {
     Integer id;
     String name;
+    String description;
     String image;
 }

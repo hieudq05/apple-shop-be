@@ -11,9 +11,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     Optional<Page<Product>> findAllByCategory_Id(Integer categoryId, Pageable pageable);
@@ -49,4 +48,14 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     Optional<Page<Product>> findAllByCategory_IdAndIsDeleted(Integer categoryId, Boolean isDeleted, Pageable pageable);
 
     Optional<Product> findProductByIdAndCategory_IdAndIsDeleted(Integer id, Integer categoryId, Boolean isDeleted);
+
+    @Query("SELECT new map (p.category.id as categoryId, SUM(od.quantity) AS totalSold) FROM OrderDetail od JOIN od.product p JOIN od.order o " +
+            "WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status = 'DELIVERED' " +
+            "GROUP BY p.category.id ORDER BY SUM(od.quantity) DESC")
+    Page<Map<String, Object>> getSalesByCategory(Pageable pageable, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT new map (s.color.id as colorId, SUM(od.quantity) AS totalSold) FROM OrderDetail od JOIN od.stock s JOIN od.order o " +
+            "WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status = 'DELIVERED' " +
+            "GROUP BY s.color.id ORDER BY SUM(od.quantity) DESC")
+    Page<Map<String, Object>> getSalesByColor(Pageable pageable, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }

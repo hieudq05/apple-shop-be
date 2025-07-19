@@ -2,17 +2,16 @@ package com.web.appleshop.service.impl;
 
 import com.web.appleshop.dto.PaymentDto;
 import com.web.appleshop.dto.projection.OrderSummaryProjection;
-import com.web.appleshop.dto.request.AdminCreateOrderRequest;
-import com.web.appleshop.dto.request.AdminOrderSearchCriteria;
-import com.web.appleshop.dto.request.UserCreateOrderRequest;
-import com.web.appleshop.dto.request.UserOrderSearchCriteria;
+import com.web.appleshop.dto.request.*;
 import com.web.appleshop.dto.response.OrderUserResponse;
+import com.web.appleshop.dto.response.UserOrderDetailResponse;
 import com.web.appleshop.dto.response.admin.OrderAdminResponse;
 import com.web.appleshop.dto.response.admin.OrderSummaryV2Dto;
 import com.web.appleshop.entity.*;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 import com.web.appleshop.exception.BadRequestException;
+import com.web.appleshop.exception.IllegalArgumentException;
 import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.repository.CartItemRepository;
 import com.web.appleshop.repository.OrderRepository;
@@ -21,17 +20,18 @@ import com.web.appleshop.repository.UserRepository;
 import com.web.appleshop.service.*;
 import com.web.appleshop.specification.OrderSpecification;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -53,6 +53,10 @@ public class OrderServiceImpl implements OrderService {
     private final VnPayService vnPayService;
     private final UserRepository userRepository;
     private final OrderSpecification orderSpecification;
+    private final PromotionService promotionService;
+    private final PayPalService payPalService;
+    @Value("${public.base.url}")
+    private String publicBaseUrl;
 
     @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
@@ -195,6 +199,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public UserOrderDetailResponse getOrderDetailByIdForUser(Integer id) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Order order = orderRepository.
+                findOrderByIdAndCreatedBy(id, user).orElseThrow(
+                        () -> new BadRequestException("Order not found with id: " + id)
+                );
+        return mapToUserOrderDetailResponse(order);
+    }
+
+    @Override
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public Page<OrderUserResponse> searchOrdersForUser(UserOrderSearchCriteria criteria, Pageable pageable) {
         Specification<Order> spec = orderSpecification.buildSpecification(criteria);
@@ -237,6 +251,11 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus oldStatus = order.getStatus();
 
         order.setStatus(status);
+        if (status == OrderStatus.PROCESSING) {
+            User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            order.setApproveAt(LocalDateTime.now());
+            order.setApproveBy(user);
+        }
         String mailSubject = "Cập nhật trạng thái đơn hàng #" + (orderId);
         mailService.sendUpdateOrderStatusMail(order.getEmail(), mailSubject, status, orderId, oldStatus);
 
@@ -302,6 +321,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Order getOrderById(Integer orderId) {
         return orderRepository.findOrderById(orderId).orElseThrow(
                 () -> new NotFoundException("Không tồn tại đơn hàng có mã #" + orderId)
@@ -326,6 +346,339 @@ public class OrderServiceImpl implements OrderService {
         return getVnPayResponse(request, order);
     }
 
+    @Override
+    public PaymentDto.PayPalResponse createPaypalPaymentUrl(Integer orderId, HttpServletRequest request) {
+        Order order = getOrderById(orderId);
+        return getPaypalPaymentUrl(order, request);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @Transactional
+    public Order createOrderWithPromotion(UserCreateOrderWithPromotionRequest orderRequest, PaymentType paymentType) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<CartItem> cartItems = cartItemRepository.findCartItemsByUserId(user.getId());
+        if (cartItems.isEmpty()) {
+            throw new BadRequestException("Không có sản phẩm trong giỏ hàng.");
+        }
+
+        Order order = new Order();
+        BeanUtils.copyProperties(orderRequest, order);
+        order.setCreatedBy(user);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
+        order.setPaymentType(paymentType);
+        order.setShippingFee(BigDecimal.valueOf(40000));
+        order.setCountry("Việt Nam");
+
+        // Calculate subtotal first
+        BigDecimal subtotal = BigDecimal.ZERO;
+        Set<OrderDetail> orderDetails = new LinkedHashSet<>();
+
+        for (CartItem cartItem : cartItems) {
+            if (cartItem.getStock().getQuantity() < cartItem.getQuantity()) {
+                throw new IllegalArgumentException("Số lượng sản phẩm trong kho không đủ.");
+            }
+            if (cartItem.getQuantity() == 0) {
+                throw new IllegalArgumentException("Số lượng sản phẩm không hợp lệ.");
+            }
+            if (cartItem.getQuantity() > 10) {
+                throw new IllegalArgumentException("Bạn chỉ có thể mua 1 sản phẩm với số lượng tối đa 10. Hãy liên hệ với chúng tôi để có thể mua nhiều hơn.");
+            }
+
+            OrderDetail orderDetail = createOrderDetailFromCartItem(cartItem, order);
+            orderDetails.add(orderDetail);
+
+            // Update stock
+            cartItem.getStock().setQuantity(cartItem.getStock().getQuantity() - cartItem.getQuantity());
+            stockRepository.save(cartItem.getStock());
+
+            // Calculate subtotal
+            subtotal = subtotal.add(cartItem.getStock().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+
+            cartItemRepository.delete(cartItem);
+        }
+
+        order.setOrderDetails(orderDetails);
+        order.setSubtotal(subtotal);
+
+        // Apply promotions
+        applyPromotions(order, orderRequest.getProductPromotionCode(), orderRequest.getShippingPromotionCode());
+
+        // Calculate final total
+        calculateFinalTotal(order);
+
+        return orderRepository.save(order);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional
+    public Order createOrderWithPromotionForAdmin(AdminCreateOrderRequest orderRequest) {
+        log.info("Bắt đầu tạo đơn hàng có mã giảm giá cho admin");
+
+        User user = orderRequest.getCreatedByUserId() != null ?
+                userRepository.findById(orderRequest.getCreatedByUserId()).orElseThrow(
+                        () -> new NotFoundException("Không tìm thấy người dùng.")
+                ) : (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Order order = new Order();
+        order.setCreatedBy(user);
+        order.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        order.setStatus(orderRequest.getStatus());
+        order.setPaymentType(orderRequest.getPaymentType());
+        order.setFirstName(orderRequest.getCustomInfo().getFirstName());
+        order.setLastName(orderRequest.getCustomInfo().getLastName());
+        order.setEmail(orderRequest.getCustomInfo().getEmail());
+        order.setPhone(orderRequest.getCustomInfo().getPhone());
+        order.setAddress(orderRequest.getCustomInfo().getAddress());
+        order.setWard(orderRequest.getCustomInfo().getWard());
+        order.setDistrict(orderRequest.getCustomInfo().getDistrict());
+        order.setProvince(orderRequest.getCustomInfo().getProvince());
+        order.setCountry("Việt Nam");
+        order.setShippingFee(orderRequest.getShippingFee());
+
+        // Tạo order details và tính subtotal
+        Set<OrderDetail> orderDetails = new LinkedHashSet<>();
+        BigDecimal subtotal = BigDecimal.ZERO;
+
+        for (AdminCreateOrderRequest.OrderDetailRequest orderDetailRequest : orderRequest.getOrderDetails()) {
+            Stock stock = stockRepository.findById(orderDetailRequest.getStockId())
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy sản phẩm với ID: " + orderDetailRequest.getStockId()));
+
+            if (stock.getQuantity() < orderDetailRequest.getQuantity()) {
+                throw new BadRequestException("Không đủ hàng cho sản phẩm ID: " + orderDetailRequest.getStockId());
+            }
+
+            // Giảm số lượng trong kho
+            stock.setQuantity(stock.getQuantity() - orderDetailRequest.getQuantity());
+            stockRepository.save(stock);
+
+            // Tạo order detail
+            OrderDetail orderDetail = createOrderDetailFromStock(stock, orderDetailRequest.getQuantity(), order);
+            orderDetails.add(orderDetail);
+
+            // Tính subtotal
+            subtotal = subtotal.add(stock.getPrice().multiply(BigDecimal.valueOf(orderDetailRequest.getQuantity())));
+        }
+
+        order.setOrderDetails(orderDetails);
+        order.setSubtotal(subtotal);
+
+        // Áp dụng mã giảm giá
+        applyPromotionsForAdmin(order, orderRequest.getProductPromotionCode(), orderRequest.getShippingPromotionCode());
+
+        // Tính final total
+        calculateFinalTotal(order);
+
+        return orderRepository.save(order);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public BigDecimal getOrderTotalRevenue(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.getTotalRevenue(
+                status == null ? OrderStatus.DELIVERED : status,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public BigDecimal getAllOrderTotalRevenue(LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.getTotalRevenue(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public Long getNumberOfOrders(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.countOrdersByCreatedAtBetweenAndStatus(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate,
+                status == null ? OrderStatus.DELIVERED : status
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public Long getAllNumberOfOrders(LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.countOrdersByCreatedAtBetween(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    @Transactional(readOnly = true)
+    public Long getNumberOfProductsSold(LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderRepository.countProductsSold(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now() : toDate
+        );
+    }
+
+    private UserOrderDetailResponse mapToUserOrderDetailResponse(Order order) {
+        UserOrderDetailResponse userOrderDetailResponse = new UserOrderDetailResponse();
+        BeanUtils.copyProperties(order, userOrderDetailResponse);
+        userOrderDetailResponse.setOrderDetails(order.getOrderDetails().stream()
+                .map(this::convertOrderDetailToOrderDetailDto)
+                .collect(Collectors.toSet()));
+        if (order.getProductPromotion() != null) {
+            userOrderDetailResponse.setProductProductPromotion(
+                    new UserOrderDetailResponse.PromotionProductDto(
+                            order.getProductPromotion().getId(),
+                            order.getProductPromotion().getName(),
+                            order.getProductPromotion().getCode()
+                    )
+            );
+        }
+        if (order.getShippingPromotion() != null) {
+            userOrderDetailResponse.setShippingShippingPromotion(
+                    new UserOrderDetailResponse.PromotionShippingDto(
+                            order.getShippingPromotion().getId(),
+                            order.getShippingPromotion().getName(),
+                            order.getShippingPromotion().getCode()
+                    )
+            );
+        }
+        return userOrderDetailResponse;
+    }
+
+    private OrderDetail createOrderDetailFromStock(Stock stock, Integer quantity, Order order) {
+        OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setOrder(order);
+        orderDetail.setStock(stock);
+        orderDetail.setProduct(stock.getProduct());
+        orderDetail.setProductName(stock.getProduct().getName());
+        orderDetail.setQuantity(quantity);
+        orderDetail.setPrice(stock.getPrice());
+        orderDetail.setColorName(stock.getColor().getName());
+        orderDetail.setVersionName(stock.getInstanceProperties().stream()
+                .map(InstanceProperty::getName)
+                .collect(Collectors.joining(", ")));
+        orderDetail.setImageUrl(stock.getProductPhotos().stream()
+                .findFirst()
+                .map(ProductPhoto::getImageUrl)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh sản phẩm.")));
+        return orderDetail;
+    }
+
+    private void applyPromotionsForAdmin(Order order, String productPromotionCode, String shippingPromotionCode) {
+        // Khởi tạo giá trị mặc định
+        order.setProductDiscountAmount(BigDecimal.ZERO);
+        order.setShippingDiscountAmount(BigDecimal.ZERO);
+
+        // Áp dụng mã giảm giá sản phẩm
+        if (productPromotionCode != null && !productPromotionCode.trim().isEmpty()) {
+            Promotion productPromotion = promotionService.findValidPromotionByCode(
+                    productPromotionCode);
+
+            if (promotionService.isPromotionValid(productPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(productPromotion, order.getSubtotal());
+                order.setProductPromotion(productPromotion);
+                order.setProductDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(productPromotion);
+                log.info("Áp dụng mã giảm giá sản phẩm: {} - Giảm: {}", productPromotionCode, discountAmount);
+            } else {
+                log.warn("Mã giảm giá sản phẩm không hợp lệ: {}", productPromotionCode);
+                throw new BadRequestException("Mã giảm giá sản phẩm không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        }
+
+        // Áp dụng mã giảm giá vận chuyển
+        if (shippingPromotionCode != null && !shippingPromotionCode.trim().isEmpty()) {
+            Promotion shippingPromotion = promotionService.findValidPromotionByCode(
+                    shippingPromotionCode);
+
+            if (promotionService.isPromotionValid(shippingPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(shippingPromotion, order.getShippingFee());
+                order.setShippingPromotion(shippingPromotion);
+                order.setShippingDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(shippingPromotion);
+                log.info("Áp dụng mã giảm giá vận chuyển: {} - Giảm: {}", shippingPromotionCode, discountAmount);
+            } else {
+                log.warn("Mã giảm giá vận chuyển không hợp lệ: {}", shippingPromotionCode);
+                throw new BadRequestException("Mã giảm giá vận chuyển không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        }
+    }
+
+    private OrderDetail createOrderDetailFromCartItem(CartItem cartItem, Order order) {
+        OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setOrder(order);
+        orderDetail.setProduct(cartItem.getProduct());
+        orderDetail.setProductName(cartItem.getProductName());
+        orderDetail.setQuantity(cartItem.getQuantity());
+        orderDetail.setPrice(cartItem.getStock().getPrice());
+        orderDetail.setColorName(cartItem.getStock().getColor().getName());
+        orderDetail.setVersionName(cartItem.getStock().getInstanceProperties().stream()
+                .map(InstanceProperty::getName)
+                .collect(Collectors.joining(", ")));
+        orderDetail.setImageUrl(cartItem.getStock().getProductPhotos().stream()
+                .findFirst()
+                .map(ProductPhoto::getImageUrl)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh sản phẩm.")));
+        orderDetail.setStock(cartItem.getStock());
+        return orderDetail;
+    }
+
+    private void applyPromotions(Order order, String productPromotionCode, String shippingPromotionCode) {
+        // Apply product promotion
+        if (productPromotionCode != null && !productPromotionCode.trim().isEmpty()) {
+            Promotion productPromotion = promotionService.findValidPromotionByCode(
+                    productPromotionCode);
+
+            if (promotionService.isPromotionValid(productPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(productPromotion, order.getSubtotal());
+                order.setProductPromotion(productPromotion);
+                order.setProductDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(productPromotion);
+            } else {
+                throw new BadRequestException("Mã giảm giá sản phẩm không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        } else {
+            order.setProductPromotion(null);
+            order.setProductDiscountAmount(BigDecimal.ZERO);
+        }
+
+        // Apply shipping promotion
+        if (shippingPromotionCode != null && !shippingPromotionCode.trim().isEmpty()) {
+            Promotion shippingPromotion = promotionService.findValidPromotionByCode(
+                    shippingPromotionCode);
+
+            if (promotionService.isPromotionValid(shippingPromotion, order.getSubtotal())) {
+                BigDecimal discountAmount = promotionService.calculateDiscountAmount(shippingPromotion, order.getShippingFee());
+                log.info("Applying shipping promotion: {} - Giảm: {}", shippingPromotionCode, discountAmount);
+                order.setShippingPromotion(shippingPromotion);
+                order.setShippingDiscountAmount(discountAmount);
+                promotionService.incrementUsageCount(shippingPromotion);
+            } else {
+                throw new BadRequestException("Mã giảm giá vận chuyển không hợp lệ hoặc đơn hàng không đủ điều kiện.");
+            }
+        } else {
+            order.setShippingPromotion(null);
+            order.setShippingDiscountAmount(BigDecimal.ZERO);
+        }
+    }
+
+    private void calculateFinalTotal(Order order) {
+        BigDecimal finalTotal = order.getSubtotal()
+                .subtract(order.getProductDiscountAmount())
+                .add(order.getShippingFee())
+                .subtract(order.getShippingDiscountAmount());
+
+        order.setFinalTotal(finalTotal.add(finalTotal.multiply(BigDecimal.valueOf(0.1))));
+    }
+
     private PaymentDto.VnPayResponse getVnPayResponse(HttpServletRequest request, Order order) {
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BadRequestException("Đơn hàng không được thanh toán vì đã được thanh toán hoặc đã được hủy.");
@@ -341,6 +694,23 @@ public class OrderServiceImpl implements OrderService {
                 "00",
                 "Tạo đường dẫn thanh toán thành công",
                 paymentUrl
+        );
+    }
+
+    private PaymentDto.PayPalResponse getPaypalPaymentUrl(Order order, HttpServletRequest request) {
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BadRequestException("Đơn hàng không được thanh toán vì đã được thanh toán hoặc đã được hủy.");
+        }
+
+        return payPalService.createPayment(
+                order.getFinalTotal().doubleValue(),
+                "USD",
+                "paypal",
+                "sale",
+                "Payment for order #" + order.getId(),
+                publicBaseUrl + "/payments/paypal/cancel",
+                publicBaseUrl + "/payments/paypal/success",
+                order.getId()
         );
     }
 
@@ -373,6 +743,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getCreatedAt(),
                 order.getPaymentType(),
                 order.getStatus(),
+                order.getFinalTotal(),
                 order.getOrderDetails().stream().map(this::convertOrderDetailToOrderDetailDto).collect(Collectors.toSet()),
                 order.getShippingTrackingCode()
         );
@@ -381,7 +752,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderUserResponse.OrderDetailDto convertOrderDetailToOrderDetailDto(OrderDetail orderDetail) {
         return new OrderUserResponse.OrderDetailDto(
                 orderDetail.getId(),
-                new OrderUserResponse.OrderDetailDto.ProductDto(orderDetail.getProduct().getId()),
+                new OrderUserResponse.OrderDetailDto.ProductDto(orderDetail.getProduct() == null ? null : orderDetail.getProduct().getId()),
                 orderDetail.getProductName(),
                 orderDetail.getQuantity(),
                 orderDetail.getPrice(),

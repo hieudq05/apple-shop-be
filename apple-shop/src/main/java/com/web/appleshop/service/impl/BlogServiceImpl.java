@@ -107,4 +107,12 @@ class BlogServiceImpl implements BlogService {
     public Page<BlogForUserInfo> getListBlogsForUser(Pageable pageable) {
         return blogRepository.findBlogsByIsPublished(true, pageable);
     }
+
+    @Override
+    public Long getPublishedBlogCount(LocalDateTime fromDate, LocalDateTime toDate) {
+        return blogRepository.getPublishedBlogsCount(
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
+    }
 }

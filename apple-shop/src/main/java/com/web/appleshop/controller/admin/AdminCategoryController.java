@@ -2,16 +2,19 @@ package com.web.appleshop.controller.admin;
 
 
 import com.web.appleshop.dto.projection.CategoryInfoView;
+import com.web.appleshop.dto.request.AdminCategoryRequest;
 import com.web.appleshop.dto.request.CategorySearchCriteria;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.PageableResponse;
 import com.web.appleshop.dto.response.admin.CategoryInfoDto;
 import com.web.appleshop.service.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -49,5 +52,23 @@ class AdminCategoryController {
                 categoryDtos.getTotalElements()
         );
         return ResponseEntity.ok(ApiResponse.success(categoryDtos.getContent(), "Search categories successfully", pageableResponse));
+    }
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<String>> createCategory(@Valid @RequestPart AdminCategoryRequest category, @RequestPart MultipartFile image) {
+        categoryService.createCategory(category, image);
+        return ResponseEntity.ok(ApiResponse.success(null, "Create category successfully"));
+    }
+
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<String>> updateCategory(@PathVariable Integer id, @Valid @RequestPart AdminCategoryRequest category, @RequestPart MultipartFile image) {
+        categoryService.updateCategory(id, category, image);
+        return ResponseEntity.ok(ApiResponse.success(null, "Update category successfully"));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Integer id) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Delete category successfully"));
     }
 }

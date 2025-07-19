@@ -99,7 +99,7 @@ public class ShippingInfoServiceImpl implements ShippingInfoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public ShippingInfo setDefaultShippingInfo(Integer shippingInfoId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -112,6 +112,7 @@ public class ShippingInfoServiceImpl implements ShippingInfoService {
         ShippingInfo defaultShippingInfo = shippingInfoRepository.findShippingInfoByUserAndIsDefault(user, true);
         if (defaultShippingInfo != null) {
             defaultShippingInfo.setIsDefault(false);
+            shippingInfoRepository.save(defaultShippingInfo);
         }
         shippingInfo.setIsDefault(true);
 

@@ -16,6 +16,7 @@ public class ProductUserResponse implements Serializable {
     String name;
     String description;
     Set<ProductStockResponse> stocks;
+    Integer categoryId;
 
     /**
      * DTO for {@link com.web.appleshop.entity.Stock}

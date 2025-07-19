@@ -20,6 +20,7 @@ public class UserReviewDto implements Serializable {
     String replyContent;
     UserDto repliedBy;
     Integer productId;
+    String productName;
     UserReviewDto.StockDto stock;
 
 

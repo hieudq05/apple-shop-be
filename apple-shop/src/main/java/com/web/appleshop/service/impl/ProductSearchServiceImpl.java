@@ -1,7 +1,7 @@
 package com.web.appleshop.service.impl;
 
-import com.web.appleshop.dto.request.BaseProductSearchCriteria;
 import com.web.appleshop.dto.request.AdminProductSearchCriteria;
+import com.web.appleshop.dto.request.BaseProductSearchCriteria;
 import com.web.appleshop.dto.request.UserProductSearchCriteria;
 import com.web.appleshop.dto.response.ProductUserResponse;
 import com.web.appleshop.dto.response.admin.ProductAdminListDto;
@@ -55,7 +55,6 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     }
 
     @Override
-    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
     public Page<ProductUserResponse> searchProductsForUser(UserProductSearchCriteria criteria, Pageable pageable) {
         log.debug("Searching products for user with criteria: {}", criteria);
 
@@ -107,13 +106,13 @@ public class ProductSearchServiceImpl implements ProductSearchService {
         }
 
         // Add sorting if specified in criteria (as an alternative to Pageable sorting)
-        if (StringUtils.hasText(criteria.getSortBy())) {
-            Specification<Product> sortSpec = ProductSpecification.createSortSpecification(
-                    criteria.getSortBy(), criteria.getSortDirection()
-            );
-            assert spec != null;
-            spec = spec.and(sortSpec);
-        }
+//        if (StringUtils.hasText(criteria.getSortBy())) {
+//            Specification<Product> sortSpec = ProductSpecification.createSortSpecification(
+//                    criteria.getSortBy(), criteria.getSortDirection()
+//            );
+//            assert spec != null;
+//            spec = spec.and(sortSpec);
+//        }
 
         return spec;
     }
@@ -125,12 +124,12 @@ public class ProductSearchServiceImpl implements ProductSearchService {
         Specification<Product> spec = ProductSpecification.createSpecification(criteria);
 
         // Add sorting if specified in criteria (as an alternative to Pageable sorting)
-        if (StringUtils.hasText(criteria.getSortBy())) {
-            Specification<Product> sortSpec = ProductSpecification.createSortSpecification(
-                    criteria.getSortBy(), criteria.getSortDirection()
-            );
-            spec = spec.and(sortSpec);
-        }
+//        if (StringUtils.hasText(criteria.getSortBy())) {
+//            Specification<Product> sortSpec = ProductSpecification.createSortSpecification(
+//                    criteria.getSortBy(), criteria.getSortDirection()
+//            );
+//            spec = spec.and(sortSpec);
+//        }
         return spec;
     }
 

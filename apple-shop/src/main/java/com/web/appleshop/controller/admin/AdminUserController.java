@@ -13,7 +13,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("admin/users")
@@ -60,5 +63,47 @@ class AdminUserController {
                 users.getTotalElements()
         );
         return ResponseEntity.ok(ApiResponse.success(users.getContent(), "Search users successfully", pageableResponse));
+    }
+
+    @PutMapping("{userId}/toggle-enabled")
+    public ResponseEntity<ApiResponse<Void>> toggleUserEnabled(@PathVariable Integer userId) {
+        userService.toggleUserEnabled(userId);
+        return ResponseEntity.ok(ApiResponse.success(null, "User enabled/disabled successfully"));
+    }
+
+    @PutMapping("{userId}/role")
+    public ResponseEntity<ApiResponse<Void>> updateUserRole(@PathVariable Integer userId, @RequestBody Set<String> role) {
+        userService.setRoleforUser(userId, role);
+        return ResponseEntity.ok(ApiResponse.success(null, "User role updated successfully"));
+    }
+
+    /**
+     * Statistics
+     */
+
+    @GetMapping("statistics/new-user-count")
+    public ResponseEntity<ApiResponse<Long>> getNewUserCount(
+            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false) LocalDateTime toDate
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getNumberOfNewUsers(fromDate, toDate), "Get new user count successfully"));
+    }
+
+    @GetMapping("statistics/top-users-expense")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getActiveUserCount(
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false) LocalDateTime toDate
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getTopUserByPrice(limit, fromDate, toDate).getContent(), "Get active user count successfully"));
+    }
+
+    @GetMapping("statistics/top-users-order-count")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getTopUserOrderCount(
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) LocalDateTime fromDate,
+            @RequestParam(required = false) LocalDateTime toDate
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getTopUserByOrderCount(limit, fromDate, toDate).getContent(), "Get top user order count successfully"));
     }
 }

@@ -4,6 +4,7 @@ import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.dto.response.ValidationErrorDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -73,7 +74,7 @@ public class GlobalExceptionHandler {
         List<ValidationErrorDetail> validationErrorDetails = new ArrayList<>();
 
         // 2. Lặp qua các lỗi từ exception và chuyển đổi thành ValidationErrorDetail
-        for(FieldError fieldError : e.getBindingResult().getFieldErrors()) {
+        for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
             validationErrorDetails.add(new ValidationErrorDetail(fieldError.getField(), fieldError.getDefaultMessage()));
         }
 
@@ -122,5 +123,12 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String errorMessage = "Dữ liệu bị trùng lặp (ví dụ: email hoặc số điện thoại đã tồn tại). Vui lòng kiểm tra lại!";
+        ApiResponse<Object> response = ApiResponse.error(String.valueOf(HttpStatus.BAD_REQUEST.value()), errorMessage);
+        return ResponseEntity.badRequest().body(response);
     }
 }

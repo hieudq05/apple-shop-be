@@ -20,6 +20,7 @@ public class OrderUserResponse implements Serializable {
     LocalDateTime createdAt;
     PaymentType paymentType;
     OrderStatus status;
+    BigDecimal finalTotal;
     Set<OrderDetailDto> orderDetails;
     String shippingTrackingCode;
 
