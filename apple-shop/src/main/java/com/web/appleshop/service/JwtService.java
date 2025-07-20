@@ -29,4 +29,6 @@ public interface JwtService {
     public Date extractExpiration(String token);
 
     public void validateRefreshToken(String token, UserDetails userDetails);
+
+    public void deleteRefreshToken(String token);
 }

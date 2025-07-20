@@ -54,26 +54,6 @@ public class User implements UserDetails {
     private String lastName;
 
     @Nationalized
-    @Column(name = "address", length = 500)
-    private String address;
-
-    @Nationalized
-    @Column(name = "ward", length = 100)
-    private String ward;
-
-    @Nationalized
-    @Column(name = "district", length = 100)
-    private String district;
-
-    @Nationalized
-    @Column(name = "province", length = 100)
-    private String province;
-
-    @Nationalized
-    @Column(name = "country", length = 100)
-    private String country;
-
-    @Nationalized
     @Column(name = "image")
     private String image;
 
@@ -90,12 +70,6 @@ public class User implements UserDetails {
 
     @Column(name = "birth", nullable = false)
     private LocalDate birth;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "author")
     private Set<Blog> blogs = new LinkedHashSet<>();
@@ -141,6 +115,15 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     private Set<RefreshToken> refreshTokens = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "createdBy")
+    private Set<Promotion> promotions = new LinkedHashSet<>();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new LinkedHashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

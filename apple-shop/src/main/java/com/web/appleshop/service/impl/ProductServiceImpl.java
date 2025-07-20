@@ -2,6 +2,7 @@ package com.web.appleshop.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.web.appleshop.dto.request.AdminProductSearchCriteria;
 import com.web.appleshop.dto.request.CreateProductRequest;
 import com.web.appleshop.dto.request.UpdateProductRequest;
 import com.web.appleshop.dto.response.ProductUserResponse;
@@ -13,6 +14,7 @@ import com.web.appleshop.exception.NotFoundException;
 import com.web.appleshop.exception.ValidationException;
 import com.web.appleshop.repository.*;
 import com.web.appleshop.service.ProductService;
+import com.web.appleshop.specification.ProductSpecification;
 import com.web.appleshop.util.UploadUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -23,13 +25,16 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +52,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductPhotoRepository productPhotoRepository;
     private final InstancePropertyRepository instancePropertyRepository;
     private final UploadUtils uploadUtils;
+    private final OrderDetailRepository orderDetailRepository;
 
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
@@ -101,21 +107,34 @@ public class ProductServiceImpl implements ProductService {
 
         product = productRepository.save(product);
 
+        Set<CreateProductRequest.CreateProductStockRequest.CreateProductColorRequest> colorRequests = new LinkedHashSet<>();
         Set<Stock> stocks = new LinkedHashSet<>();
         for (CreateProductRequest.CreateProductStockRequest stockRequest : request.getStocks()) {
             Color color;
-            if (stockRequest.getColor().getId() != null) {
+            if (stockRequest.getColor().getId() != null && colorRequests.stream().anyMatch(colorRequest -> colorRequest.getName().equals(stockRequest.getColor().getName()))) {
                 color = colorRepository.findById(stockRequest.getColor().getId()).orElseThrow(() -> new NotFoundException("Color not found with id: " + stockRequest.getColor().getId()));
             } else {
                 color = Color.builder().name(stockRequest.getColor().getName()).hexCode(stockRequest.getColor().getHexCode()).build();
+                color = colorRepository.save(color);
+                colorRequests.add(stockRequest.getColor());
             }
-            color = colorRepository.save(color);
 
             Stock stock = new Stock();
             BeanUtils.copyProperties(stockRequest, stock);
             stock.setProduct(product);
 
-            Set<InstanceProperty> instanceProperties = stockRequest.getInstanceProperties().stream().map(instanceRequest -> {
+            // filter instance duplicate
+            Collection<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> filtered = stockRequest.getInstanceProperties().stream()
+                    .collect(Collectors.toMap(
+                            CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest::getName,
+                            Function.identity(), // value: chính object đó
+                            (existing, replacement) -> existing
+                    ))
+                    .values();
+
+            Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> instanceRequests = new HashSet<>(filtered);
+
+            Set<InstanceProperty> instanceProperties = instanceRequests.stream().map(instanceRequest -> {
                 InstanceProperty instanceProperty;
                 if (instanceRequest.getId() != null) {
                     instanceProperty = instancePropertyRepository.findById(instanceRequest.getId())
@@ -413,6 +432,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<ProductAdminListDto> getAllProductsForAdminV2(Pageable pageable) {
+        Specification<Product> spec = ProductSpecification.createSpecification(
+                AdminProductSearchCriteria.builder().isDeleted(false).build()
+        );
+        Page<Product> products = productRepository.findAll(spec, pageable);
+        return products.map(this::convertProductToProductAdminListDto);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
         Page<Product> products = productRepository.findAllByCategory_IdAndIsDeleted(categoryId, false, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
@@ -441,12 +469,35 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
-    public void deleteProduct(Integer categoryId, Integer productId) {
+    public void toggleDeleteProduct(Integer categoryId, Integer productId) {
         Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
                 () -> new NotFoundException("Sản phẩm với id: " + productId + " và danh mục với id: " + categoryId + " không tồn tại.")
         );
-        product.setIsDeleted(true);
+        product.setIsDeleted(!product.getIsDeleted());
         productRepository.save(product);
+    }
+
+    @Override
+    public Page<Map<String, Object>> getTopProductSelling(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate) {
+        return orderDetailRepository.getTopSellingProducts(pageable, fromDate, toDate);
+    }
+
+    @Override
+    public Page<Map<String, Object>> getSaleByCategory(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate) {
+        return productRepository.getSalesByCategory(
+                pageable,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
+    }
+
+    @Override
+    public Page<Map<String, Object>> getSaleByColor(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate) {
+        return productRepository.getSalesByColor(
+                pageable,
+                fromDate == null ? LocalDateTime.of(1, 1, 1, 0, 0) : fromDate,
+                toDate == null ? LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")) : toDate
+        );
     }
 
     public ProductUserResponse convertProductToProductUserResponse(Product product) {
@@ -458,7 +509,49 @@ public class ProductServiceImpl implements ProductService {
             stockDtos.add(new ProductUserResponse.ProductStockResponse(stock.getId(), colorDto, stock.getQuantity(), stock.getPrice(), photoDtos, instanceDto));
         }
 
-        return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos);
+        return new ProductUserResponse(product.getId(), product.getName(), product.getDescription(), stockDtos, product.getCategory().getId());
+    }
+
+    public ProductAdminListDto convertProductToProductAdminListDto(Product product) {
+        return ProductAdminListDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .createdAt(product.getCreatedAt())
+                .createdBy(product.getCreatedBy().getFirstName() + " " + product.getCreatedBy().getLastName())
+                .categoryId(product.getCategory().getId())
+                .categoryName(product.getCategory().getName())
+                .features(product.getFeatures().stream().map(feature ->
+                        FeatureSummaryDto.builder()
+                                .id(feature.getId())
+                                .name(feature.getName())
+                                .image(feature.getImage())
+                                .build()
+                ).collect(Collectors.toSet()))
+                .stocks(product.getStocks().stream().map(stock ->
+                        StockSummaryDto.builder()
+                                .id(stock.getId())
+                                .quantity(stock.getQuantity())
+                                .price(stock.getPrice())
+                                .productPhotos(stock.getProductPhotos().stream().map(photo ->
+                                        StockSummaryDto.ProductPhotoDto.builder()
+                                                .id(photo.getId())
+                                                .imageUrl(photo.getImageUrl())
+                                                .alt(photo.getAlt())
+                                                .build()
+                                ).collect(Collectors.toSet()))
+                                .instanceProperties(stock.getInstanceProperties().stream().map(instanceProperty ->
+                                        StockSummaryDto.InstancePropertyDto.builder()
+                                                .id(instanceProperty.getId())
+                                                .name(instanceProperty.getName())
+                                                .build()
+                                ).collect(Collectors.toSet()))
+                                .colorId(stock.getColor().getId())
+                                .colorName(stock.getColor().getName())
+                                .colorHexCode(stock.getColor().getHexCode())
+                                .build()
+                ).collect(Collectors.toSet()))
+                .build();
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")

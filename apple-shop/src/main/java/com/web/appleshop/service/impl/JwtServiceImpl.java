@@ -7,6 +7,7 @@ import com.web.appleshop.service.JwtService;
 import com.web.appleshop.service.RefreshTokenService;
 import com.web.appleshop.service.UserService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -17,8 +18,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
@@ -173,8 +172,16 @@ public class JwtServiceImpl implements JwtService {
         if (!this.isTokenValid(token, userDetails)) {
             throw new BadRequestException("Your refresh token is invalid.");
         }
-        RefreshToken refreshTokenEntity = refreshTokenRepository.findRefreshTokenByToken("Bearer " + token)
+        refreshTokenRepository.findRefreshTokenByToken("Bearer " + token)
                 .orElseThrow(() -> new BadRequestException("Your refresh token is invalid."));
+    }
+
+    @Override
+    public void deleteRefreshToken(String token) {
+        RefreshToken refreshToken = refreshTokenRepository.findRefreshTokenByToken("Bearer " + token).orElseThrow(
+                () -> new BadRequestException("Your refresh token is invalid.")
+        );
+        refreshTokenRepository.delete(refreshToken);
     }
 
     /**
@@ -184,12 +191,19 @@ public class JwtServiceImpl implements JwtService {
      * @return Claims object
      */
     private Claims extractAllClaims(String token) {
-        return Jwts
-                .parser()
-                .verifyWith(getSignInKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        Claims claims;
+        try {
+            claims = Jwts
+                    .parser()
+                    .verifyWith(getSignInKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (Exception e) {
+            log.warn("Token expired: {}", token, e);
+            throw new BadRequestException("Your refresh token is expired.");
+        }
+        return claims;
     }
 
     /**

@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.mapping.Join;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
@@ -46,7 +45,7 @@ public class Stock {
     @OneToMany(mappedBy = "stock")
     private Set<CartItem> cartItems = new LinkedHashSet<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "stock_instances",
             joinColumns = @JoinColumn(name = "stock_id"),
             inverseJoinColumns = @JoinColumn(name = "instance_id"))
@@ -56,4 +55,7 @@ public class Stock {
     @OneToMany(mappedBy = "stock")
     private Set<OrderDetail> orderDetails = new LinkedHashSet<>();
 
+
+    @OneToMany(mappedBy = "stock")
+    private Set<Review> reviews = new LinkedHashSet<>();
 }

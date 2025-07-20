@@ -1,6 +1,7 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.Nationalized;
@@ -34,14 +35,9 @@ public class Category {
     @OneToMany(mappedBy = "category", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     private Set<Product> products = new LinkedHashSet<>();
 
-    @ManyToMany(cascade = {
-            CascadeType.MERGE,
-            CascadeType.PERSIST,
-            CascadeType.REFRESH
-    }, fetch = FetchType.EAGER)
-    @JoinTable(name = "promotion_category",
-            joinColumns = @JoinColumn(name = "category_id"),
-            inverseJoinColumns = @JoinColumn(name = "promotion_id"))
-    private Set<Promotion> promotions = new LinkedHashSet<>();
+    @Size(max = 255)
+    @Nationalized
+    @Column(name = "description")
+    private String description;
 
 }

@@ -35,4 +35,25 @@ public class PaymentDto {
         String RspCode;
         String Message;
     }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PayPalResponse {
+        private String code;
+        private String message;
+        private String paymentUrl;
+        private String paymentId;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PayPalExecuteResponse {
+        private String code;
+        private String message;
+        private String paymentId;
+        private String state;
+        private Integer orderId;
+    }
 }

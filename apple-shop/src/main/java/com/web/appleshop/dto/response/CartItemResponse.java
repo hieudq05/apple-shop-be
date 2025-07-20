@@ -1,5 +1,6 @@
 package com.web.appleshop.dto.response;
 
+import com.web.appleshop.enums.PromotionType;
 import lombok.*;
 
 import java.io.Serializable;
@@ -31,31 +32,7 @@ public class CartItemResponse implements Serializable {
         Integer id;
         String name;
         String description;
-        Set<PromotionDto> promotions;
-
-        /**
-         * DTO for {@link com.web.appleshop.entity.Promotion}
-         */
-        @Value
-        public static class PromotionDto implements Serializable {
-            Integer id;
-            String name;
-            String code;
-            PromotionTypeDto promotionType;
-            BigDecimal value;
-            Boolean isActive;
-            LocalDateTime startDate;
-            LocalDateTime endDate;
-
-            /**
-             * DTO for {@link com.web.appleshop.entity.PromotionType}
-             */
-            @Value
-            public static class PromotionTypeDto implements Serializable {
-                Integer id;
-                String name;
-            }
-        }
+        Integer categoryId;
     }
 
     /**

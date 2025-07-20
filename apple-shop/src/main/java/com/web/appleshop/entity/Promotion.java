@@ -1,5 +1,6 @@
 package com.web.appleshop.entity;
 
+import com.web.appleshop.enums.PromotionType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,8 +32,8 @@ public class Promotion {
     @Column(name = "code", nullable = false, length = 50)
     private String code;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "promotion_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "promotion_type", nullable = false)
     private PromotionType promotionType;
 
     @Column(name = "\"value\"", nullable = false, precision = 18, scale = 2)
@@ -61,22 +62,18 @@ public class Promotion {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 
-    @Column(name = "apply_on", nullable = false)
-    private Boolean applyOn = false;
+    @ColumnDefault("getdate()")
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @ManyToMany(mappedBy = "promotions")
-    private Set<Category> categories = new LinkedHashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 
-    @ManyToMany(cascade = {
-            CascadeType.MERGE,
-            CascadeType.PERSIST,
-            CascadeType.REFRESH
-    }, fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "promotion_product",
-            joinColumns = @JoinColumn(name = "promotions_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id")
-    )
-    private Set<Product> products = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "productPromotion")
+    private Set<Order> orders_product_promotion = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "shippingPromotion")
+    private Set<Order> orders_shipping_promotion = new LinkedHashSet<>();
 
 }

@@ -1,9 +1,6 @@
 package com.web.appleshop.dto.response.admin;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Value;
+import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -16,6 +13,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class StockSummaryDto implements Serializable {
     Integer id;
     Integer productId;
@@ -42,7 +40,10 @@ public class StockSummaryDto implements Serializable {
     /**
      * DTO for {@link com.web.appleshop.entity.ProductPhoto}
      */
-    @Value
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
     public static class ProductPhotoDto implements Serializable {
         Integer id;
         String imageUrl;
@@ -52,7 +53,10 @@ public class StockSummaryDto implements Serializable {
     /**
      * DTO for {@link com.web.appleshop.entity.InstanceProperty}
      */
-    @Value
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
     public static class InstancePropertyDto implements Serializable {
         Integer id;
         String name;
