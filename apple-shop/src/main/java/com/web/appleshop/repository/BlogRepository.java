@@ -19,6 +19,8 @@ public interface BlogRepository extends JpaRepository<Blog, Integer>, JpaSpecifi
 
     Optional<BlogInfo> findBlogById(Integer id);
 
+    Optional<BlogInfo> findBlogByIdAndIsPublished(Integer id, Boolean isPublished);
+
     Page<BlogForUserInfo> findBlogsByIsPublished(Boolean isPublished, Pageable pageable);
 
     @Query("SELECT COUNT(b) FROM Blog b WHERE b.isPublished = true AND b.publishedAt BETWEEN :startDate AND :endDate")

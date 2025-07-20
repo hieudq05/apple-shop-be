@@ -104,6 +104,14 @@ class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional(readOnly = true)
+    public BlogInfo getBlogByIdForUser(Integer blogId) {
+        return blogRepository.findBlogByIdAndIsPublished(blogId, true).orElseThrow(
+                () -> new IllegalArgumentException("Không tìm thấy bài viết.")
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<BlogForUserInfo> getListBlogsForUser(Pageable pageable) {
         return blogRepository.findBlogsByIsPublished(true, pageable);
     }

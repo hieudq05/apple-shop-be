@@ -24,6 +24,8 @@ public interface BlogService {
 
     BlogInfo getBlogByIdForAdmin(Integer blogId);
 
+    BlogInfo getBlogByIdForUser(Integer blogId);
+
     Page<BlogForUserInfo> getListBlogsForUser(Pageable pageable);
 
     Long getPublishedBlogCount(LocalDateTime fromDate, LocalDateTime toDate);
