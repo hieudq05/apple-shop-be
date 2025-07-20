@@ -142,6 +142,7 @@ public class UserReviewSearchService {
                         review.getRepliedBy().getImage()
                 ),
                 review.getStock().getProduct().getId(),
+                review.getStock().getProduct().getName(),
                 new UserReviewDto.StockDto(
                         review.getStock().getId(),
                         new UserReviewDto.StockDto.ColorDto(

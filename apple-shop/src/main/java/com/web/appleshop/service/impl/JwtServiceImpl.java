@@ -172,8 +172,16 @@ public class JwtServiceImpl implements JwtService {
         if (!this.isTokenValid(token, userDetails)) {
             throw new BadRequestException("Your refresh token is invalid.");
         }
-        RefreshToken refreshTokenEntity = refreshTokenRepository.findRefreshTokenByToken("Bearer " + token)
+        refreshTokenRepository.findRefreshTokenByToken("Bearer " + token)
                 .orElseThrow(() -> new BadRequestException("Your refresh token is invalid."));
+    }
+
+    @Override
+    public void deleteRefreshToken(String token) {
+        RefreshToken refreshToken = refreshTokenRepository.findRefreshTokenByToken("Bearer " + token).orElseThrow(
+                () -> new BadRequestException("Your refresh token is invalid.")
+        );
+        refreshTokenRepository.delete(refreshToken);
     }
 
     /**

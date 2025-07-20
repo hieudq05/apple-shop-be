@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+
 public interface BlogService {
     Page<BlogSummaryInfo> getListBlogsForAdmin(Pageable pageable);
 
@@ -22,5 +24,9 @@ public interface BlogService {
 
     BlogInfo getBlogByIdForAdmin(Integer blogId);
 
+    BlogInfo getBlogByIdForUser(Integer blogId);
+
     Page<BlogForUserInfo> getListBlogsForUser(Pageable pageable);
+
+    Long getPublishedBlogCount(LocalDateTime fromDate, LocalDateTime toDate);
 }

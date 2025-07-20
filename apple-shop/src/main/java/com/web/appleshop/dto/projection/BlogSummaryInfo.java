@@ -10,9 +10,13 @@ public interface BlogSummaryInfo {
 
     String getTitle();
 
+    String getThumbnail();
+
     LocalDateTime getCreatedAt();
 
     String getStatus();
+
+    Boolean getIsPublished();
 
     OrderSummaryProjection.UserSummary getAuthor();
 }

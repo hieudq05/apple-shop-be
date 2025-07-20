@@ -11,6 +11,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -52,10 +54,10 @@ public class OrderDetail {
     @Column(name = "color_name", nullable = false, length = 50)
     private String colorName;
 
-    @Size(max = 50)
+    @Size(max = 550)
     @NotNull
     @Nationalized
-    @Column(name = "version_name", nullable = false, length = 50)
+    @Column(name = "version_name", nullable = false, length = 550)
     private String versionName;
 
     @NotNull
@@ -67,5 +69,4 @@ public class OrderDetail {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
-
 }

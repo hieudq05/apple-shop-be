@@ -71,6 +71,14 @@ public class ReviewController {
         );
     }
 
+    @DeleteMapping("{reviewId}")
+    public ResponseEntity<ApiResponse<String>> deleteReview(@PathVariable Integer reviewId) {
+        reviewService.deleteReview(reviewId);
+        return ResponseEntity.ok(
+                ApiResponse.success(null, "Delete review successfully")
+        );
+    }
+
     @GetMapping("product/{productId}/search")
     public ResponseEntity<ApiResponse<List<UserReviewDto>>> searchReviewsForProduct(
             @PathVariable Integer productId,

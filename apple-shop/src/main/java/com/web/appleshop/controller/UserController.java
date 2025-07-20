@@ -3,6 +3,7 @@ package com.web.appleshop.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.web.appleshop.dto.projection.UserInfo;
+import com.web.appleshop.dto.request.ChangePasswordDto;
 import com.web.appleshop.dto.request.UserUpdateDto;
 import com.web.appleshop.dto.response.ApiResponse;
 import com.web.appleshop.exception.BadRequestException;
@@ -29,11 +30,16 @@ class UserController {
     }
 
     @PatchMapping(path = "me", consumes = "multipart/form-data")
-    public ResponseEntity<ApiResponse<String>> updateUserInfo(
+    public ResponseEntity<ApiResponse<UserUpdateDto>> updateUserInfo(
             @RequestPart @Valid UserUpdateDto user,
             @RequestPart(required = false) MultipartFile imageFile
     ) {
-        userService.updateUser(user, imageFile);
-        return ResponseEntity.ok(ApiResponse.success(null, "Update user info successfully"));
+        return ResponseEntity.ok(ApiResponse.success(userService.updateUser(user, imageFile), "Update user info successfully"));
+    }
+
+    @PostMapping("change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) {
+        userService.changePassword(changePasswordDto);
+        return ResponseEntity.ok(ApiResponse.success(null, "Change password successfully"));
     }
 }
