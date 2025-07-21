@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/payments/paypal/cancel").permitAll()
                         .requestMatchers("/webhooks/**").permitAll()
                         .requestMatchers("/reviews/product/**").permitAll()
+                        .requestMatchers("/ws-chat/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)

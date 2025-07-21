@@ -35,6 +35,15 @@ spring:
     consumer:
       group-id: my-group
       auto-offset-reset: earliest
+  ai:
+    vertex:
+      ai:
+        gemini:
+          project-id: gemini-cloud-465707
+          location: us-central1
+          chat:
+            options:
+              model: gemini-2.5-flash
 
 application:
   security:
@@ -82,3 +91,4 @@ paypal:
 public:
   base:
     url: https://f4a4-2405-4803-d34c-3740-b92d-61dd-683a-74fc.ngrok-free.app/api/v1
+

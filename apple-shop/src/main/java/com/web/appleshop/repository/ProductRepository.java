@@ -58,4 +58,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
             "WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status = 'DELIVERED' " +
             "GROUP BY s.color.id ORDER BY SUM(od.quantity) DESC")
     Page<Map<String, Object>> getSalesByColor(Pageable pageable, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    List<Product> findProductsByNameContainingIgnoreCase(String name);
 }
