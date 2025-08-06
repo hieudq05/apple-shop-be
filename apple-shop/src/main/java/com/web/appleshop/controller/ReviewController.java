@@ -10,6 +10,8 @@ import com.web.appleshop.service.UserReviewSearchService;
 import com.web.appleshop.specification.UserReviewSpecification;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequestMapping("reviews")
 @RequiredArgsConstructor
 public class ReviewController {
+    private static final Logger log = LoggerFactory.getLogger(ReviewController.class);
     private final ReviewService reviewService;
     private final UserReviewSearchService userReviewSearchService;
     private final UserReviewSpecification userReviewSpecification;
@@ -36,8 +39,13 @@ public class ReviewController {
     }
 
     @GetMapping("product/{productId}")
-    public ResponseEntity<ApiResponse<List<UserReviewDto>>> getReviewsForProduct(@PathVariable Integer productId, @RequestHeader(name = "Authorization", required = false) String token) {
-        Pageable pageable = Pageable.ofSize(6).withPage(0);
+    public ResponseEntity<ApiResponse<List<UserReviewDto>>> getReviewsForProduct(
+            @PathVariable Integer productId,
+            @RequestHeader(name = "Authorization", required = false) String token,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
         Page<UserReviewDto> reviews;
         if (token == null) {
             reviews = userReviewSearchService.getProductApprovedReviews(productId, pageable);

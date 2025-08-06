@@ -90,5 +90,5 @@ paypal:
 
 public:
   base:
-    url: https://91666e58af99.ngrok-free.app
+    url: https://61849be9973b.ngrok-free.app/api/v1
 

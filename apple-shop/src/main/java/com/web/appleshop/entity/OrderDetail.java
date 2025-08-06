@@ -69,4 +69,8 @@ public class OrderDetail {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
+
+    @Column(name = "is_reviewed")
+    private Boolean isReviewed;
+
 }

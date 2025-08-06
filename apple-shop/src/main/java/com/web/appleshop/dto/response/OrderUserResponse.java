@@ -32,12 +32,14 @@ public class OrderUserResponse implements Serializable {
         Integer id;
         ProductDto product;
         String productName;
+        Integer stockId;
         Integer quantity;
         BigDecimal price;
         String note;
         String colorName;
         String versionName;
         String image_url;
+        Boolean isReviewed;
 
         /**
          * DTO for {@link com.web.appleshop.entity.Product}

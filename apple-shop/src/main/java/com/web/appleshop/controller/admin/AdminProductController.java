@@ -80,11 +80,9 @@ public class AdminProductController {
 
     @PostMapping("search")
     public ResponseEntity<ApiResponse<List<ProductAdminListDto>>> searchProduct(
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
             @RequestBody AdminProductSearchCriteria criteria
     ) {
-        Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
+        Pageable pageable = Pageable.ofSize(criteria.getSize() != null ? criteria.getSize() : 10).withPage(criteria.getPage() != null ? criteria.getPage() : 0);
         Page<ProductAdminListDto> productsPage = productSearchService.searchProductsForAdmin(criteria, pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 productsPage.getNumber(),

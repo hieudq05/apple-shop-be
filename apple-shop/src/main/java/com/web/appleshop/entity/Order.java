@@ -120,4 +120,7 @@ public class Order {
     @Column(name = "final_total", precision = 18, scale = 2)
     private BigDecimal finalTotal;
 
+    @Column(name = "vat", precision = 18, scale = 2)
+    private BigDecimal vat;
+
 }

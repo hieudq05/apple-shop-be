@@ -19,7 +19,6 @@ public class UploadUtils {
     public static final String UPLOAD_DIR = "./uploads/";
     public static final String[] ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"};
     public static final long MAX_FILE_SIZE = 1024 * 1024 * 20; // 20MB
-    public static final long MAX_TOTAL_SIZE = 1024 * 1024 * 100; // 100MB
 
     public static boolean isAllowedExtension(String filename) {
         for (String extension : ALLOWED_EXTENSIONS) {
@@ -32,10 +31,6 @@ public class UploadUtils {
 
     public static boolean isAllowedSize(long size) {
         return size <= MAX_FILE_SIZE;
-    }
-
-    public static boolean isAllowedTotalSize(long totalSize) {
-        return totalSize <= MAX_TOTAL_SIZE;
     }
 
     public String uploadFile(MultipartFile file) {
@@ -53,7 +48,7 @@ public class UploadUtils {
             throw new IllegalArgumentException("Dung lượng file ảnh không được vượt quá " + MAX_FILE_SIZE / 1024 / 1024 + "MB.");
         }
 
-        String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename())).startsWith("blob:") ? file.getOriginalFilename().substring(5) : file.getOriginalFilename().replaceAll(" ", "_");
 
         if (filename.contains("..")) {
             throw new IllegalArgumentException("Tên file ảnh không hợp lệ.");
@@ -67,6 +62,8 @@ public class UploadUtils {
         } catch (IOException e) {
             throw new IllegalStateException("Lỗi khi lưu file ảnh.", e);
         }
+
+        System.out.println("Uploaded file successfully: " + ServletUriComponentsBuilder.fromCurrentContextPath().path("/uploads/"+uniqueFilename).toUriString());
 
         return ServletUriComponentsBuilder.fromCurrentContextPath().path("/uploads/"+uniqueFilename).toUriString();
     }

@@ -32,7 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query("""
             SELECT new com.web.appleshop.dto.response.admin.ProductAdminListDto(
-            p.id, p.name, p.description, p.createdAt, CONCAT(p.createdBy.firstName, ' ', p.createdBy.lastName), p.category.id, p.category.name)
+            p.id, p.name, p.description, p.createdAt, CONCAT(p.createdBy.firstName, ' ', p.createdBy.lastName), p.category.id, p.category.name, p.isDeleted)
                         FROM Product p
             """)
     Page<ProductAdminListDto> findProductAdminList(Pageable pageable);

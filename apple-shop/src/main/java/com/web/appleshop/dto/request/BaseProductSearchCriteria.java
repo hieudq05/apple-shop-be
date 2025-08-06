@@ -7,6 +7,9 @@ import java.util.Set;
 
 @Data
 public abstract class BaseProductSearchCriteria {
+    private Integer page;
+    private Integer size;
+
     // Basic product information
     private String name;
     private String description;

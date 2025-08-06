@@ -282,8 +282,8 @@ public class ProductServiceImpl implements ProductService {
                         .name(featureRequest.getName())
                         .description(featureRequest.getDescription())
                         .image(
-                                featureRequest.getImage() instanceof MultipartFile
-                                        ? uploadUtils.uploadFile((MultipartFile) featureRequest.getImage())
+                                featureRequest.getImage().toString().startsWith("feature_")
+                                        ? uploadUtils.uploadFile(files.get(featureRequest.getImage().toString()))
                                         : featureRequest.getImage().toString()
                         )
                         .createdBy(persistentUpdatedBy)
@@ -363,11 +363,13 @@ public class ProductServiceImpl implements ProductService {
                 }
                 productPhoto.setStock(stock); // Thiết lập mối quan hệ ngược
                 productPhoto.setImageUrl(
-                        photoRequest.getImageUrl() instanceof MultipartFile
-                                ? uploadUtils.uploadFile((MultipartFile) photoRequest.getImageUrl())
+                        photoRequest.getImageUrl().toString().startsWith("stock_")
+                                ? uploadUtils.uploadFile(files.get(photoRequest.getImageUrl().toString()))
                                 : photoRequest.getImageUrl().toString()
                 );
                 productPhoto.setAlt(photoRequest.getAlt());
+                System.out.println("Photo Request: " + photoRequest.getImageUrl() + " - " + (photoRequest.getImageUrl().getClass().getName()));
+                System.out.println("ProductPhoto: " + productPhoto.getImageUrl() + " - " + productPhoto.getAlt());
                 return productPhoto;
             }).collect(Collectors.toSet());
 
@@ -574,6 +576,7 @@ public class ProductServiceImpl implements ProductService {
                                 .colorHexCode(stock.getColor().getHexCode())
                                 .build()
                 ).collect(Collectors.toSet()))
+                .isDeleted(product.getIsDeleted())
                 .build();
     }
 

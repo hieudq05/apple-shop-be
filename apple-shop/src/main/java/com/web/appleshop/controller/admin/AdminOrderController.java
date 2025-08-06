@@ -37,7 +37,7 @@ public class AdminOrderController {
         return ResponseEntity.ok(ApiResponse.success(order, "Get order successfully"));
     }
 
-    @GetMapping("search")
+    @PostMapping("search")
     public ResponseEntity<ApiResponse<List<OrderSummaryV2Dto>>> searchOrders(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,

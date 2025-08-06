@@ -77,6 +77,9 @@ public class ReviewServiceImpl implements ReviewService {
         review.setRating(request.getRating());
         review.setCreatedAt(LocalDateTime.now());
         review.setIsApproved(false); // Default to false, needs admin approval
+        review.getOrder().getOrderDetails().forEach(orderDetail -> {
+            orderDetail.setIsReviewed(true);
+        });
 
         return reviewRepository.save(review);
     }
