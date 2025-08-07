@@ -24,6 +24,8 @@ public interface ProductService {
 
     Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable);
 
+    Page<ProductUserResponse> getTopProductsByCategoryIdForUser(Integer categoryId, Pageable pageable);
+
     ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId);
 
     ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId);

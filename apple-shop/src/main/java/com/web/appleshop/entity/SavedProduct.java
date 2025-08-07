@@ -1,8 +1,7 @@
 package com.web.appleshop.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.OnDelete;
@@ -14,6 +13,9 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "saved_products")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @DynamicInsert
 public class SavedProduct {
     @EmbeddedId

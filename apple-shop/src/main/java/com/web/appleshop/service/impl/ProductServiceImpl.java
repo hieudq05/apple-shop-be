@@ -268,16 +268,16 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setCategory(category);
 
-        // 5. SỬA LỖI: Xử lý collection Features
-        Set<Feature> managedFeatures = product.getFeatures();
-        managedFeatures.clear(); // Xóa các mối quan hệ cũ
+        product.getFeatures().clear();
 
-        Set<Feature> newFeaturesToAdd = productRequest.getFeatures().stream().map(featureRequest -> {
+        productRequest.getFeatures().forEach(featureRequest -> {
             Feature feature;
             if (featureRequest.getId() != null) {
                 feature = featureRepository.findById(featureRequest.getId())
                         .orElseThrow(() -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
             } else {
+                Set<Product> products = new LinkedHashSet<>();
+                products.add(product);
                 feature = Feature.builder()
                         .name(featureRequest.getName())
                         .description(featureRequest.getDescription())
@@ -287,15 +287,15 @@ public class ProductServiceImpl implements ProductService {
                                         : featureRequest.getImage().toString()
                         )
                         .createdBy(persistentUpdatedBy)
-                        .products(new LinkedHashSet<>())
+                        .products(products)
                         .build();
                 feature = featureRepository.save(feature); // Cần save vì là entity mới
             }
-            feature.addProduct(product);
-            return feature;
-        }).collect(Collectors.toSet());
-
-        managedFeatures.addAll(newFeaturesToAdd); // Thêm các mối quan hệ mới vào collection đang được quản lý
+            log.info("New feature added: " + feature.getName() + " - " + feature.getId() + " - " + feature.getImage() + " - " + feature.getProducts().size() + " products in this feature.");
+            product.getFeatures().add(feature);
+        });
+        log.info("Number of features in product: " + product.getFeatures().size());
+        productRepository.save(product);
 
         // 6. SỬA LỖI: Xử lý collection Stocks
         Set<Stock> managedStocks = product.getStocks();
@@ -368,8 +368,6 @@ public class ProductServiceImpl implements ProductService {
                                 : photoRequest.getImageUrl().toString()
                 );
                 productPhoto.setAlt(photoRequest.getAlt());
-                System.out.println("Photo Request: " + photoRequest.getImageUrl() + " - " + (photoRequest.getImageUrl().getClass().getName()));
-                System.out.println("ProductPhoto: " + productPhoto.getImageUrl() + " - " + productPhoto.getAlt());
                 return productPhoto;
             }).collect(Collectors.toSet());
 
@@ -469,6 +467,12 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
         Page<Product> products = productRepository.findAllByCategory_IdAndIsDeleted(categoryId, false, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
+        return products.map(this::convertProductToProductUserResponse);
+    }
+
+    @Override
+    public Page<ProductUserResponse> getTopProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
+        Page<Product> products = orderDetailRepository.getTopSellingProductsByCategory(pageable, categoryId);
         return products.map(this::convertProductToProductUserResponse);
     }
 

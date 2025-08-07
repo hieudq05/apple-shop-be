@@ -25,4 +25,14 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
                 order by sum(od.quantity) desc
             """)
     Page<Map<String, Object>> getTopSellingProducts(Pageable pageable, @Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+
+    @Query("""
+                select od.product
+                from OrderDetail od
+                where od.product.category.id = :categoryId
+                group by od.product
+                having od.product.isDeleted = false
+                order by sum(od.quantity) desc
+            """)
+    Page<Product> getTopSellingProductsByCategory(Pageable pageable, @Param("categoryId") Integer categoryId);
 }

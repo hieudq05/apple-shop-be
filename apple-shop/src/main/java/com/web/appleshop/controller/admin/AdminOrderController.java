@@ -43,9 +43,7 @@ public class AdminOrderController {
             @RequestParam(required = false) Integer size,
             @RequestBody AdminOrderSearchCriteria criteria
     ) {
-        Pageable pageable = Pageable
-                .ofSize(size != null ? size : 6)
-                .withPage(page != null ? page : 0);
+        Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 6, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<OrderSummaryV2Dto> orders = orderService.searchOrdersSummaryForAdmin(criteria, pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 orders.getNumber(),
