@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 
@@ -107,9 +109,9 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
     }
 
-    @GetMapping("vnpay-callback")
+    @GetMapping("vnpay/call-back")
     @Transactional
-    public ResponseEntity<ApiResponse<PaymentDto.VnPayIpnResponse>> vnpayCallback(
+    public RedirectView vnpayCallback(
             HttpServletRequest request
     ) {
         int paymentStatus = vnPayService.orderReturn(request);
@@ -117,33 +119,78 @@ public class PaymentController {
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String transactionId = request.getParameter("vnp_TxnRef");
         String responseCode = request.getParameter("vnp_ResponseCode");
+        String transactionStatus = request.getParameter("vnp_TransactionStatus");
+        String amount = request.getParameter("vnp_Amount");
+        String bankCode = request.getParameter("vnp_BankCode");
+        String bankTranNo = request.getParameter("vnp_BankTranNo");
+        String cardType = request.getParameter("vnp_CardType");
+        String payDate = request.getParameter("vnp_PayDate");
+        String transactionNo = request.getParameter("vnp_TransactionNo");
 
         if (paymentStatus == 1) {
             orderStatusService.updateStatus(
                     Integer.parseInt(orderInfo.split("#")[1]),
                     OrderStatus.PAID
             );
+            String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+                    .queryParam("transactionId", transactionId)
+                    .queryParam("ResponseCode", responseCode)
+                    .queryParam("TransactionStatus", transactionStatus)
+                    .queryParam("Amount", amount)
+                    .queryParam("BankCode", bankCode)
+                    .queryParam("BankTranNo", bankTranNo)
+                    .queryParam("CardType", cardType)
+                    .queryParam("PayDate", payDate)
+                    .queryParam("TransactionNo", transactionNo)
+                    .queryParam("OrderInfo", orderInfo)
+                    .queryParam("TxnRef", transactionId)
+                    .toUriString();
             log.info("Payment successful. Transaction ID: {}, Response code: {}", transactionId, responseCode);
-            return ResponseEntity.ok(ApiResponse.success(
-                    new PaymentDto.VnPayIpnResponse("00", "Thanh toán thành công"),
-                    "Payment successful"
-            ));
+            return new RedirectView(returnUrl);
         } else if (paymentStatus == 0) {
             orderStatusService.updateStatus(
                     Integer.parseInt(orderInfo.split("#")[1]),
                     OrderStatus.FAILED_PAYMENT
             );
+            String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+                    .queryParam("transactionId", transactionId)
+                    .queryParam("ResponseCode", responseCode)
+                    .queryParam("TransactionStatus", transactionStatus)
+                    .queryParam("Amount", amount)
+                    .queryParam("BankCode", bankCode)
+                    .queryParam("BankTranNo", bankTranNo)
+                    .queryParam("CardType", cardType)
+                    .queryParam("PayDate", payDate)
+                    .queryParam("TransactionNo", transactionNo)
+                    .queryParam("OrderInfo", orderInfo)
+                    .queryParam("TxnRef", transactionId)
+                    .toUriString();
             log.info("Payment failed. Transaction ID: {}, Response code: {}", transactionId, responseCode);
-            return ResponseEntity.ok(ApiResponse.success(
-                    new PaymentDto.VnPayIpnResponse("99", "Thanh toán thất bại"),
-                    "Payment failed"
-            ));
+            return new RedirectView(returnUrl);
+//            return ResponseEntity.ok(ApiResponse.success(
+//                    new PaymentDto.VnPayIpnResponse("99", "Thanh toán thất bại"),
+//                    "Payment failed"
+//            ));
         } else {
+            String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+                    .queryParam("transactionId", transactionId)
+                    .queryParam("ResponseCode", responseCode)
+                    .queryParam("TransactionStatus", transactionStatus)
+                    .queryParam("Amount", amount)
+                    .queryParam("BankCode", bankCode)
+                    .queryParam("BankTranNo", bankTranNo)
+                    .queryParam("CardType", cardType)
+                    .queryParam("PayDate", payDate)
+                    .queryParam("TransactionNo", transactionNo)
+                    .queryParam("OrderInfo", orderInfo)
+                    .queryParam("TxnRef", transactionId)
+                    .toUriString();
             log.info("Payment failed. Transaction ID: {}, Response code: {}", transactionId, responseCode);
-            return ResponseEntity.ok(ApiResponse.success(
-                    new PaymentDto.VnPayIpnResponse("99", "Chữ ký không hợp lệ."),
-                    "Payment failed"
-            ));
+            return new RedirectView(returnUrl);
+//            return ResponseEntity.ok(ApiResponse.success(
+//                    new PaymentDto.VnPayIpnResponse("99", "Chữ ký không hợp lệ."),
+//                    "Payment failed"
+//            ));
         }
     }
 
@@ -234,7 +281,7 @@ public class PaymentController {
 
     @GetMapping("paypal/success")
     @Transactional
-    public ResponseEntity<ApiResponse<PaymentDto.PayPalExecuteResponse>> paypalSuccess(
+    public RedirectView paypalSuccess(
             @RequestParam("paymentId") String paymentId,
             @RequestParam("PayerID") String payerId
     ) {
@@ -248,7 +295,17 @@ public class PaymentController {
             log.warn("PayPal payment failed. Payment ID: {}", paymentId);
         }
 
-        return ResponseEntity.ok(ApiResponse.success(response, "PayPal payment processed"));
+        String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+                .queryParam("TransactionId", response.getPaymentId())
+                .queryParam("ResponseCode", response.getCode())
+                .queryParam("TransactionStatus", response.getState())
+                .queryParam("OrderInfo", response.getMessage() + " #" + response.getOrderId())
+                .queryParam("TxnRef", response.getPaymentId())
+                .queryParam("TransactionNo", response.getPaymentId())
+                .toUriString();
+
+
+        return new RedirectView(returnUrl);
     }
 
     @GetMapping("paypal/cancel")

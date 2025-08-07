@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Value;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -31,6 +32,12 @@ public class OrderAdminResponse implements Serializable {
     String province;
     String country;
     OrderStatus status;
+    BigDecimal shippingDiscountAmount;
+    BigDecimal productDiscountAmount;
+    BigDecimal subTotal;
+    BigDecimal shippingFee;
+    BigDecimal finalTotal;
+    BigDecimal vat;
     Set<OrderUserResponse.OrderDetailDto> orderDetails;
     String shippingTrackingCode;
 }

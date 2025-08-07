@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ProductAdminResponse.ProductOwnerAdminResponse convertUserToProductOwnerAdminResponse(User user) {
-        return new ProductAdminResponse.ProductOwnerAdminResponse(
+        return user == null ? null : new ProductAdminResponse.ProductOwnerAdminResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getFirstName(),

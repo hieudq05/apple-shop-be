@@ -37,15 +37,13 @@ public class AdminOrderController {
         return ResponseEntity.ok(ApiResponse.success(order, "Get order successfully"));
     }
 
-    @GetMapping("search")
+    @PostMapping("search")
     public ResponseEntity<ApiResponse<List<OrderSummaryV2Dto>>> searchOrders(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestBody AdminOrderSearchCriteria criteria
     ) {
-        Pageable pageable = Pageable
-                .ofSize(size != null ? size : 6)
-                .withPage(page != null ? page : 0);
+        Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 6, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<OrderSummaryV2Dto> orders = orderService.searchOrdersSummaryForAdmin(criteria, pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 orders.getNumber(),

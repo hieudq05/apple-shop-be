@@ -40,6 +40,7 @@ public class UserOrderDetailResponse {
     private BigDecimal subtotal;
     private BigDecimal shippingFee;
     private BigDecimal finalTotal;
+    private BigDecimal vat;
 
 
     /**

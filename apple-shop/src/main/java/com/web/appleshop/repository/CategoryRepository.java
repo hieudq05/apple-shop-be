@@ -16,6 +16,6 @@ public interface CategoryRepository extends JpaRepository<Category, Integer>, Jp
 
     Optional<CategoryInfoView> findCategoryById(Integer id);
 
-    @Query("SELECT c FROM Category c LEFT JOIN FETCH c.products")
+    @Query("SELECT c FROM Category c LEFT JOIN FETCH c.products ps WHERE ps.isDeleted = false")
     List<Category> findCategoryWith4Products();
 }

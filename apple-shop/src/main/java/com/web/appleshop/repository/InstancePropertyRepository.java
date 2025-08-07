@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 public interface InstancePropertyRepository extends JpaRepository<InstanceProperty, Integer>, JpaSpecificationExecutor<InstanceProperty> {
@@ -19,4 +20,6 @@ public interface InstancePropertyRepository extends JpaRepository<InstanceProper
                     WHERE s.id IN :stockIds
             """)
     Set<StockInstanceDto> findInstancesForProducts(@Param("stockIds") Collection<Integer> stockIds);
+
+    Optional<InstanceProperty> findByName(String name);
 }

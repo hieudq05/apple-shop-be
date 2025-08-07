@@ -22,11 +22,13 @@ public class ProductAdminListDto implements Serializable {
     String createdBy;
     Integer categoryId;
     String categoryName;
+    Boolean isDeleted;
+
 
     Set<FeatureSummaryDto> features;
     Set<StockSummaryDto> stocks;
 
-    public ProductAdminListDto(Integer id, String name, String description, LocalDateTime createdAt, String createdBy, Integer categoryId, String categoryName) {
+    public ProductAdminListDto(Integer id, String name, String description, LocalDateTime createdAt, String createdBy, Integer categoryId, String categoryName, Boolean isDeleted) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -36,5 +38,6 @@ public class ProductAdminListDto implements Serializable {
         this.categoryName = categoryName;
         this.features = new LinkedHashSet<>();
         this.stocks = new LinkedHashSet<>();
+        this.isDeleted = isDeleted;
     }
 }

@@ -8,6 +8,8 @@ import com.web.appleshop.dto.response.admin.UserAdminInfoDto;
 import com.web.appleshop.dto.response.admin.UserAdminSummaryDto;
 import com.web.appleshop.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.util.Set;
 @RequestMapping("admin/users")
 @RequiredArgsConstructor
 class AdminUserController {
+    private static final Logger log = LoggerFactory.getLogger(AdminUserController.class);
     private final UserService userService;
 
     @GetMapping
@@ -48,12 +51,13 @@ class AdminUserController {
         return ResponseEntity.ok(ApiResponse.success(user, "Get user successfully"));
     }
 
-    @GetMapping("search")
+    @PostMapping("search")
     public ResponseEntity<ApiResponse<List<UserAdminSummaryDto>>> searchUsers(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestBody UserSearchCriteria criteria
     ) {
+        log.info("Search users with criteria: {}", criteria);
         Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
         Page<UserAdminSummaryDto> users = userService.searchUsers(criteria, pageable);
         PageableResponse pageableResponse = new PageableResponse(

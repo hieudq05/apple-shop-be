@@ -20,7 +20,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Set;
 
@@ -44,6 +43,10 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
         if (isSimpleCriteria(criteria)) {
             return productService.getAllProductsForAdminV1(pageable);
+        }
+
+        if (criteria.getIsDeleted() == null) {
+            criteria.setIsDeleted(false);
         }
 
         Specification<Product> spec = buildSpecification(criteria);

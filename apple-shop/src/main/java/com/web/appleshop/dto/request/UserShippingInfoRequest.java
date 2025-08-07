@@ -3,6 +3,7 @@ package com.web.appleshop.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.Length;
@@ -26,7 +27,7 @@ public class UserShippingInfoRequest {
     String email;
 
     @NotBlank(message = "Số điện thoại là bắt buộc.")
-    @Length(max = 20, message = "Số điện thoại phải có độ dài tối đa là 20 kí tự.")
+    @Pattern(regexp = "^(0|\\+84)(\\s|\\.)?((3[2-9])|(5[689])|(7[06-9])|(8[1-689])|(9[0-46-9]))(\\d)(\\s|\\.)?(\\d{3})(\\s|\\.)?(\\d{3})$", message = "Số điện thoại không đúng định dạng")
     String phone;
 
     @Length(max = 500, message = "Địa chỉ phải có độ dài tối đa là 500 kí tự.")

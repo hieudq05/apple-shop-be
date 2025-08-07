@@ -107,51 +107,75 @@ public class ProductServiceImpl implements ProductService {
 
         product = productRepository.save(product);
 
-        Set<CreateProductRequest.CreateProductStockRequest.CreateProductColorRequest> colorRequests = new LinkedHashSet<>();
+        Map<String, Color> processedColors = new HashMap<>();
+        Map<String, InstanceProperty> processedInstanceProperties = new HashMap<>();
         Set<Stock> stocks = new LinkedHashSet<>();
         for (CreateProductRequest.CreateProductStockRequest stockRequest : request.getStocks()) {
-            Color color;
-            if (stockRequest.getColor().getId() != null && colorRequests.stream().anyMatch(colorRequest -> colorRequest.getName().equals(stockRequest.getColor().getName()))) {
-                color = colorRepository.findById(stockRequest.getColor().getId()).orElseThrow(() -> new NotFoundException("Color not found with id: " + stockRequest.getColor().getId()));
+            Color colorEntity;
+            String colorName = stockRequest.getColor().getName();
+
+            // 1. Kiểm tra xem màu này đã được xử lý trong request chưa
+            if (processedColors.containsKey(colorName)) {
+                colorEntity = processedColors.get(colorName);
             } else {
-                color = Color.builder().name(stockRequest.getColor().getName()).hexCode(stockRequest.getColor().getHexCode()).build();
-                color = colorRepository.save(color);
-                colorRequests.add(stockRequest.getColor());
+                // 2. Nếu chưa, tìm trong DB xem có tồn tại không
+                colorEntity = colorRepository.findByName(colorName)
+                        .orElseGet(() -> {
+                            // 3. Nếu không có trong DB, tạo mới, save và đưa vào map
+                            Color newColor = Color.builder()
+                                    .name(colorName)
+                                    .hexCode(stockRequest.getColor().getHexCode())
+                                    .build();
+                            Color savedColor = colorRepository.save(newColor);
+                            processedColors.put(colorName, savedColor);
+                            return savedColor;
+                        });
+
+                // Nếu tìm thấy trong DB, cũng đưa vào map để lần sau không cần query nữa
+                if (!processedColors.containsKey(colorName)) {
+                    processedColors.put(colorName, colorEntity);
+                }
             }
 
             Stock stock = new Stock();
             BeanUtils.copyProperties(stockRequest, stock);
             stock.setProduct(product);
+            stock.setColor(colorEntity);
 
-            // filter instance duplicate
             Collection<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> filtered = stockRequest.getInstanceProperties().stream()
                     .collect(Collectors.toMap(
                             CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest::getName,
-                            Function.identity(), // value: chính object đó
+                            Function.identity(),
                             (existing, replacement) -> existing
                     ))
                     .values();
-
             Set<CreateProductRequest.CreateProductStockRequest.CreateProductInstanceRequest> instanceRequests = new HashSet<>(filtered);
 
             Set<InstanceProperty> instanceProperties = instanceRequests.stream().map(instanceRequest -> {
-                InstanceProperty instanceProperty;
-                if (instanceRequest.getId() != null) {
-                    instanceProperty = instancePropertyRepository.findById(instanceRequest.getId())
-                            .orElseThrow(() -> new NotFoundException("Instance property not found with id: " + instanceRequest.getId()));
-                    instanceProperty.setName(instanceRequest.getName());
-                } else {
-                    instanceProperty = InstanceProperty.builder()
-                            .name(instanceRequest.getName())
-                            .createdBy(createdBy)
-                            .createdAt(LocalDateTime.now())
-                            .build();
-                    instanceProperty = instancePropertyRepository.save(instanceProperty); // Cần save vì là entity mới
+                String instanceName = instanceRequest.getName();
+
+                // 1. Kiểm tra cache trước
+                if (processedInstanceProperties.containsKey(instanceName)) {
+                    return processedInstanceProperties.get(instanceName);
                 }
+
+                // 2. Nếu không có trong cache, tìm trong DB hoặc tạo mới
+                InstanceProperty instanceProperty = instancePropertyRepository.findByName(instanceName)
+                        .orElseGet(() -> {
+                            InstanceProperty newInstance = InstanceProperty.builder()
+                                    .name(instanceName)
+                                    .createdBy(createdBy)
+                                    .createdAt(LocalDateTime.now())
+                                    .build();
+                            return instancePropertyRepository.save(newInstance);
+                        });
+
+                // 3. Đưa vào cache cho lần xử lý tiếp theo
+                processedInstanceProperties.put(instanceName, instanceProperty);
                 return instanceProperty;
             }).collect(Collectors.toSet());
-            stock.setInstanceProperties(instanceProperties);
 
+            stock.setInstanceProperties(instanceProperties);
             stock = stockRepository.save(stock);
 
             Set<ProductPhoto> productPhotos = new LinkedHashSet<>();
@@ -171,7 +195,6 @@ public class ProductServiceImpl implements ProductService {
                 productPhotoRepository.saveAll(productPhotos);
                 stock.setProductPhotos(productPhotos);
             }
-            stock.setColor(color);
 
             stocks.add(stock);
         }
@@ -245,34 +268,34 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setCategory(category);
 
-        // 5. SỬA LỖI: Xử lý collection Features
-        Set<Feature> managedFeatures = product.getFeatures();
-        managedFeatures.clear(); // Xóa các mối quan hệ cũ
+        product.getFeatures().clear();
 
-        Set<Feature> newFeaturesToAdd = productRequest.getFeatures().stream().map(featureRequest -> {
+        productRequest.getFeatures().forEach(featureRequest -> {
             Feature feature;
             if (featureRequest.getId() != null) {
                 feature = featureRepository.findById(featureRequest.getId())
                         .orElseThrow(() -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
             } else {
+                Set<Product> products = new LinkedHashSet<>();
+                products.add(product);
                 feature = Feature.builder()
                         .name(featureRequest.getName())
                         .description(featureRequest.getDescription())
                         .image(
-                                featureRequest.getImage() instanceof MultipartFile
-                                        ? uploadUtils.uploadFile((MultipartFile) featureRequest.getImage())
+                                featureRequest.getImage().toString().startsWith("feature_")
+                                        ? uploadUtils.uploadFile(files.get(featureRequest.getImage().toString()))
                                         : featureRequest.getImage().toString()
                         )
                         .createdBy(persistentUpdatedBy)
-                        .products(new LinkedHashSet<>())
+                        .products(products)
                         .build();
                 feature = featureRepository.save(feature); // Cần save vì là entity mới
             }
-            feature.addProduct(product);
-            return feature;
-        }).collect(Collectors.toSet());
-
-        managedFeatures.addAll(newFeaturesToAdd); // Thêm các mối quan hệ mới vào collection đang được quản lý
+            log.info("New feature added: " + feature.getName() + " - " + feature.getId() + " - " + feature.getImage() + " - " + feature.getProducts().size() + " products in this feature.");
+            product.getFeatures().add(feature);
+        });
+        log.info("Number of features in product: " + product.getFeatures().size());
+        productRepository.save(product);
 
         // 6. SỬA LỖI: Xử lý collection Stocks
         Set<Stock> managedStocks = product.getStocks();
@@ -340,8 +363,8 @@ public class ProductServiceImpl implements ProductService {
                 }
                 productPhoto.setStock(stock); // Thiết lập mối quan hệ ngược
                 productPhoto.setImageUrl(
-                        photoRequest.getImageUrl() instanceof MultipartFile
-                                ? uploadUtils.uploadFile((MultipartFile) photoRequest.getImageUrl())
+                        photoRequest.getImageUrl().toString().startsWith("stock_")
+                                ? uploadUtils.uploadFile(files.get(photoRequest.getImageUrl().toString()))
                                 : photoRequest.getImageUrl().toString()
                 );
                 productPhoto.setAlt(photoRequest.getAlt());
@@ -444,6 +467,12 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Page<ProductUserResponse> getProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
         Page<Product> products = productRepository.findAllByCategory_IdAndIsDeleted(categoryId, false, pageable).orElseThrow(() -> new NotFoundException("Category not found with id: " + categoryId));
+        return products.map(this::convertProductToProductUserResponse);
+    }
+
+    @Override
+    public Page<ProductUserResponse> getTopProductsByCategoryIdForUser(Integer categoryId, Pageable pageable) {
+        Page<Product> products = orderDetailRepository.getTopSellingProductsByCategory(pageable, categoryId);
         return products.map(this::convertProductToProductUserResponse);
     }
 
@@ -551,6 +580,7 @@ public class ProductServiceImpl implements ProductService {
                                 .colorHexCode(stock.getColor().getHexCode())
                                 .build()
                 ).collect(Collectors.toSet()))
+                .isDeleted(product.getIsDeleted())
                 .build();
     }
 

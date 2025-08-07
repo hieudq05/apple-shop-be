@@ -676,7 +676,11 @@ public class OrderServiceImpl implements OrderService {
                 .add(order.getShippingFee())
                 .subtract(order.getShippingDiscountAmount());
 
-        order.setFinalTotal(finalTotal.add(finalTotal.multiply(BigDecimal.valueOf(0.1))));
+        BigDecimal vat = finalTotal.multiply(BigDecimal.valueOf(0.1));
+
+        order.setVat(vat);
+
+        order.setFinalTotal(finalTotal.add(vat));
     }
 
     private PaymentDto.VnPayResponse getVnPayResponse(HttpServletRequest request, Order order) {
@@ -732,6 +736,12 @@ public class OrderServiceImpl implements OrderService {
                 order.getProvince(),
                 order.getCountry(),
                 order.getStatus(),
+                order.getShippingDiscountAmount(),
+                order.getProductDiscountAmount(),
+                order.getSubtotal(),
+                order.getShippingFee(),
+                order.getFinalTotal(),
+                order.getVat(),
                 order.getOrderDetails().stream().map(this::convertOrderDetailToOrderDetailDto).collect(Collectors.toSet()),
                 order.getShippingTrackingCode()
         );
@@ -750,16 +760,24 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderUserResponse.OrderDetailDto convertOrderDetailToOrderDetailDto(OrderDetail orderDetail) {
+        Boolean isReviewAvailable = null;
+        if (orderDetail.getProduct()!= null && !orderDetail.getProduct().getIsDeleted()) {
+            isReviewAvailable = orderDetail.getIsReviewed() == null ? Boolean.FALSE : orderDetail.getIsReviewed();
+        } else {
+            isReviewAvailable = Boolean.TRUE;
+        }
         return new OrderUserResponse.OrderDetailDto(
                 orderDetail.getId(),
                 new OrderUserResponse.OrderDetailDto.ProductDto(orderDetail.getProduct() == null ? null : orderDetail.getProduct().getId()),
                 orderDetail.getProductName(),
+                orderDetail.getStock() == null ? null : orderDetail.getStock().getId(),
                 orderDetail.getQuantity(),
                 orderDetail.getPrice(),
                 orderDetail.getNote(),
                 orderDetail.getColorName(),
                 orderDetail.getVersionName(),
-                orderDetail.getImageUrl()
+                orderDetail.getImageUrl(),
+                isReviewAvailable
         );
     }
 
@@ -770,7 +788,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getPaymentType(),
                 order.getApproveAt(),
                 order.getStatus(),
-                new OrderSummaryV2Dto.UserSummary(
+                order.getCreatedBy() == null ? null : new OrderSummaryV2Dto.UserSummary(
                         order.getCreatedBy().getId(),
                         order.getCreatedBy().getFirstName(),
                         order.getCreatedBy().getLastName(),

@@ -135,12 +135,12 @@ public class UserReviewSearchService {
                 review.getRating(),
                 review.getCreatedAt(),
                 review.getReplyContent(),
-                new UserReviewDto.UserDto(
+                review.getRepliedBy() != null ? new UserReviewDto.UserDto(
                         review.getRepliedBy().getId(),
                         review.getRepliedBy().getFirstName(),
                         review.getRepliedBy().getLastName(),
                         review.getRepliedBy().getImage()
-                ),
+                ) : null,
                 review.getStock().getProduct().getId(),
                 review.getStock().getProduct().getName(),
                 new UserReviewDto.StockDto(

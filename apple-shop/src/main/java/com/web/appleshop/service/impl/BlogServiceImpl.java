@@ -52,6 +52,7 @@ class BlogServiceImpl implements BlogService {
         blog.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         blog.setAuthor(user);
         blog.setThumbnail(!fileImage.isEmpty() ? uploadUtils.uploadFile(fileImage) : request.getThumbnail());
+        blog.setIsPublished(request.getIsPublished() != null && request.getIsPublished());
 
         return blogRepository.save(blog);
     }

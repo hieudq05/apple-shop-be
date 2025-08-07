@@ -2,6 +2,7 @@ package com.web.appleshop.specification;
 
 import com.web.appleshop.dto.request.BaseProductSearchCriteria;
 import com.web.appleshop.dto.request.AdminProductSearchCriteria;
+import com.web.appleshop.dto.request.UserProductSearchCriteria;
 import com.web.appleshop.entity.*;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.criteria.Order;
@@ -82,7 +83,10 @@ public class ProductSpecification {
                 addPromotionFilter(adminCriteria.getPromotionIds(), root, criteriaBuilder, predicates);
 
                 // Is deleted filters
-                addIsDeletedFilter(adminCriteria.getIsDeleted(), root, criteriaBuilder, predicates);
+                // addIsDeletedFilter(adminCriteria.getIsDeleted(), root, criteriaBuilder, predicates);
+            }
+            if(criteria instanceof UserProductSearchCriteria){
+                addIsDeletedFilter(false, root, criteriaBuilder, predicates);
             }
 
             query.distinct(true);

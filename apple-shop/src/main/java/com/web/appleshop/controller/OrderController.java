@@ -51,7 +51,8 @@ public class OrderController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestBody UserOrderSearchCriteria criteria) {
-        Pageable pageable = Pageable.ofSize(size != null ? size : 6).withPage(page != null ? page : 0);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 6, sort);
         Page<OrderUserResponse> orders = orderService.searchOrdersForUser(criteria, pageable);
         PageableResponse pageableResponse = new PageableResponse(
                 orders.getNumber(),
