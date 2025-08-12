@@ -7,6 +7,7 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
+@NoArgsConstructor
 public class UserProductSearchCriteria extends BaseProductSearchCriteria {
     @Override
     public boolean hasJoins() {

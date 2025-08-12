@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class MailService {
     private final MailProducer mailProducer;
-    private final String frontendUrl = "http://localhost:5173/";
+    private final String frontendUrl = "https://hieudq05.github.io/";
     private final String backendUrl = "http://localhost:8080/";
 
     public MailService(MailProducer mailProducer) {

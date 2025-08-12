@@ -1,0 +1,65 @@
+spring:
+    application:
+        name: apple-shop-test
+    datasource:
+        url: jdbc:sqlserver://localhost:1433;databaseName=apple_shop_test_v1;encrypt=true;trustServerCertificate=true
+        driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+        username: ${DB_USERNAME:sa}
+        password: ${DB_PASSWORD:Hieu26102005@}
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: false
+        database-platform: org.hibernate.dialect.SQLServerDialect
+    mail:
+        host: localhost
+        port: 2525
+        username: test@example.com
+        password: testpassword
+        properties:
+            mail:
+                smtp:
+                    auth: false
+                    starttls:
+                        enable: false
+
+spring.autoconfigure.exclude:
+    - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+    - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+    - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+application:
+    security:
+        jwt:
+            secret-key: dGVzdF9zZWNyZXRfa2V5X2Zvcl9hcHBsZV9zaG9wX3Rlc3RzXzMyYnl0ZXM=
+            expiration: 3600000
+            refresh-token:
+                expiration: 2592000000
+
+server:
+    servlet:
+        context-path: /api/v1
+    port: 0
+
+public:
+    base:
+        url: http://localhost
+
+google:
+    client-id: ${GOOGLE_CLIENT_ID:test-google-client-id}
+
+vnpay:
+    url: http://localhost/vnpay
+    tmnCode: TEST
+    secretKey: TEST
+    version: 2.1.0
+    command: pay
+    orderType: other
+    returnUrl: http://localhost/return
+    ipnUrl: http://localhost/ipn
+
+paypal:
+    client:
+        id: test-client-id
+        secret: test-client-secret
+    mode: sandbox

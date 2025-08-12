@@ -132,7 +132,7 @@ public class PaymentController {
                     Integer.parseInt(orderInfo.split("#")[1]),
                     OrderStatus.PAID
             );
-            String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+            String returnUrl = UriComponentsBuilder.fromHttpUrl("https://hieudq05.github.io/apple-shop-fe.github.io/payment-result")
                     .queryParam("transactionId", transactionId)
                     .queryParam("ResponseCode", responseCode)
                     .queryParam("TransactionStatus", transactionStatus)
@@ -152,7 +152,7 @@ public class PaymentController {
                     Integer.parseInt(orderInfo.split("#")[1]),
                     OrderStatus.FAILED_PAYMENT
             );
-            String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+            String returnUrl = UriComponentsBuilder.fromHttpUrl("https://hieudq05.github.io/apple-shop-fe.github.io/payment-result")
                     .queryParam("transactionId", transactionId)
                     .queryParam("ResponseCode", responseCode)
                     .queryParam("TransactionStatus", transactionStatus)
@@ -172,7 +172,7 @@ public class PaymentController {
 //                    "Payment failed"
 //            ));
         } else {
-            String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+            String returnUrl = UriComponentsBuilder.fromHttpUrl("https://hieudq05.github.io/apple-shop-fe.github.io/payment-result")
                     .queryParam("transactionId", transactionId)
                     .queryParam("ResponseCode", responseCode)
                     .queryParam("TransactionStatus", transactionStatus)
@@ -295,7 +295,7 @@ public class PaymentController {
             log.warn("PayPal payment failed. Payment ID: {}", paymentId);
         }
 
-        String returnUrl = UriComponentsBuilder.fromHttpUrl("http://localhost:5173/payment-result")
+        String returnUrl = UriComponentsBuilder.fromHttpUrl("https://hieudq05.github.io/apple-shop-fe.github.io/payment-result")
                 .queryParam("TransactionId", response.getPaymentId())
                 .queryParam("ResponseCode", response.getCode())
                 .queryParam("TransactionStatus", response.getState())

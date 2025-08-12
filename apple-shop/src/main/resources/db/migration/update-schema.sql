@@ -1,499 +1,428 @@
-CREATE TABLE blog
+create table categories
 (
-    id           int IDENTITY (1, 1) NOT NULL,
-    title        nvarchar(255)       NOT NULL,
-    content      nvarchar(MAX)       NOT NULL,
-    thumbnail    nvarchar(255),
-    author_id    int,
+    id          int identity
+        constraint pk_category
+            primary key,
+    name        nvarchar(100) not null,
+    image       nvarchar(max),
+    description nvarchar(255)
+)
+go
+
+create table colors
+(
+    id       int identity
+        constraint pk_color
+            primary key,
+    name     nvarchar(50) not null
+        constraint uk_color_name
+            unique,
+    hex_code varchar(7)
+)
+go
+
+create table roles
+(
+    id   int identity
+        constraint pk_role
+            primary key,
+    name nvarchar(50) not null
+)
+go
+
+create table users
+(
+    id         int identity
+        constraint pk_user
+            primary key,
+    email      nvarchar(255) not null,
+    phone      nvarchar(20),
+    password   nvarchar(255),
+    first_name nvarchar(50),
+    last_name  nvarchar(50),
+    image      nvarchar(255),
+    created_at datetime
+        constraint DF_user_created_at default getdate(),
+    updated_at datetime,
+    enabled    bit default 0,
+    birth      date
+)
+go
+
+create table blogs
+(
+    id           int identity
+        constraint pk_blog
+            primary key,
+    title        nvarchar(255) not null,
+    content      nvarchar(max) not null,
+    thumbnail    nvarchar(max),
+    author_id    int
+        constraint FK_BLOG_ON_AUTHORID
+            references users,
     published_at datetime,
     created_at   datetime
-        CONSTRAINT DF_blog_created_at DEFAULT GETDATE(),
+        constraint DF_blog_created_at default getdate(),
     updated_at   datetime,
-    status       nvarchar(50),
-    CONSTRAINT pk_blog PRIMARY KEY (id)
+    is_published bit default 0 not null,
+    status       nvarchar(50)
 )
-GO
+go
 
-CREATE TABLE cart_item
+create table features
 (
-    id           int IDENTITY (1, 1) NOT NULL,
-    user_id      int                 NOT NULL,
-    product_id   int                 NOT NULL,
-    product_name nvarchar(255),
-    stock_id     int                 NOT NULL,
-    quantity     int                 NOT NULL,
-    CONSTRAINT pk_cartitem PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE category
-(
-    id    int IDENTITY (1, 1) NOT NULL,
-    name  nvarchar(100)       NOT NULL,
-    image nvarchar(255),
-    CONSTRAINT pk_category PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE color
-(
-    id         int IDENTITY (1, 1) NOT NULL,
-    name       nvarchar(50)        NOT NULL,
-    hex_code   varchar(7),
-    product_id int,
-    CONSTRAINT pk_color PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE feature
-(
-    id          int IDENTITY (1, 1) NOT NULL,
-    name        nvarchar(100)       NOT NULL,
+    id          int identity
+        constraint pk_feature
+            primary key,
+    name        nvarchar(100) not null,
     description nvarchar(500),
-    image       nvarchar(255),
+    image       nvarchar(max),
     created_at  datetime
-        CONSTRAINT DF_feature_created_at DEFAULT GETDATE(),
-    created_by  int                 NOT NULL,
-    CONSTRAINT pk_feature PRIMARY KEY (id)
+        constraint DF_feature_created_at default getdate(),
+    created_by  int           not null
+        constraint FK_FEATURE_ON_CREATEDBY
+            references users
 )
-GO
+go
 
-CREATE TABLE instance_properties
+create table instance_properties
 (
-    id         int IDENTITY (1, 1) NOT NULL,
-    name       nvarchar(255)       NOT NULL,
+    id         int identity
+        constraint pk_instanceproperties
+            primary key,
+    name       nvarchar(255) not null
+        constraint uk_instance_property_name
+            unique,
     created_at datetime
-        CONSTRAINT DF_instance_properties_created_at DEFAULT GETDATE(),
-    created_by int                 NOT NULL,
-    CONSTRAINT pk_instanceproperties PRIMARY KEY (id)
+        constraint DF_instance_properties_created_at default getdate(),
+    created_by int           not null
+        constraint FK_INSTANCEPROPERTIES_ON_CREATEDBY
+            references users
 )
-GO
+go
 
-CREATE TABLE [order]
+create table products
 (
-    id           int IDENTITY (1, 1) NOT NULL,
-    created_by   int                 NOT NULL,
-    created_at   datetime
-        CONSTRAINT DF_order_created_at DEFAULT GETDATE(),
-    payment_type int                 NOT NULL,
-    approve_at   datetime
-        CONSTRAINT DF_order_approve_at DEFAULT GETDATE(),
-    approve_by   int                 NOT NULL,
-    first_name   nvarchar(55),
-    last_name    nvarchar(55),
-    email        nvarchar(255),
-    phone        nvarchar(20),
-    address      nvarchar(500),
-    ward         nvarchar(100),
-    district     nvarchar(100),
-    province     nvarchar(100),
-    country      nvarchar(100),
-    status       int                 NOT NULL,
-    CONSTRAINT pk_order PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE order_detail
-(
-    id           int IDENTITY (1, 1) NOT NULL,
-    order_id     int                 NOT NULL,
-    product_id   int                 NOT NULL,
-    product_name nvarchar(255)       NOT NULL,
-    stock_id     int                 NOT NULL,
-    quantity     int                 NOT NULL,
-    price        decimal(18, 2)      NOT NULL,
-    note         nvarchar(255),
-    CONSTRAINT pk_orderdetail PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE order_status
-(
-    id   int IDENTITY (1, 1) NOT NULL,
-    name nvarchar(255),
-    CONSTRAINT pk_orderstatus PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE payment_type
-(
-    id   int IDENTITY (1, 1) NOT NULL,
-    name nvarchar(255)       NOT NULL,
-    CONSTRAINT pk_paymenttype PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE product
-(
-    id          int IDENTITY (1, 1) NOT NULL,
-    name        nvarchar(255)       NOT NULL,
-    description nvarchar(MAX),
+    id          int identity
+        constraint pk_product
+            primary key,
+    name        nvarchar(255) not null,
+    description nvarchar(max),
     created_at  datetime
-        CONSTRAINT DF_product_created_at DEFAULT GETDATE(),
-    created_by  int                 NOT NULL,
+        constraint DF_product_created_at default getdate(),
+    created_by  int           not null
+        constraint FK_PRODUCT_ON_CREATEDBY
+            references users,
     updated_at  datetime
-        CONSTRAINT DF_product_updated_at DEFAULT GETDATE(),
-    updated_by  int                 NOT NULL,
-    category_id int                 NOT NULL,
-    CONSTRAINT pk_product PRIMARY KEY (id)
+        constraint DF_product_updated_at default getdate(),
+    updated_by  int           not null
+        constraint FK_PRODUCT_ON_UPDATEDBY
+            references users,
+    category_id int
+        constraint FK_PRODUCT_ON_CATEGORYID
+            references categories
+            on update cascade on delete set null,
+    is_deleted  bit default 0
 )
-GO
+go
 
-CREATE TABLE product_feature
+create table product_features
 (
-    feature_id int NOT NULL,
-    product_id int NOT NULL,
-    CONSTRAINT pk_productfeature PRIMARY KEY (feature_id, product_id)
+    feature_id int not null
+        constraint fk_profea_on_featureqCSbb5
+            references features
+            on update cascade on delete cascade,
+    product_id int not null
+        constraint fk_profea_on_productPrAiak
+            references products
+            on update cascade,
+    constraint pk_productfeature
+        primary key (feature_id, product_id)
 )
-GO
+go
 
-CREATE TABLE product_features
+create table promotions
 (
-    product_id  int NOT NULL,
-    features_id int NOT NULL,
-    CONSTRAINT pk_product_features PRIMARY KEY (product_id, features_id)
-)
-GO
-
-CREATE TABLE product_photos
-(
-    id         int IDENTITY (1, 1) NOT NULL,
-    stock_id   int                 NOT NULL,
-    image_url  nvarchar(255)       NOT NULL,
-    is_default bit
-        CONSTRAINT DF_product_photos_is_default DEFAULT 0,
-    CONSTRAINT pk_productphotos PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE product_promotions
-(
-    categories_id int NOT NULL,
-    promotions_id int NOT NULL,
-    CONSTRAINT pk_product_promotions PRIMARY KEY (categories_id, promotions_id)
-)
-GO
-
-CREATE TABLE promotion_category
-(
-    category_id  int NOT NULL,
-    promotion_id int NOT NULL,
-    CONSTRAINT pk_promotioncategory PRIMARY KEY (category_id, promotion_id)
-)
-GO
-
-CREATE TABLE promotion_type
-(
-    id   int IDENTITY (1, 1) NOT NULL,
-    name nvarchar(155),
-    CONSTRAINT pk_promotiontype PRIMARY KEY (id)
-)
-GO
-
-CREATE TABLE promotions
-(
-    id                  int IDENTITY (1, 1) NOT NULL,
-    name                nvarchar(255)       NOT NULL,
-    code                nvarchar(50)        NOT NULL,
-    promotion_type      int                 NOT NULL,
-    value               decimal(18, 2)      NOT NULL,
+    id                  int identity
+        constraint pk_promotions
+            primary key,
+    name                nvarchar(255)  not null,
+    code                nvarchar(50)   not null,
+    promotion_type      varchar(55)    not null,
+    value               decimal(18, 2) not null,
     max_discount_amount decimal(18, 2),
     min_order_value     decimal(18, 2),
-    usage_limit         int                 NOT NULL,
+    usage_limit         int            not null,
     usage_count         int
-        CONSTRAINT DF_promotions_usage_count DEFAULT 0,
+        constraint DF_promotions_usage_count default 0,
     is_active           bit
-        CONSTRAINT DF_promotions_is_active DEFAULT 1,
-    start_date          datetime            NOT NULL,
-    end_date            datetime            NOT NULL,
-    apply_on            bit                 NOT NULL,
-    CONSTRAINT pk_promotions PRIMARY KEY (id)
+        constraint DF_promotions_is_active default 1,
+    start_date          datetime       not null,
+    end_date            datetime       not null,
+    created_at          datetime2 default getdate(),
+    created_by          int
+        constraint promotions_users_id_fk
+            references users
 )
-GO
+go
 
-CREATE TABLE review
+create table orders
 (
-    id            int IDENTITY (1, 1) NOT NULL,
-    user_id       int                 NOT NULL,
-    product_id    int                 NOT NULL,
-    content       nvarchar(1000)      NOT NULL,
-    rating        int                 NOT NULL,
-    created_at    datetime
-        CONSTRAINT DF_review_created_at DEFAULT GETDATE(),
-    is_approved   bit
-        CONSTRAINT DF_review_is_approved DEFAULT 0,
-    approved_by   int,
-    approved_at   datetime
-        CONSTRAINT DF_review_approved_at DEFAULT GETDATE(),
-    reply_content nvarchar(1000)      NOT NULL,
-    replied_by    int                 NOT NULL,
-    CONSTRAINT pk_review PRIMARY KEY (id)
+    id                       int identity
+        constraint pk_order
+            primary key,
+    created_by               int
+        constraint FK_ORDER_ON_CREATEDBY
+            references users,
+    created_at               datetime
+        constraint DF_order_created_at default getdate(),
+    payment_type             varchar(55) not null,
+    approve_at               datetime
+        constraint DF_order_approve_at default getdate(),
+    approve_by               int
+        constraint FK_ORDER_ON_APPROVEBY
+            references users,
+    first_name               nvarchar(55),
+    last_name                nvarchar(55),
+    email                    nvarchar(255),
+    phone                    nvarchar(20),
+    address                  nvarchar(500),
+    ward                     nvarchar(100),
+    district                 nvarchar(100),
+    province                 nvarchar(100),
+    country                  nvarchar(100),
+    status                   varchar(55) not null,
+    shipping_tracking_code   varchar(255),
+    product_promotion_id     int
+        constraint orders_product_promotions_id_fk
+            references promotions,
+    shipping_promotion_id    int
+        constraint orders_shipping_promotions_id_fk
+            references promotions,
+    shipping_discount_amount decimal(18, 2) default 0,
+    product_discount_amount  decimal(18, 2) default 0,
+    subtotal                 decimal(18, 2),
+    shipping_fee             decimal(18, 2) default 0,
+    final_total              decimal(18, 2),
+    vat                      decimal(18, 2)
 )
-GO
+go
 
-CREATE TABLE role
+create table refresh_tokens
 (
-    id   int IDENTITY (1, 1) NOT NULL,
-    name nvarchar(50)        NOT NULL,
-    CONSTRAINT pk_role PRIMARY KEY (id)
+    id          int identity
+        primary key,
+    user_id     int          not null
+        references users,
+    token       varchar(500) not null
+        unique,
+    expiry_date date         not null,
+    is_revoked  bit default 0,
+    issued_at   date
 )
-GO
+go
 
-CREATE TABLE saved_product
+create table shipping_infos
 (
-    product_id int NOT NULL,
-    created_at datetime
-        CONSTRAINT DF_saved_product_created_at DEFAULT GETDATE(),
-    user_id    int NOT NULL,
-    stock_id   int NOT NULL,
-    CONSTRAINT pk_savedproduct PRIMARY KEY (user_id, stock_id)
-)
-GO
-
-CREATE TABLE shipping_info
-(
-    id         int IDENTITY (1, 1) NOT NULL,
-    user_id    int                 NOT NULL,
+    id         int identity
+        constraint pk_shippinginfo
+            primary key,
+    user_id    int           not null
+        constraint FK_SHIPPINGINFO_ON_USERID
+            references users
+            on delete cascade,
     first_name nvarchar(55),
-    last_name  nvarchar(55),
-    email      nvarchar(255),
-    phone      nvarchar(20),
+    last_name  nvarchar(55)  not null,
+    email      nvarchar(255) not null,
+    phone      nvarchar(20)  not null,
     address    nvarchar(500),
-    ward       nvarchar(100),
-    district   nvarchar(100),
-    province   nvarchar(100),
-    country    nvarchar(100),
+    ward       nvarchar(100) not null,
+    district   nvarchar(100) not null,
     is_default bit
-        CONSTRAINT DF_shipping_info_is_default DEFAULT 0,
-    CONSTRAINT pk_shippinginfo PRIMARY KEY (id)
+        constraint DF_shipping_info_is_default default 0,
+    created_at datetime2 default getdate(),
+    updated_at datetime2 default getdate(),
+    province   nvarchar(100) not null
 )
-GO
+go
 
-CREATE TABLE stock
+create table stocks
 (
-    id         int IDENTITY (1, 1)             NOT NULL,
-    product_id int                             NOT NULL,
-    color_id   int,
+    id         int identity
+        constraint pk_stock
+            primary key,
+    product_id int                             not null
+        constraint FK_STOCK_ON_PRODUCTID
+            references products,
+    color_id   int
+        constraint FK_STOCK_ON_COLORID
+            references colors
+            on update cascade,
     quantity   int
-        CONSTRAINT DF_stock_quantity DEFAULT 0 NOT NULL,
-    CONSTRAINT pk_stock PRIMARY KEY (id)
+        constraint DF_stock_quantity default 0 not null,
+    price      decimal(18, 2)                  not null
 )
-GO
+go
 
-CREATE TABLE stock_instance
+create table cart_items
 (
-    instance_id int NOT NULL,
-    stock_id    int NOT NULL,
-    CONSTRAINT pk_stockinstance PRIMARY KEY (instance_id, stock_id)
+    id           int identity
+        constraint pk_cartitem
+            primary key,
+    user_id      int not null
+        constraint FK_CARTITEM_ON_USERID
+            references users,
+    product_id   int not null
+        constraint FK_CARTITEM_ON_PRODUCTID
+            references products,
+    product_name nvarchar(255),
+    stock_id     int not null
+        constraint FK_CARTITEM_ON_STOCKID
+            references stocks,
+    quantity     int not null
 )
-GO
+go
 
-CREATE TABLE stock_instance_properties
+create table order_details
 (
-    stock_id               int NOT NULL,
-    instance_properties_id int NOT NULL,
-    CONSTRAINT pk_stock_instanceproperties PRIMARY KEY (stock_id, instance_properties_id)
+    id           int identity
+        constraint pk_orderdetail
+            primary key,
+    order_id     int            not null
+        constraint FK_ORDERDETAIL_ON_ORDERID
+            references orders
+            on delete cascade,
+    product_id   int
+        constraint order_details_products_id_fk
+            references products
+            on update cascade on delete set null,
+    product_name nvarchar(255)  not null,
+    quantity     int            not null,
+    price        decimal(18, 2) not null,
+    note         nvarchar(255),
+    color_name   nvarchar(50)   not null,
+    version_name nvarchar(550)  not null,
+    image_url    nvarchar(max)  not null,
+    stock_id     int
+        constraint order_details_stocks_id_fk
+            references stocks
+            on update cascade on delete set null,
+    is_reviewed  bit
 )
-GO
+go
 
-CREATE TABLE [user]
+create table product_photos
 (
-    id            int IDENTITY (1, 1) NOT NULL,
-    email         nvarchar(255)       NOT NULL,
-    phone         nvarchar(20),
-    password_hash nvarchar(255)       NOT NULL,
-    first_name    nvarchar(50),
-    last_name     nvarchar(50),
-    address       nvarchar(500),
-    ward          nvarchar(100),
-    district      nvarchar(100),
-    province      nvarchar(100),
-    country       nvarchar(100),
-    image         nvarchar(255),
+    id        int identity
+        constraint pk_productphotos
+            primary key,
+    stock_id  int           not null
+        constraint FK_PRODUCTPHOTOS_ON_STOCKID
+            references stocks,
+    image_url nvarchar(max) not null,
+    alt       nvarchar(155)
+)
+go
+
+create table reviews
+(
+    id            int identity
+        constraint pk_review
+            primary key,
+    user_id       int            not null
+        constraint FK_REVIEW_ON_USERID
+            references users,
+    order_id      int            not null
+        constraint reviews_orders_id_fk
+            references orders,
+    content       nvarchar(1000) not null,
+    rating        int            not null,
     created_at    datetime
-        CONSTRAINT DF_user_created_at DEFAULT GETDATE(),
-    updated_at    datetime,
-    role_id       int,
-    is_active     bit
-        CONSTRAINT DF_user_is_active DEFAULT 1,
-    CONSTRAINT pk_user PRIMARY KEY (id)
+        constraint DF_review_created_at default getdate(),
+    is_approved   bit
+        constraint DF_review_is_approved default 0,
+    approved_by   int
+        constraint FK_REVIEW_ON_APPROVEDBY
+            references users,
+    approved_at   datetime,
+    reply_content nvarchar(1000),
+    replied_by    int
+        constraint FK_REVIEW_ON_REPLIEDBY
+            references users,
+    stock_id      int            not null
+        constraint reviews_stocks_id_fk
+            references stocks
 )
-GO
+go
 
-CREATE TABLE user_activity_log
+create table saved_products
 (
-    id                 bigint IDENTITY (1, 1) NOT NULL,
-    user_id            int                    NOT NULL,
-    log_time           datetime
-        CONSTRAINT DF_user_activity_log_log_time DEFAULT GETDATE(),
-    action_type        nvarchar(MAX)          NOT NULL,
-    target_entity_type nvarchar(MAX),
-    message            nvarchar(MAX),
-    old_value          nvarchar(MAX),
-    CONSTRAINT pk_useractivitylog PRIMARY KEY (id)
+    product_id int not null
+        constraint FK_SAVEDPRODUCT_ON_PRODUCTID
+            references products
+            on delete cascade,
+    created_at datetime
+        constraint DF_saved_product_created_at default getdate(),
+    user_id    int not null
+        constraint FK_SAVEDPRODUCT_ON_USERID
+            references users
+            on delete cascade,
+    stock_id   int not null
+        constraint FK_SAVEDPRODUCT_ON_STOCKID
+            references stocks,
+    constraint pk_savedproduct
+        primary key (user_id, stock_id)
 )
-GO
+go
 
-ALTER TABLE blogs
-    ADD CONSTRAINT FK_BLOG_ON_AUTHORID FOREIGN KEY (author_id) REFERENCES users (id)
-GO
+create table stock_instances
+(
+    stock_id    int not null
+        constraint stock_instances_stocks_id_fk
+            references stocks,
+    instance_id int not null
+        constraint stock_instances_instance_properties_id_fk
+            references instance_properties
+            on update cascade
+)
+go
 
-ALTER TABLE cart_items
-    ADD CONSTRAINT FK_CARTITEM_ON_PRODUCTID FOREIGN KEY (product_id) REFERENCES products (id)
-GO
+create table user_activity_logs
+(
+    id                 bigint identity
+        constraint pk_useractivitylog
+            primary key,
+    user_id            int           not null
+        constraint user_activity_log_user_id_fk
+            references users,
+    log_time           datetime
+        constraint DF_user_activity_log_log_time default getdate(),
+    action_type        nvarchar(max) not null,
+    target_entity_type nvarchar(max),
+    message            nvarchar(max),
+    old_value          nvarchar(max),
+    new_value          nvarchar(max)
+)
+go
 
-ALTER TABLE cart_items
-    ADD CONSTRAINT FK_CARTITEM_ON_STOCKID FOREIGN KEY (stock_id) REFERENCES stocks (id)
-GO
+create table user_role
+(
+    user_id int not null
+        constraint user_role_users_id_fk
+            references users,
+    role_id int not null
+        constraint user_role_roles_id_fk
+            references roles,
+    constraint user_role_pk
+        primary key (role_id, user_id)
+)
+go
 
-ALTER TABLE cart_items
-    ADD CONSTRAINT FK_CARTITEM_ON_USERID FOREIGN KEY (user_id) REFERENCES users (id)
-GO
+create unique index user_email_uindex
+    on users (email)
+go
 
-ALTER TABLE colors
-    ADD CONSTRAINT FK_COLOR_ON_PRODUCTID FOREIGN KEY (product_id) REFERENCES products (id)
-GO
-
-ALTER TABLE features
-    ADD CONSTRAINT FK_FEATURE_ON_CREATEDBY FOREIGN KEY (created_by) REFERENCES users (id)
-GO
-
-ALTER TABLE features
-    ADD CONSTRAINT FK_FEATURE_ON_ID FOREIGN KEY (id) REFERENCES users (id)
-GO
-
-ALTER TABLE instance_properties
-    ADD CONSTRAINT FK_INSTANCEPROPERTIES_ON_CREATEDBY FOREIGN KEY (created_by) REFERENCES users (id)
-GO
-
-ALTER TABLE order_details
-    ADD CONSTRAINT FK_ORDERDETAIL_ON_ORDERID FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
-GO
-
-ALTER TABLE order_details
-    ADD CONSTRAINT FK_ORDERDETAIL_ON_PRODUCTID FOREIGN KEY (product_id) REFERENCES products (id)
-GO
-
-ALTER TABLE order_details
-    ADD CONSTRAINT FK_ORDERDETAIL_ON_STOCKID FOREIGN KEY (stock_id) REFERENCES stocks (id)
-GO
-
-ALTER TABLE orders
-    ADD CONSTRAINT FK_ORDER_ON_APPROVEBY FOREIGN KEY (approve_by) REFERENCES users (id)
-GO
-
-ALTER TABLE orders
-    ADD CONSTRAINT FK_ORDER_ON_CREATEDBY FOREIGN KEY (created_by) REFERENCES users (id)
-GO
-
-ALTER TABLE orders
-    ADD CONSTRAINT FK_ORDER_ON_PAYMENTTYPE FOREIGN KEY (payment_type) REFERENCES payment_types (id)
-GO
-
-ALTER TABLE orders
-    ADD CONSTRAINT FK_ORDER_ON_STATUS FOREIGN KEY (status) REFERENCES order_statuses (id)
-GO
-
-ALTER TABLE product_photos
-    ADD CONSTRAINT FK_PRODUCTPHOTOS_ON_STOCKID FOREIGN KEY (stock_id) REFERENCES stocks (id)
-GO
-
-ALTER TABLE products
-    ADD CONSTRAINT FK_PRODUCT_ON_CATEGORYID FOREIGN KEY (category_id) REFERENCES categories (id)
-GO
-
-ALTER TABLE products
-    ADD CONSTRAINT FK_PRODUCT_ON_CREATEDBY FOREIGN KEY (created_by) REFERENCES users (id)
-GO
-
-ALTER TABLE products
-    ADD CONSTRAINT FK_PRODUCT_ON_UPDATEDBY FOREIGN KEY (updated_by) REFERENCES users (id)
-GO
-
-ALTER TABLE promotions
-    ADD CONSTRAINT FK_PROMOTIONS_ON_PROMOTIONTYPE FOREIGN KEY (promotion_type) REFERENCES promotion_types (id)
-GO
-
-ALTER TABLE reviews
-    ADD CONSTRAINT FK_REVIEW_ON_APPROVEDBY FOREIGN KEY (approved_by) REFERENCES users (id)
-GO
-
-ALTER TABLE reviews
-    ADD CONSTRAINT FK_REVIEW_ON_PRODUCTID FOREIGN KEY (product_id) REFERENCES products (id)
-GO
-
-ALTER TABLE reviews
-    ADD CONSTRAINT FK_REVIEW_ON_REPLIEDBY FOREIGN KEY (replied_by) REFERENCES users (id)
-GO
-
-ALTER TABLE reviews
-    ADD CONSTRAINT FK_REVIEW_ON_USERID FOREIGN KEY (user_id) REFERENCES users (id)
-GO
-
-ALTER TABLE saved_products
-    ADD CONSTRAINT FK_SAVEDPRODUCT_ON_PRODUCTID FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
-GO
-
-ALTER TABLE saved_products
-    ADD CONSTRAINT FK_SAVEDPRODUCT_ON_STOCKID FOREIGN KEY (stock_id) REFERENCES stocks (id)
-GO
-
-ALTER TABLE saved_products
-    ADD CONSTRAINT FK_SAVEDPRODUCT_ON_USERID FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-GO
-
-ALTER TABLE shipping_infos
-    ADD CONSTRAINT FK_SHIPPINGINFO_ON_USERID FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-GO
-
-ALTER TABLE stocks
-    ADD CONSTRAINT FK_STOCK_ON_COLORID FOREIGN KEY (color_id) REFERENCES colors (id)
-GO
-
-ALTER TABLE stocks
-    ADD CONSTRAINT FK_STOCK_ON_PRODUCTID FOREIGN KEY (product_id) REFERENCES products (id)
-GO
-
-ALTER TABLE user_activity_logs
-    ADD CONSTRAINT FK_USERACTIVITYLOG_ON_USERID FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
-GO
-
-ALTER TABLE promotion_category
-    ADD CONSTRAINT fk_procat_on_category FOREIGN KEY (category_id) REFERENCES categories (id)
-GO
-
-ALTER TABLE promotion_category
-    ADD CONSTRAINT fk_procat_on_promotion FOREIGN KEY (promotion_id) REFERENCES promotions (id)
-GO
-
-ALTER TABLE product_features
-    ADD CONSTRAINT fk_profea_on_feature FOREIGN KEY (features_id) REFERENCES features (id)
-GO
-
-ALTER TABLE product_features
-    ADD CONSTRAINT fk_profea_on_featureqCSbb5 FOREIGN KEY (feature_id) REFERENCES features (id)
-GO
-
-ALTER TABLE product_features
-    ADD CONSTRAINT fk_profea_on_product FOREIGN KEY (product_id) REFERENCES products (id)
-GO
-
-ALTER TABLE product_features
-    ADD CONSTRAINT fk_profea_on_productPrAiak FOREIGN KEY (product_id) REFERENCES products (id)
-GO
-
-ALTER TABLE promotion_stock
-    ADD CONSTRAINT fk_propro_on_product FOREIGN KEY (product_id) REFERENCES products (id)
-GO
-
-ALTER TABLE promotion_stock
-    ADD CONSTRAINT fk_propro_on_promotion FOREIGN KEY (promotions_id) REFERENCES promotions (id)
-GO
-
-ALTER TABLE stock_instances
-    ADD CONSTRAINT fk_stoins_on_instance_property FOREIGN KEY (instance_id) REFERENCES instance_properties (id)
-GO
-
-ALTER TABLE stock_instances
-    ADD CONSTRAINT fk_stoins_on_stock FOREIGN KEY (stock_id) REFERENCES stocks (id)
-GO
+create unique index IX_phone_Unique_NotNull
+    on users (phone)
+    where [phone] IS NOT NULL
+go

@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["success", "msg"],
+    "properties": {
+        "success": { "type": "boolean", "const": true },
+        "msg": { "type": "string" },
+        "data": {},
+        "meta": {},
+        "error": { "type": "null" }
+    },
+    "additionalProperties": true
+}
