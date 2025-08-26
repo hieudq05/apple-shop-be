@@ -2,13 +2,15 @@ package com.web.appleshop.service;
 
 import com.web.appleshop.dto.MailSender;
 import com.web.appleshop.enums.OrderStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MailService {
     private final MailProducer mailProducer;
     private final String frontendUrl = "http://localhost:5173/";
-    private final String backendUrl = "http://localhost:8080/";
+    @Value("${public.base.url}")
+    private String backendUrl;
 
     public MailService(MailProducer mailProducer) {
         this.mailProducer = mailProducer;
@@ -29,7 +31,7 @@ public class MailService {
     }
 
     public void sendResetPasswordMail(String to, String token) {
-        String resetUrl = frontendUrl + "reset-password?url=" + backendUrl + "?token=" + token;
+        String resetUrl = frontendUrl + "reset-password?token=" + token;
         String subject = "Reset Password";
         String body = "[RESET PASSWORD] To reset your password, please click the link below: " + resetUrl;
         sendMail(to, subject, body);

@@ -207,10 +207,10 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
     @Override
-    public void updateProduct(Integer categoryId, Integer productId, String productJson, Map<String, MultipartFile> files, Integer[] productPhotoDeletions, User updatedBy) {
+    public void updateProduct(Integer productId, String productJson, Map<String, MultipartFile> files, Integer[] productPhotoDeletions, User updatedBy) {
         // 1. Tải các entity gốc từ DB
-        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId)
-                .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId + " and category id: " + categoryId));
+        Product product = productRepository.findProductById(productId)
+                .orElseThrow(() -> new NotFoundException("Product not found with id: " + productId));
 
         User persistentUpdatedBy = userRepository.getUserByEmail(updatedBy.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found with email: " + updatedBy.getEmail()));
@@ -268,16 +268,32 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setCategory(category);
 
-        product.getFeatures().clear();
+        // 5. Xử lý Features với bidirectional relationship
+        // Trước tiên, remove product khỏi tất cả features cũ
+        Set<Feature> currentFeatures = new HashSet<>(product.getFeatures());
+        for (Feature oldFeature : currentFeatures) {
+            product.removeFeature(oldFeature);
+        }
 
+        // Sau đó thêm các features mới hoặc existing
         productRequest.getFeatures().forEach(featureRequest -> {
             Feature feature;
             if (featureRequest.getId() != null) {
                 feature = featureRepository.findById(featureRequest.getId())
                         .orElseThrow(() -> new NotFoundException("Feature not found with id: " + featureRequest.getId()));
+                // Cập nhật thông tin feature nếu cần
+                feature.setName(featureRequest.getName());
+                feature.setDescription(featureRequest.getDescription());
+                if (!featureRequest.getImage().toString().equals(feature.getImage())) {
+                    feature.setImage(
+                            featureRequest.getImage().toString().startsWith("feature_")
+                                    ? uploadUtils.uploadFile(files.get(featureRequest.getImage().toString()))
+                                    : featureRequest.getImage().toString()
+                    );
+                }
+                feature = featureRepository.save(feature);
             } else {
-                Set<Product> products = new LinkedHashSet<>();
-                products.add(product);
+                // Tạo feature mới
                 feature = Feature.builder()
                         .name(featureRequest.getName())
                         .description(featureRequest.getDescription())
@@ -287,14 +303,18 @@ public class ProductServiceImpl implements ProductService {
                                         : featureRequest.getImage().toString()
                         )
                         .createdBy(persistentUpdatedBy)
-                        .products(products)
+                        .products(new LinkedHashSet<>()) // Khởi tạo empty set
                         .build();
-                feature = featureRepository.save(feature); // Cần save vì là entity mới
+                feature = featureRepository.save(feature); // Save trước khi tạo relationship
             }
-            log.info("New feature added: " + feature.getName() + " - " + feature.getId() + " - " + feature.getImage() + " - " + feature.getProducts().size() + " products in this feature.");
-            product.getFeatures().add(feature);
+
+            // Sử dụng helper method để maintain bidirectional relationship
+            product.addFeature(feature);
+            log.info("Feature processed: {} - {} - {} - {} products in this feature.",
+                    feature.getName(), feature.getId(), feature.getImage(), feature.getProducts().size());
         });
-        log.info("Number of features in product: " + product.getFeatures().size());
+
+        log.info("Number of features in product: {}", product.getFeatures().size());
         productRepository.save(product);
 
         // 6. SỬA LỖI: Xử lý collection Stocks
@@ -488,9 +508,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
-    public ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId) {
-        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
-                () -> new NotFoundException("Sản phẩm với id: " + productId + " và danh mục với id: " + categoryId + " không tồn tại.")
+    public ProductAdminResponse getProductByProductIdForAdmin(Integer productId) {
+        Product product = productRepository.findProductById(productId).orElseThrow(
+                () -> new NotFoundException("Sản phẩm với id: " + productId + " không tồn tại.")
         );
         return convertProductToProductAdminResponse(product);
     }
@@ -498,12 +518,19 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
-    public void toggleDeleteProduct(Integer categoryId, Integer productId) {
-        Product product = productRepository.findProductByIdAndCategory_Id(productId, categoryId).orElseThrow(
-                () -> new NotFoundException("Sản phẩm với id: " + productId + " và danh mục với id: " + categoryId + " không tồn tại.")
+    public void toggleDeleteProduct(Integer productId) {
+        Product product = productRepository.findProductById(productId).orElseThrow(
+                () -> new NotFoundException("Sản phẩm với id: " + productId + " không tồn tại.")
         );
         product.setIsDeleted(!product.getIsDeleted());
         productRepository.save(product);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STAFF')")
+    public void deleteForeverProduct(Integer productId) {
+        productRepository.deleteProductById(productId);
     }
 
     @Override
@@ -548,8 +575,8 @@ public class ProductServiceImpl implements ProductService {
                 .description(product.getDescription())
                 .createdAt(product.getCreatedAt())
                 .createdBy(product.getCreatedBy().getFirstName() + " " + product.getCreatedBy().getLastName())
-                .categoryId(product.getCategory().getId())
-                .categoryName(product.getCategory().getName())
+                .categoryId(product.getCategory() == null ? null : product.getCategory().getId())
+                .categoryName(product.getCategory() == null ? null : product.getCategory().getName())
                 .features(product.getFeatures().stream().map(feature ->
                         FeatureSummaryDto.builder()
                                 .id(feature.getId())
@@ -593,8 +620,11 @@ public class ProductServiceImpl implements ProductService {
         ProductAdminResponse.ProductUpdatedAdminResponse updatedByDto = new ProductAdminResponse.ProductUpdatedAdminResponse(updatedByEntity.getId(), updatedByEntity.getEmail(), updatedByEntity.getFirstName(), updatedByEntity.getLastName(), updatedByEntity.getImage());
 
         Category categoryEntity = product.getCategory();
-        ProductAdminResponse.ProductCategoryAdminResponse categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(categoryEntity.getId(), categoryEntity.getName(), categoryEntity.getImage());
-        BeanUtils.copyProperties(categoryEntity, categoryDto);
+        ProductAdminResponse.ProductCategoryAdminResponse categoryDto = null;
+        if (product.getCategory() != null) {
+            categoryDto = new ProductAdminResponse.ProductCategoryAdminResponse(categoryEntity.getId(), categoryEntity.getName(), categoryEntity.getImage());
+            BeanUtils.copyProperties(categoryEntity, categoryDto);
+        }
 
         Set<ProductAdminResponse.ProductStockAdminResponse> stockDto = product.getStocks().stream().map(stock -> new ProductAdminResponse.ProductStockAdminResponse(
                 stock.getId(),

@@ -4,6 +4,9 @@ import com.web.appleshop.dto.response.OrderUserResponse;
 import com.web.appleshop.enums.OrderStatus;
 import com.web.appleshop.enums.PaymentType;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
 import java.io.Serializable;
@@ -14,7 +17,9 @@ import java.util.Set;
 /**
  * DTO for {@link com.web.appleshop.entity.Order}
  */
-@Value
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class OrderAdminResponse implements Serializable {
     Integer id;
     ProductAdminResponse.ProductOwnerAdminResponse createdBy;

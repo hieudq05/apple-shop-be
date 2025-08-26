@@ -1,6 +1,10 @@
 spring:
   application:
     name: apple-shop
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -90,5 +94,4 @@ paypal:
 
 public:
   base:
-    url: https://61849be9973b.ngrok-free.app/api/v1
-
+    url: ${BASE_URL}

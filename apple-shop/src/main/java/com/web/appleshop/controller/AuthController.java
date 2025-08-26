@@ -110,7 +110,8 @@ public class AuthController {
     @PostMapping("reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(
             @RequestParam("token") String token,
-            @RequestParam("password") String password
+            @RequestParam("password") String password,
+            @RequestParam("confirmPassword") String confirmPassword
     ) {
         if (token.isEmpty()) {
             throw new BadRequestException("Không có token nào được nhập. Vui lòng nhập token để đặt lại mật khẩu. (Token: " + token + " )");
@@ -127,7 +128,7 @@ public class AuthController {
         if (!passwordResetService.validatePasswordResetToken(token)) {
             throw new BadRequestException("Request reset password was error, please try again or request a new one. (Token: " + token + " )");
         }
-        passwordResetService.resetPassword(token, passwordEncoder.encode(password));
+        passwordResetService.resetPassword(token, password);
         return ResponseEntity.ok(ApiResponse.success(null, "Password reset successful"));
     }
 

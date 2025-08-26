@@ -35,6 +35,69 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            if (StringUtils.hasText(criteria.getSortBy())) {
+                Order order;
+
+                // Handle nested property sorting
+                switch (criteria.getSortBy().toLowerCase()) {
+                    case "categoryname":
+                        Path<?> categoryPath = root.get("category").get("name");
+                        order = "desc".equalsIgnoreCase(criteria.getSortDirection())
+                                ? criteriaBuilder.desc(categoryPath)
+                                : criteriaBuilder.asc(categoryPath);
+                        query.orderBy(order);
+                        break;
+                    case "createdbyname":
+                        Expression<String> createdByNameExpr = criteriaBuilder.concat(
+                                criteriaBuilder.concat(root.get("createdBy").get("firstName"), " "),
+                                root.get("createdBy").get("lastName")
+                        );
+                        order = "desc".equalsIgnoreCase(criteria.getSortDirection())
+                                ? criteriaBuilder.desc(createdByNameExpr)
+                                : criteriaBuilder.asc(createdByNameExpr);
+                        query.orderBy(order);
+                        break;
+                    case "price":
+                        // For price sorting, use a subquery to get the minimum price per product
+                        Subquery<java.math.BigDecimal> priceSubquery = query.subquery(java.math.BigDecimal.class);
+                        Root<Stock> stockSubRoot = priceSubquery.from(Stock.class);
+                        priceSubquery.select(criteriaBuilder.min(stockSubRoot.get("price")))
+                                .where(criteriaBuilder.equal(stockSubRoot.get("product"), root));
+
+                        order = "desc".equalsIgnoreCase(criteria.getSortDirection())
+                                ? criteriaBuilder.desc(priceSubquery)
+                                : criteriaBuilder.asc(priceSubquery);
+                        query.orderBy(order);
+                        break;
+                    case "quantity":
+                        // For quantity sorting, use a subquery to get the total quantity per product
+                        Subquery<Long> quantitySubquery = query.subquery(Long.class);
+                        Root<Stock> stockQuantitySubRoot = quantitySubquery.from(Stock.class);
+                        quantitySubquery.select(criteriaBuilder.sum(stockQuantitySubRoot.get("quantity")))
+                                .where(criteriaBuilder.equal(stockQuantitySubRoot.get("product"), root));
+
+                        order = "desc".equalsIgnoreCase(criteria.getSortDirection())
+                                ? criteriaBuilder.desc(quantitySubquery)
+                                : criteriaBuilder.asc(quantitySubquery);
+                        query.orderBy(order);
+                        break;
+                    default:
+                        // Handle direct properties
+                        try {
+                            Path<?> directPath = root.get(criteria.getSortBy());
+                            order = "desc".equalsIgnoreCase(criteria.getSortDirection())
+                                    ? criteriaBuilder.desc(directPath)
+                                    : criteriaBuilder.asc(directPath);
+                            query.orderBy(order);
+                        } catch (IllegalArgumentException e) {
+                            // Default to name if property doesn't exist
+                            Path<?> namePath = root.get("name");
+                            order = criteriaBuilder.asc(namePath);
+                            query.orderBy(order);
+                        }
+                }
+            }
+
             Objects.requireNonNull(query, "Query must not be null");
             addFetchJoins(root, query, criteria);
 
@@ -89,7 +152,19 @@ public class ProductSpecification {
                 addIsDeletedFilter(false, root, criteriaBuilder, predicates);
             }
 
-            query.distinct(true);
+            // Only use DISTINCT when not sorting by aggregated fields that require subqueries
+            // SQL Server requires ORDER BY expressions to be in SELECT list when using DISTINCT
+            boolean useDistinct = true;
+            if (StringUtils.hasText(criteria.getSortBy())) {
+                String sortBy = criteria.getSortBy().toLowerCase();
+                if ("price".equals(sortBy) || "quantity".equals(sortBy)) {
+                    useDistinct = false;
+                }
+            }
+
+            if (useDistinct) {
+                query.distinct(true);
+            }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
@@ -407,23 +482,27 @@ public class ProductSpecification {
                         query.orderBy(order);
                         break;
                     case "price":
-                        // For price sorting, we need to join with stocks and use MIN aggregation
-                        Join<Product, Stock> stockJoin = root.join("stocks", JoinType.LEFT);
-                        Expression<java.math.BigDecimal> minPriceExpr = criteriaBuilder.min(stockJoin.get("price"));
+                        // For price sorting, use a subquery to get the minimum price per product
+                        Subquery<java.math.BigDecimal> priceSubquery = query.subquery(java.math.BigDecimal.class);
+                        Root<Stock> stockSubRoot = priceSubquery.from(Stock.class);
+                        priceSubquery.select(criteriaBuilder.min(stockSubRoot.get("price")))
+                                .where(criteriaBuilder.equal(stockSubRoot.get("product"), root));
+
                         order = "desc".equalsIgnoreCase(sortDirection)
-                                ? criteriaBuilder.desc(minPriceExpr)
-                                : criteriaBuilder.asc(minPriceExpr);
-                        query.groupBy(root.get("id")); // Group by product ID for aggregation
+                                ? criteriaBuilder.desc(priceSubquery)
+                                : criteriaBuilder.asc(priceSubquery);
                         query.orderBy(order);
                         break;
                     case "quantity":
-                        // For quantity sorting, sum all stock quantities
-                        Join<Product, Stock> stockJoinQty = root.join("stocks", JoinType.LEFT);
-                        Expression<Long> sumQuantityExpr = criteriaBuilder.sum(stockJoinQty.get("quantity"));
+                        // For quantity sorting, use a subquery to get the total quantity per product
+                        Subquery<Long> quantitySubquery = query.subquery(Long.class);
+                        Root<Stock> stockQuantitySubRoot = quantitySubquery.from(Stock.class);
+                        quantitySubquery.select(criteriaBuilder.sum(stockQuantitySubRoot.get("quantity")))
+                                .where(criteriaBuilder.equal(stockQuantitySubRoot.get("product"), root));
+
                         order = "desc".equalsIgnoreCase(sortDirection)
-                                ? criteriaBuilder.desc(sumQuantityExpr)
-                                : criteriaBuilder.asc(sumQuantityExpr);
-                        query.groupBy(root.get("id"));
+                                ? criteriaBuilder.desc(quantitySubquery)
+                                : criteriaBuilder.asc(quantitySubquery);
                         query.orderBy(order);
                         break;
                     default:
