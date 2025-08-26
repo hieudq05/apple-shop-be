@@ -60,4 +60,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     Page<Map<String, Object>> getSalesByColor(Pageable pageable, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     List<Product> findProductsByNameContainingIgnoreCase(String name);
+
+    Optional<Product> findProductById(Integer id);
+
+    void deleteProductById(Integer id);
 }

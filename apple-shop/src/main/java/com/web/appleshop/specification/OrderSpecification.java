@@ -42,6 +42,61 @@ public class OrderSpecification {
             // Common filters
             addCommonFilters(criteria, root, criteriaBuilder, predicates);
 
+            if (StringUtils.hasText(criteria.getSortBy())) {
+                System.out.println("Sorting by: " + criteria.getSortBy());
+                System.out.println("Sorting direction: " + criteria.getSortDirection());
+                switch (criteria.getSortBy().toLowerCase()) {
+                    case "createdat":
+                        Path<?> createdAtPath = root.get("createdAt");
+                        if("desc".equalsIgnoreCase(criteria.getSortDirection())) {
+                            query.orderBy(criteriaBuilder.desc(createdAtPath));
+                        } else {
+                            query.orderBy(criteriaBuilder.asc(createdAtPath));
+                        }
+                        break;
+                    case "approveat":
+                        Path<?> approveAtPath = root.get("approveAt");
+                        if("desc".equalsIgnoreCase(criteria.getSortDirection())) {
+                            query.orderBy(criteriaBuilder.desc(approveAtPath));
+                        } else {
+                            query.orderBy(criteriaBuilder.asc(approveAtPath));
+                        }
+                        break;
+                    case "total":
+                        Path<?> totalPath = root.get("finalTotal");
+                        if("desc".equalsIgnoreCase(criteria.getSortDirection())) {
+                            query.orderBy(criteriaBuilder.desc(totalPath));
+                        } else {
+                            query.orderBy(criteriaBuilder.asc(totalPath));
+                        }
+                        break;
+                    case "status":
+                        Path<?> statusPath = root.get("status");
+                        if("desc".equalsIgnoreCase(criteria.getSortDirection())) {
+                            query.orderBy(criteriaBuilder.desc(statusPath));
+                        } else {
+                            query.orderBy(criteriaBuilder.asc(statusPath));
+                        }
+                        break;
+                    case "paymenttype":
+                        Path<?> paymentTypePath = root.get("paymentType");
+                        if("desc".equalsIgnoreCase(criteria.getSortDirection())) {
+                            query.orderBy(criteriaBuilder.desc(paymentTypePath));
+                        } else {
+                            query.orderBy(criteriaBuilder.asc(paymentTypePath));
+                        }
+                        break;
+                    default:
+                        try {
+                            Path<?> directPath = root.get(criteria.getSortBy());
+                            query.orderBy(criteriaBuilder.asc(directPath));
+                        } catch (IllegalArgumentException e) {
+                            log.error("Invalid sort field: {}", criteria.getSortBy());
+                        }
+                        break;
+                }
+            }
+
             // Admin filters
             if (criteria instanceof AdminOrderSearchCriteria adminCriteria) {
                 addSpecificFilters(adminCriteria, root, criteriaBuilder, predicates);

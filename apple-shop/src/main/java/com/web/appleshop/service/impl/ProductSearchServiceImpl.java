@@ -50,7 +50,6 @@ public class ProductSearchServiceImpl implements ProductSearchService {
         }
 
         Specification<Product> spec = buildSpecification(criteria);
-//        Pageable sortedPageable = applySorting(criteria, pageable);
 
         Page<Product> products = productRepository.findAll(spec, pageable);
 
@@ -62,7 +61,6 @@ public class ProductSearchServiceImpl implements ProductSearchService {
         log.debug("Searching products for user with criteria: {}", criteria);
 
         Specification<Product> spec = buildSpecification(criteria);
-//        Pageable sortedPageable = applySorting(criteria, pageable);
 
         Page<Product> products = productRepository.findAll(spec, pageable);
 

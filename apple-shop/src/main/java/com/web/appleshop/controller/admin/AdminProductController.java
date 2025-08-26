@@ -39,16 +39,15 @@ public class AdminProductController {
         return ResponseEntity.ok(ApiResponse.success(null, "Product created successfully"));
     }
 
-    @PutMapping(consumes = {"multipart/form-data"}, path = "{categoryId}/{productId}")
+    @PutMapping(consumes = {"multipart/form-data"}, path = "{productId}")
     public ResponseEntity<ApiResponse<String>> updateProduct(
-            @PathVariable Integer categoryId,
             @PathVariable Integer productId,
             @RequestPart("product") String productJson,
             @RequestPart(value = "productPhotoDeletions", required = false) Integer[] productPhotoDeletions,
             @RequestParam(required = false) Map<String, MultipartFile> files
     ) {
         User updatedBy = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        productService.updateProduct(categoryId, productId, productJson, files, productPhotoDeletions, updatedBy);
+        productService.updateProduct(productId, productJson, files, productPhotoDeletions, updatedBy);
         return ResponseEntity.ok(ApiResponse.success(null, "Product updated successfully"));
     }
 
@@ -66,15 +65,21 @@ public class AdminProductController {
         return ResponseEntity.ok(ApiResponse.success(productAdminResponsePage.getContent(), "Get all products successfully", pageableResponse));
     }
 
-    @GetMapping("{categoryId}/{productId}")
-    public ResponseEntity<ApiResponse<ProductAdminResponse>> getProduct(@PathVariable Integer categoryId, @PathVariable Integer productId) {
-        ProductAdminResponse productAdminResponse = productService.getProductByProductIdForAdmin(categoryId, productId);
+    @GetMapping("{productId}")
+    public ResponseEntity<ApiResponse<ProductAdminResponse>> getProduct(@PathVariable Integer productId) {
+        ProductAdminResponse productAdminResponse = productService.getProductByProductIdForAdmin(productId);
         return ResponseEntity.ok(ApiResponse.success(productAdminResponse, "Get product successfully"));
     }
 
-    @DeleteMapping("{categoryId}/{productId}")
-    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Integer categoryId, @PathVariable Integer productId) {
-        productService.toggleDeleteProduct(categoryId, productId);
+    @DeleteMapping("{productId}")
+    public ResponseEntity<ApiResponse<String>> deleteProduct(@PathVariable Integer productId) {
+        productService.toggleDeleteProduct(productId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Delete product successfully"));
+    }
+
+    @DeleteMapping("delete-forever/{productId}")
+    public ResponseEntity<ApiResponse<String>> deleteForeverProduct(@PathVariable Integer productId) {
+        productService.deleteForeverProduct(productId);
         return ResponseEntity.ok(ApiResponse.success(null, "Delete product successfully"));
     }
 

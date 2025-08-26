@@ -14,7 +14,7 @@ import java.util.Map;
 public interface ProductService {
     void createProduct(String productJson, Map<String, MultipartFile> files);
 
-    void updateProduct(Integer categoryId, Integer productId, String productJson, Map<String, MultipartFile> files, Integer[] productPhotoDeletions, User updatedBy);
+    void updateProduct(Integer productId, String productJson, Map<String, MultipartFile> files, Integer[] productPhotoDeletions, User updatedBy);
 
     Page<ProductAdminResponse> getAllProductsForAdmin(Pageable pageable);
 
@@ -28,9 +28,11 @@ public interface ProductService {
 
     ProductUserResponse getProductByProductIdForUser(Integer categoryId, Integer productId);
 
-    ProductAdminResponse getProductByProductIdForAdmin(Integer categoryId, Integer productId);
+    ProductAdminResponse getProductByProductIdForAdmin(Integer productId);
 
-    void toggleDeleteProduct(Integer categoryId, Integer productId);
+    void toggleDeleteProduct(Integer productId);
+
+    void deleteForeverProduct(Integer productId);
 
     Page<Map<String, Object>> getTopProductSelling(Pageable pageable, LocalDateTime fromDate, LocalDateTime toDate);
 

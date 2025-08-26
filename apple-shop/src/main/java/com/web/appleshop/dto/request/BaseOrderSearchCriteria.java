@@ -20,6 +20,8 @@ public abstract class BaseOrderSearchCriteria {
     private LocalDateTime createdAtTo;
     private String searchTerm; // Tìm kiếm tổng quát
     private OrderStatus status;
+    private String sortBy;
+    private String sortDirection;
 
     public abstract boolean isUserSpecific();
 }
