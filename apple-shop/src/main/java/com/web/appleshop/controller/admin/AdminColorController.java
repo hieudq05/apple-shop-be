@@ -14,12 +14,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Handles administrative operations for product colors.
+ * <p>
+ * This controller provides CRUD (Create, Read, Update, Delete) functionalities
+ * for managing product colors in the admin panel.
+ */
 @RestController
 @RequestMapping("admin/colors")
 @RequiredArgsConstructor
 class AdminColorController {
     private final ColorService colorService;
 
+    /**
+     * Retrieves a paginated list of all product colors for the admin panel.
+     *
+     * @param page The page number to retrieve (optional, defaults to 0).
+     * @param size The number of colors per page (optional, defaults to 6).
+     * @return A {@link ResponseEntity} containing a paginated list of color details.
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse>>> getAllColors(
             @RequestParam(required = false) Integer page,
@@ -37,6 +50,12 @@ class AdminColorController {
         );
     }
 
+    /**
+     * Creates a new product color.
+     *
+     * @param request The request body containing the details of the color to create.
+     * @return A {@link ResponseEntity} with the created color's details.
+     */
     @PostMapping
     public ResponseEntity<ApiResponse<ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse>> createColor(@Valid @RequestBody AdminColorRequest request) {
         return ResponseEntity.ok(
@@ -44,6 +63,13 @@ class AdminColorController {
         );
     }
 
+    /**
+     * Updates an existing product color.
+     *
+     * @param colorId The ID of the color to update.
+     * @param request The request body containing the updated color details.
+     * @return A {@link ResponseEntity} with the updated color's details.
+     */
     @PutMapping("{colorId}")
     public ResponseEntity<ApiResponse<ProductAdminResponse.ProductStockAdminResponse.ColorAdminResponse>> updateColor(@PathVariable Integer colorId, @RequestBody AdminColorRequest request) {
         return ResponseEntity.ok(
@@ -51,6 +77,12 @@ class AdminColorController {
         );
     }
 
+    /**
+     * Deletes a product color by its ID.
+     *
+     * @param colorId The ID of the color to delete.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @DeleteMapping("{colorId}")
     public ResponseEntity<ApiResponse<String>> deleteColor(@PathVariable Integer colorId) {
         colorService.deleteColor(colorId);

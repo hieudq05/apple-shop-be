@@ -25,6 +25,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Handles authentication-related endpoints for the application.
+ * <p>
+ * This controller provides endpoints for user registration, login, token refreshing,
+ * password management, and social authentication via Google. It coordinates with
+ * various services to manage user identity, authentication tokens, and security.
+ */
 @RestController
 @RequestMapping("auth")
 @RequiredArgsConstructor
@@ -41,6 +48,12 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final UserRepository userRepository;
 
+    /**
+     * Authenticates a user and returns access and refresh tokens.
+     *
+     * @param request The login request containing the user's email and password.
+     * @return A {@link ResponseEntity} containing an {@link AuthenticationResponse} with tokens on success.
+     */
     @PostMapping("login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@Valid @RequestBody LoginRequest request) {
         authenticationManager.authenticate(
@@ -62,6 +75,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response, "Login successful"));
     }
 
+    /**
+     * Registers a new user and sends an OTP for email verification.
+     *
+     * @param request The registration request containing user details.
+     * @return A {@link ResponseEntity} containing an {@link OtpResponse} with details for verification.
+     */
     @PostMapping("register")
     public ResponseEntity<ApiResponse<OtpResponse>> register(@Valid @RequestBody RegisterRequest request) {
         User userEntity = new User();
@@ -77,6 +96,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response, "You have to verify your email to complete the registration."));
     }
 
+    /**
+     * Verifies the user's email using an OTP and issues authentication tokens.
+     *
+     * @param request The OTP validation request containing the email and OTP.
+     * @return A {@link ResponseEntity} containing an {@link AuthenticationResponse} with tokens on successful verification.
+     */
     @PostMapping("register/verify")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> verify(@RequestBody OtpValidationRequest request) {
         otpService.verifyOtp(request.getEmail(), request.getOtp());
@@ -98,6 +123,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response, "Verified successfully, you can login now!"));
     }
 
+    /**
+     * Initiates the password reset process by sending a reset link to the user's email.
+     *
+     * @param email The email address of the user who forgot their password.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @PostMapping("forgot-password")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestParam("email") String email) {
         if (email.isEmpty()) {
@@ -107,6 +138,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(null, "Password reset email sent successfully"));
     }
 
+    /**
+     * Resets the user's password using a valid reset token.
+     *
+     * @param token The password reset token sent to the user's email.
+     * @param password The new password.
+     * @param confirmPassword The confirmation of the new password.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @PostMapping("reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(
             @RequestParam("token") String token,
@@ -132,6 +171,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(null, "Password reset successful"));
     }
 
+    /**
+     * Generates a new access token using a valid refresh token.
+     *
+     * @param refreshToken The refresh token.
+     * @return A {@link ResponseEntity} containing the new access token.
+     */
     @PostMapping("refresh-token")
     public ResponseEntity<ApiResponse<String>> refreshToken(@RequestParam("refreshToken") String refreshToken) {
         refreshToken = refreshToken.substring(7);
@@ -140,6 +185,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(jwtService.generateToken(userDetails), "Refreshed token successful"));
     }
 
+    /**
+     * Authenticates a user via their Google account.
+     *
+     * @param request The request containing the Google ID token.
+     * @return A {@link ResponseEntity} containing an {@link AuthenticationResponse} with tokens on success.
+     */
     @PostMapping("google")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> googleAuth(@RequestBody GgTokenRequest request) {
         GoogleInfo googleInfo = googleAuthService.getInfo(googleAuthService.verifyGoogleToken(request.getToken()));
@@ -162,6 +213,12 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Logs out the currently authenticated user by invalidating their refresh token.
+     *
+     * @param refreshToken The refresh token to be invalidated.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @PostMapping("logout")
     public ResponseEntity<ApiResponse<String>> logout(@RequestBody LogoutRequest refreshToken) {
         String token = refreshToken.getRefreshToken().substring(7);

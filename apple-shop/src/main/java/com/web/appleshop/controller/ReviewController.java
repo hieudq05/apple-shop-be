@@ -19,6 +19,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Handles HTTP requests related to product reviews.
+ * <p>
+ * This controller provides endpoints for users to create, view, search, and delete
+ * their reviews. It also allows public access to view reviews for a specific product.
+ */
 @RestController
 @RequestMapping("reviews")
 @RequiredArgsConstructor
@@ -28,6 +34,12 @@ public class ReviewController {
     private final UserReviewSearchService userReviewSearchService;
     private final UserReviewSpecification userReviewSpecification;
 
+    /**
+     * Creates a new review for a product by an authenticated user.
+     *
+     * @param request The request body containing the review details.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @PostMapping
     public ResponseEntity<ApiResponse<String>> createReviewForUser(
             @Valid @RequestBody UserCreateReviewRequest request
@@ -38,6 +50,18 @@ public class ReviewController {
         );
     }
 
+    /**
+     * Retrieves a paginated list of reviews for a specific product.
+     * <p>
+     * If an authentication token is provided, it returns all reviews. Otherwise, it
+     * returns only the approved reviews.
+     *
+     * @param productId The ID of the product.
+     * @param token The Authorization token (optional).
+     * @param page The page number to retrieve (optional, defaults to 0).
+     * @param size The number of reviews per page (optional, defaults to 6).
+     * @return A {@link ResponseEntity} containing a paginated list of {@link UserReviewDto}.
+     */
     @GetMapping("product/{productId}")
     public ResponseEntity<ApiResponse<List<UserReviewDto>>> getReviewsForProduct(
             @PathVariable Integer productId,
@@ -64,6 +88,11 @@ public class ReviewController {
         );
     }
 
+    /**
+     * Retrieves a paginated list of reviews created by the currently authenticated user.
+     *
+     * @return A {@link ResponseEntity} containing a paginated list of the user's {@link UserReviewDto}s.
+     */
     @GetMapping("my")
     public ResponseEntity<ApiResponse<List<UserReviewDto>>> getReviewsForUser() {
         Pageable pageable = Pageable.ofSize(6).withPage(0);
@@ -79,6 +108,12 @@ public class ReviewController {
         );
     }
 
+    /**
+     * Deletes a review created by the currently authenticated user.
+     *
+     * @param reviewId The ID of the review to delete.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @DeleteMapping("{reviewId}")
     public ResponseEntity<ApiResponse<String>> deleteReview(@PathVariable Integer reviewId) {
         reviewService.deleteReview(reviewId);
@@ -87,6 +122,15 @@ public class ReviewController {
         );
     }
 
+    /**
+     * Searches for reviews of a specific product based on given criteria.
+     *
+     * @param productId The ID of the product.
+     * @param page The page number to retrieve (optional, defaults to 0).
+     * @param size The number of reviews per page (optional, defaults to 6).
+     * @param criteria The search criteria.
+     * @return A {@link ResponseEntity} containing a paginated list of matching {@link UserReviewDto}s.
+     */
     @GetMapping("product/{productId}/search")
     public ResponseEntity<ApiResponse<List<UserReviewDto>>> searchReviewsForProduct(
             @PathVariable Integer productId,

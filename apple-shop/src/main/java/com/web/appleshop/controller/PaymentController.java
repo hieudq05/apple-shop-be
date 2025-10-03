@@ -25,6 +25,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 
+/**
+ * Handles payment processing through various gateways like VnPay and PayPal.
+ * <p>
+ * This controller provides endpoints to create payment URLs, handle callbacks,
+ * and process payment results for orders. It integrates with different payment
+ * services to manage the entire payment lifecycle.
+ */
 @RestController
 @RequestMapping("payments")
 @RequiredArgsConstructor
@@ -37,6 +44,13 @@ public class PaymentController {
     @Value("${public.base.url}")
     private String publicBaseUrl;
 
+    /**
+     * Creates a VnPay payment URL for a new order.
+     *
+     * @param request The incoming HTTP request.
+     * @param orderRequest The request to create a new order.
+     * @return A {@link ResponseEntity} with the VnPay payment URL.
+     */
     @PostMapping("vnpay/create-payment")
     @Transactional
     public ResponseEntity<ApiResponse<PaymentDto.VnPayResponse>> createPayment(
@@ -60,6 +74,13 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
     }
 
+    /**
+     * Creates a VnPay payment URL for a new order with a promotion applied.
+     *
+     * @param request The incoming HTTP request.
+     * @param orderRequest The request to create a new order with a promotion.
+     * @return A {@link ResponseEntity} with the VnPay payment URL.
+     */
     @PostMapping("vnpay/create-payment-v1")
     public ResponseEntity<?> createVNPAYOrderWithPromotion(
             HttpServletRequest request,
@@ -81,6 +102,13 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
     }
 
+    /**
+     * Creates a VnPay payment URL for an existing order.
+     *
+     * @param request The incoming HTTP request.
+     * @param orderId The ID of the existing order.
+     * @return A {@link ResponseEntity} with the VnPay payment URL.
+     */
     @PostMapping("vnpay/create-payment-v1/order/{orderId}")
     public ResponseEntity<?> createVNPAYOrderWithPromotion(HttpServletRequest request, @PathVariable Integer orderId) {
         Order order = orderService.getOrderById(orderId);
@@ -99,6 +127,13 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
     }
 
+    /**
+     * Generates a VnPay payment URL for an existing order, intended for retrying payment.
+     *
+     * @param request The incoming HTTP request.
+     * @param orderId The ID of the order to create a payment URL for.
+     * @return A {@link ResponseEntity} with the VnPay payment URL.
+     */
     @PostMapping("vnpay/payment-url")
     @Transactional
     public ResponseEntity<ApiResponse<PaymentDto.VnPayResponse>> vnpayReturnUrl(
@@ -109,6 +144,13 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "Create payment successfully"));
     }
 
+    /**
+     * Handles the callback from VnPay after a payment attempt.
+     * Updates the order status based on the payment result and redirects the user to a results page.
+     *
+     * @param request The incoming HTTP request containing VnPay callback parameters.
+     * @return A {@link RedirectView} to the frontend payment result page.
+     */
     @GetMapping("vnpay/call-back")
     @Transactional
     public RedirectView vnpayCallback(
@@ -194,6 +236,12 @@ public class PaymentController {
         }
     }
 
+    /**
+     * Creates a PayPal payment for a new order.
+     *
+     * @param orderRequest The request to create a new order.
+     * @return A {@link ResponseEntity} with the PayPal payment details, including the approval link.
+     */
     @PostMapping("paypal/create-payment")
     @Transactional
     public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPayPalPayment(
@@ -217,6 +265,13 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "PayPal payment created successfully"));
     }
 
+    /**
+     * Creates a PayPal payment for a new order with a promotion applied.
+     *
+     * @param request The incoming HTTP request.
+     * @param orderRequest The request to create a new order with a promotion.
+     * @return A {@link ResponseEntity} with the PayPal payment details.
+     */
     @PostMapping("paypal/create-payment-v1")
     public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPAYPALOrderWithPromotion(
             HttpServletRequest request,
@@ -237,6 +292,13 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(payPalResponse, "Create payment successfully"));
     }
 
+    /**
+     * Creates a PayPal payment for an existing order.
+     *
+     * @param request The incoming HTTP request.
+     * @param orderId The ID of the existing order.
+     * @return A {@link ResponseEntity} with the PayPal payment details.
+     */
     @PostMapping("paypal/create-payment-v1/order/{orderId}")
     public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPAYPALOrderWithPromotion(HttpServletRequest request, @PathVariable Integer orderId) {
         Order order = orderService.getOrderById(orderId);
@@ -258,6 +320,12 @@ public class PaymentController {
         ));
     }
 
+    /**
+     * Generates a PayPal payment URL for an existing order.
+     *
+     * @param orderId The ID of the order to create a payment URL for.
+     * @return A {@link ResponseEntity} with the PayPal payment details.
+     */
     @PostMapping("paypal/payment-url")
     public ResponseEntity<ApiResponse<PaymentDto.PayPalResponse>> createPayPalPaymentUrl(
             @RequestParam Integer orderId
@@ -279,6 +347,14 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response, "PayPal payment URL created successfully"));
     }
 
+    /**
+     * Handles the successful completion of a PayPal payment.
+     * Executes the payment, updates the order status, and redirects the user to a results page.
+     *
+     * @param paymentId The payment ID provided by PayPal.
+     * @param payerId The payer ID provided by PayPal.
+     * @return A {@link RedirectView} to the frontend payment result page.
+     */
     @GetMapping("paypal/success")
     @Transactional
     public RedirectView paypalSuccess(
@@ -308,6 +384,12 @@ public class PaymentController {
         return new RedirectView(returnUrl);
     }
 
+    /**
+     * Handles the cancellation of a PayPal payment.
+     *
+     * @param token The token associated with the cancelled payment.
+     * @return A {@link ResponseEntity} confirming the cancellation.
+     */
     @GetMapping("paypal/cancel")
     @Transactional
     public ResponseEntity<ApiResponse<String>> paypalCancel(

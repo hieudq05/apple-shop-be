@@ -16,12 +16,28 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Handles HTTP requests related to user orders.
+ * <p>
+ * This controller provides endpoints for authenticated users to view their order history,
+ * see the details of a specific order, search their orders, and cancel an order.
+ * All operations are performed within the context of the currently logged-in user.
+ */
 @RestController
 @RequestMapping("orders")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
 
+    /**
+     * Retrieves a paginated list of orders for the currently authenticated user.
+     * <p>
+     * The results are sorted by creation date in descending order.
+     *
+     * @param page The page number to retrieve (optional, defaults to 0).
+     * @param size The number of orders per page (optional, defaults to 6).
+     * @return A {@link ResponseEntity} containing a paginated list of {@link OrderUserResponse}.
+     */
     @GetMapping("me")
     public ResponseEntity<ApiResponse<List<OrderUserResponse>>> getOrdersForUser(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
@@ -40,12 +56,26 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orders.getContent(), "Get orders successfully", pageableResponse));
     }
 
+    /**
+     * Retrieves the details of a specific order for the currently authenticated user.
+     *
+     * @param orderId The ID of the order to retrieve.
+     * @return A {@link ResponseEntity} containing the {@link UserOrderDetailResponse} if found.
+     */
     @GetMapping("{orderId}")
     public ResponseEntity<ApiResponse<UserOrderDetailResponse>> getOrderDetailForUser(@PathVariable Integer orderId) {
         UserOrderDetailResponse order = orderService.getOrderDetailByIdForUser(orderId);
         return ResponseEntity.ok(ApiResponse.success(order, "Get order successfully"));
     }
 
+    /**
+     * Searches for orders belonging to the currently authenticated user based on specified criteria.
+     *
+     * @param page The page number to retrieve (optional, defaults to 0).
+     * @param size The number of orders per page (optional, defaults to 6).
+     * @param criteria The search criteria.
+     * @return A {@link ResponseEntity} containing a paginated list of matching {@link OrderUserResponse}.
+     */
     @PostMapping("search")
     public ResponseEntity<ApiResponse<List<OrderUserResponse>>> searchOrdersForUser(
             @RequestParam(required = false) Integer page,
@@ -63,6 +93,12 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(orders.getContent(), "Search orders successfully", pageableResponse));
     }
 
+    /**
+     * Cancels a specific order for the currently authenticated user.
+     *
+     * @param orderId The ID of the order to cancel.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @PostMapping("{orderId}/cancel")
     public ResponseEntity<ApiResponse<String>> cancelOrder(@PathVariable Integer orderId) {
         orderService.cancelOrderForUser(orderId);

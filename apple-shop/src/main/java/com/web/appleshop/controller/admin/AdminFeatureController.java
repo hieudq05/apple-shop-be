@@ -15,12 +15,26 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Handles administrative operations for product features.
+ * <p>
+ * This controller provides CRUD (Create, Read, Update, Delete) functionalities
+ * for managing product features, which can be used to highlight key aspects
+ * of products.
+ */
 @RestController
 @RequestMapping("admin/features")
 @RequiredArgsConstructor
 class AdminFeatureController {
     private final FeatureService featureService;
 
+    /**
+     * Retrieves a paginated list of all product features for the admin panel.
+     *
+     * @param page The page number to retrieve (optional, defaults to 0).
+     * @param size The number of features per page (optional, defaults to 6).
+     * @return A {@link ResponseEntity} containing a paginated list of {@link FeatureInfoView}.
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<FeatureInfoView>>> getAllFeatures(
             @RequestParam(required = false) Integer page,
@@ -39,6 +53,13 @@ class AdminFeatureController {
         );
     }
 
+    /**
+     * Creates a new product feature.
+     *
+     * @param request The request body containing the feature details.
+     * @param image The image file associated with the feature.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<String>> createFeature(@Valid @RequestPart AdminFeatureRequest request, @RequestPart MultipartFile image) {
         featureService.createFeature(request, image);
@@ -47,6 +68,14 @@ class AdminFeatureController {
         );
     }
 
+    /**
+     * Updates an existing product feature.
+     *
+     * @param featureId The ID of the feature to update.
+     * @param request The request body with the updated feature details.
+     * @param image The new image file for the feature.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @PutMapping("{featureId}")
     public ResponseEntity<ApiResponse<String>> updateFeature(@PathVariable Integer featureId, @Valid @RequestPart AdminFeatureRequest request, @RequestPart MultipartFile image) {
         featureService.updateFeature(featureId, request, image);
@@ -55,6 +84,12 @@ class AdminFeatureController {
         );
     }
 
+    /**
+     * Deletes a product feature by its ID.
+     *
+     * @param featureId The ID of the feature to delete.
+     * @return A {@link ResponseEntity} with a success message.
+     */
     @DeleteMapping("{featureId}")
     public ResponseEntity<ApiResponse<String>> deleteFeature(@PathVariable Integer featureId) {
         featureService.deleteFeature(featureId);

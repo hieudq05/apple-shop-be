@@ -15,12 +15,25 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Handles HTTP requests related to promotions.
+ * <p>
+ * This controller provides an endpoint for users to retrieve a list of available
+ * promotions. The promotions can be used to get discounts on orders.
+ */
 @RestController
 @RequestMapping("promotions")
 @RequiredArgsConstructor
 public class PromotionController {
     private final PromotionService promotionService;
 
+    /**
+     * Retrieves a paginated list of promotions available to users.
+     *
+     * @param page The page number to retrieve (optional, defaults to 0).
+     * @param size The number of promotions per page (optional, defaults to 6).
+     * @return A {@link ResponseEntity} containing a paginated list of {@link UserPromotionDto}.
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<UserPromotionDto>>> getPromotions(
             @RequestParam(required = false) Integer page,
